@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/secrets.dart';
 import 'package:schueler_portal/stundenplan.dart';
-import 'package:schueler_portal/test.dart';
+import 'package:schueler_portal/api_client.dart';
 
 ApiClient apiClient =
     ApiClient(Secrets.email, Secrets.password, Secrets.schulkuerzel);
 
 void main() {
   runApp(const MyApp());
+  DataLoader.fetchData();
 }
 
 class MyApp extends StatelessWidget {
@@ -85,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
           alignment: Alignment.center,
           child: const Text('Chats'),
         ),
-        const StundenplanContainer(),
+        StundenplanContainer(),
       ][currentPageIndex],
     );
   }

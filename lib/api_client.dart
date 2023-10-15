@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:http/io_client.dart';
 import 'package:http/src/response.dart';
 import 'package:schueler_portal/api/request_models/base_request.dart';
@@ -8,7 +10,7 @@ import 'api/response_models/api/vertretungsplan.dart';
 
 class ApiClient {
   IOClient client = IOClient();
-  String baseUri = "http://10.0.2.2:8134/schueler_portal";
+  String baseUri = "http://192.168.178.42:8134/schueler_portal";
 
   late BaseRequest baseRequest;
   late String baseRequestJson;
@@ -19,9 +21,7 @@ class ApiClient {
 
   updateCredentials(String email, String password, String schulkuerzel) {
     baseRequest = BaseRequest(
-        email: email,
-        password: password,
-        schulkuerzel: schulkuerzel);
+        email: email, password: password, schulkuerzel: schulkuerzel);
     baseRequestJson = baseRequestToJson(baseRequest);
   }
 
@@ -37,9 +37,9 @@ class ApiClient {
   Future<List<News>> getNews() async =>
       newsFromJson((await _put("/news")).body);
 
-  Future<Vertretungsplan> getVertretungsplan() async =>
-      vertretungsplanFromJson((await _put("/vertretungsplan")).body);
+  Future<Vertretungsplan> getVertretungsplan() async => vertretungsplanFromJson(
+      utf8.decode((await _put("/vertretungsplan")).bodyBytes));
 
   Future<Stundenplan> getStundenplan() async =>
-      stundenplanFromJson((await _put("/stundenplan")).body);
+      stundenplanFromJson(utf8.decode((await _put("/stundenplan")).bodyBytes));
 }

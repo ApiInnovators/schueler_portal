@@ -1,5 +1,5 @@
 class UserData {
-  Set<String> registeredCourses = {
+  static Set<String> registeredCourses = {
     "2M_7",
     "2SK_7",
     "2KU_5",

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:schueler_portal/data_loader.dart';
+import 'package:schueler_portal/home.dart';
 import 'package:schueler_portal/secrets.dart';
 import 'package:schueler_portal/stundenplan.dart';
 import 'package:schueler_portal/api_client.dart';
@@ -75,10 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       body: <Widget>[
-        Container(
-          alignment: Alignment.center,
-          child: const Text('Home'),
-        ),
+        const HomeWidget(),
         Container(
           alignment: Alignment.center,
           child: const Text('Hausaufgaben'),
@@ -87,7 +85,7 @@ class _MyHomePageState extends State<MyHomePage> {
           alignment: Alignment.center,
           child: const Text('Chats'),
         ),
-        StundenplanContainer(),
+        const StundenplanContainer(),
       ][currentPageIndex],
     );
   }

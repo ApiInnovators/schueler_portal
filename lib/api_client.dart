@@ -35,7 +35,7 @@ class ApiClient {
   }
 
   Future<List<News>> getNews() async =>
-      newsFromJson((await _put("/news")).body);
+      newsFromJson(utf8.decode((await _put("/news")).bodyBytes));
 
   Future<Vertretungsplan> getVertretungsplan() async => vertretungsplanFromJson(
       utf8.decode((await _put("/vertretungsplan")).bodyBytes));

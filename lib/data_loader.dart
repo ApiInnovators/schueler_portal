@@ -2,10 +2,13 @@ import 'package:schueler_portal/api/response_models/api/stundenplan.dart';
 import 'package:schueler_portal/api/response_models/api/vertretungsplan.dart';
 import 'package:schueler_portal/main.dart';
 
+import 'api/response_models/api/news.dart';
+
 class DataLoader {
 
   static Stundenplan? _cachedStundenplan;
   static Vertretungsplan? _cachedVertretungsplan;
+  static List<News>? _cachedNews;
 
   static bool _loadsData = false;
   static bool _requestedRefresh = false;
@@ -24,6 +27,7 @@ class DataLoader {
 
     _cachedStundenplan = await apiClient.getStundenplan();
     _cachedVertretungsplan = await apiClient.getVertretungsplan();
+    _cachedNews = await apiClient.getNews();
 
     _loadsData = false;
 
@@ -47,5 +51,10 @@ class DataLoader {
   static Future<Vertretungsplan> getVertretungsplan() async {
     await awaitFetch();
     return _cachedVertretungsplan!;
+  }
+
+  static Future<List<News>> getNews() async {
+    await awaitFetch();
+    return _cachedNews!;
   }
 }

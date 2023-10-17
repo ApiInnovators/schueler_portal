@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/home.dart';
+import 'package:schueler_portal/homework.dart';
 import 'package:schueler_portal/secrets.dart';
 import 'package:schueler_portal/stundenplan.dart';
 import 'package:schueler_portal/api_client.dart';
@@ -77,10 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: <Widget>[
         const HomeWidget(),
-        Container(
-          alignment: Alignment.center,
-          child: const Text('Hausaufgaben'),
-        ),
+        const HomeworkWidget(),
         Container(
           alignment: Alignment.center,
           child: const Text('Chats'),

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/io_client.dart';
 import 'package:http/src/response.dart';
 import 'package:schueler_portal/api/request_models/base_request.dart';
+import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 import 'package:schueler_portal/api/response_models/api/news.dart';
 
 import 'api/response_models/api/stundenplan.dart';
@@ -42,4 +43,7 @@ class ApiClient {
 
   Future<Stundenplan> getStundenplan() async =>
       stundenplanFromJson(utf8.decode((await _put("/stundenplan")).bodyBytes));
+
+  Future<List<Hausaufgabe>> getHomework() async =>
+      hausaufgabeFromJson(utf8.decode((await _put("/hausaufgaben")).bodyBytes));
 }

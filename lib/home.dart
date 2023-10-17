@@ -37,24 +37,26 @@ class _HomeWidget extends State<StatefulWidget> {
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
                     ),
                     Expanded(
-                      child: FutureBuilder(
-                        future: DataLoader.getNews(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.done) {
-                            if (snapshot.hasData) {
-                              return NewsWidget(
-                                  news: snapshot.data as List<News>);
-                            } else {
-                              return const Text(
-                                  "Error: Data not available");
-                            }
-                          } else {
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          }
-                        },
-                      ),
+                      child: DataLoader.cachedNews != null
+                          ? NewsWidget(news: DataLoader.cachedNews!)
+                          : FutureBuilder(
+                              future: DataLoader.getNews(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.done) {
+                                  if (snapshot.hasData) {
+                                    return NewsWidget(
+                                        news: snapshot.data as List<News>);
+                                  } else {
+                                    return const Text(
+                                        "Error: Data not available");
+                                  }
+                                } else {
+                                  return const Center(
+                                      child: CircularProgressIndicator());
+                                }
+                              },
+                            ),
                     ),
                   ],
                 ),
@@ -117,7 +119,8 @@ class NewsWidget extends StatelessWidget {
                   ),
                   if (news[i].file != null)
                     ElevatedButton(
-                        onPressed: () async {}, child: Text(news[i].file!.name)),
+                        onPressed: () async {},
+                        child: Text(news[i].file!.name)),
                   if (i != news.length - 1) const Divider(),
                 ],
               ),

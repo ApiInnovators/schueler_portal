@@ -6,45 +6,45 @@ import 'package:schueler_portal/main.dart';
 import 'api/response_models/api/news.dart';
 
 class DataLoader {
-  static Stundenplan? _cachedStundenplan;
-  static Vertretungsplan? _cachedVertretungsplan;
-  static List<News>? _cachedNews;
-  static List<Hausaufgabe>? _cachedHomework;
+  static Stundenplan? cachedStundenplan;
+  static Vertretungsplan? cachedVertretungsplan;
+  static List<News>? cachedNews;
+  static List<Hausaufgabe>? cachedHomework;
 
   static fetchData() {
-    apiClient.getNews().then((value) => _cachedNews = value);
-    apiClient.getStundenplan().then((value) => _cachedStundenplan = value);
+    apiClient.getNews().then((value) => cachedNews = value);
+    apiClient.getStundenplan().then((value) => cachedStundenplan = value);
     apiClient
         .getVertretungsplan()
-        .then((value) => _cachedVertretungsplan = value);
-    apiClient.getHomework().then((value) => _cachedHomework = value);
+        .then((value) => cachedVertretungsplan = value);
+    apiClient.getHomework().then((value) => cachedHomework = value);
   }
 
   static Future<Stundenplan> getStundenplan() async {
-    while (_cachedStundenplan == null) {
+    while (cachedStundenplan == null) {
       await Future.delayed(const Duration(milliseconds: 50));
     }
-    return _cachedStundenplan!;
+    return cachedStundenplan!;
   }
 
   static Future<Vertretungsplan> getVertretungsplan() async {
-    while (_cachedVertretungsplan == null) {
+    while (cachedVertretungsplan == null) {
       await Future.delayed(const Duration(milliseconds: 50));
     }
-    return _cachedVertretungsplan!;
+    return cachedVertretungsplan!;
   }
 
   static Future<List<News>> getNews() async {
-    while (_cachedNews == null) {
+    while (cachedNews == null) {
       await Future.delayed(const Duration(milliseconds: 50));
     }
-    return _cachedNews!;
+    return cachedNews!;
   }
 
   static Future<List<Hausaufgabe>> getHomework() async {
-    while (_cachedHomework == null) {
+    while (cachedHomework == null) {
       await Future.delayed(const Duration(milliseconds: 50));
     }
-    return _cachedHomework!;
+    return cachedHomework!;
   }
 }

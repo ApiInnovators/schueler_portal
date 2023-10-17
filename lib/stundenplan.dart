@@ -56,26 +56,30 @@ class _StundenplanContainer extends State<StatefulWidget> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    FutureBuilder(
-                      future: DataLoader.getStundenplan(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.done) {
-                          if (snapshot.hasData) {
-                            return StundenplanWidget(
-                              scheduleData: snapshot.data
-                                  as stundenplan_package.Stundenplan,
-                              stundenplanContainer: this,
-                            );
-                          } else {
-                            return const Text("Error: Data not available");
-                          }
-                        } else {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-                      },
-                    ),
+                    DataLoader.cachedStundenplan != null
+                        ? StundenplanWidget(
+                            scheduleData: DataLoader.cachedStundenplan!,
+                            stundenplanContainer: this)
+                        : FutureBuilder(
+                            future: DataLoader.getStundenplan(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.done) {
+                                if (snapshot.hasData) {
+                                  return StundenplanWidget(
+                                    scheduleData: snapshot.data!,
+                                    stundenplanContainer: this,
+                                  );
+                                } else {
+                                  return const Text(
+                                      "Error: Data not available");
+                                }
+                              } else {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              }
+                            },
+                          ),
                     const SizedBox(
                       height: 50,
                       child: Center(
@@ -85,26 +89,31 @@ class _StundenplanContainer extends State<StatefulWidget> {
                         ),
                       ),
                     ),
-                    FutureBuilder(
-                      future: DataLoader.getVertretungsplan(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.done) {
-                          if (snapshot.hasData) {
-                            return VertretungsplanWidget(
-                              vertretungsplanData: snapshot.data
-                                  as vertretungsplan_package.Vertretungsplan,
-                              stundenplanContainer: this,
-                            );
-                          } else {
-                            return const Text("Error: Data not available");
-                          }
-                        } else {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-                      },
-                    ),
+                    DataLoader.cachedVertretungsplan != null
+                        ? VertretungsplanWidget(
+                            stundenplanContainer: this,
+                            vertretungsplanData:
+                                DataLoader.cachedVertretungsplan!)
+                        : FutureBuilder(
+                            future: DataLoader.getVertretungsplan(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.done) {
+                                if (snapshot.hasData) {
+                                  return VertretungsplanWidget(
+                                    vertretungsplanData: snapshot.data!,
+                                    stundenplanContainer: this,
+                                  );
+                                } else {
+                                  return const Text(
+                                      "Error: Data not available");
+                                }
+                              } else {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              }
+                            },
+                          ),
                   ],
                 ),
               ),

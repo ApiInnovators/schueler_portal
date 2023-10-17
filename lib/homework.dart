@@ -12,6 +12,84 @@ class HomeworkWidget extends StatefulWidget {
 }
 
 class _HomeworkWidget extends State<StatefulWidget> {
+  DefaultTabController buildTabController(List<Hausaufgabe> data) {
+    data.sort((a, b) => a.dueAt.compareTo(b.dueAt));
+
+    List<Hausaufgabe> erledigteHausaufgaben =
+        data.where((element) => element.completed).toList();
+    List<Hausaufgabe> nichtErledigteHausaufgaben =
+        data.where((element) => !element.completed).toList();
+
+    return DefaultTabController(
+      length: 3,
+      initialIndex: 1,
+      child: Scaffold(
+        appBar: const TabBar(
+          tabs: [
+            Tab(
+              text: "Vergangen",
+            ),
+            Tab(
+              text: "Aktuell",
+            ),
+            Tab(
+              text: "Heute",
+            ),
+          ],
+        ),
+        body: TabBarView(
+          children: [
+            const Text("No data"),
+            data.isEmpty
+                ? const Center(child: Text("Keine Hausaufgaben"))
+                : SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 10),
+                        const Text(
+                          "Zu erledigen",
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        Column(
+                          children: List.generate(
+                              nichtErledigteHausaufgaben.length,
+                              (i) => Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 3),
+                                    child: SingleHomeworkWidget(
+                                      hausaufgabe:
+                                          nichtErledigteHausaufgaben[i],
+                                    ),
+                                  )),
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          "Erledigt",
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        Column(
+                          children: List.generate(
+                              erledigteHausaufgaben.length,
+                              (i) => Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 3),
+                                    child: SingleHomeworkWidget(
+                                      hausaufgabe: erledigteHausaufgaben[i],
+                                    ),
+                                  )),
+                        )
+                      ],
+                    ),
+                  ),
+            const Text("No Data"),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,97 +97,22 @@ class _HomeworkWidget extends State<StatefulWidget> {
         title: const Text("Hausaufgaben"),
         centerTitle: true,
       ),
-      body: FutureBuilder(
-        future: DataLoader.getHomework(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasData) {
-              snapshot.data!.sort((a, b) => a.dueAt.compareTo(b.dueAt));
-
-              List<Hausaufgabe> erledigteHausaufgaben =
-                  snapshot.data!.where((element) => element.completed).toList();
-              List<Hausaufgabe> nichtErledigteHausaufgaben = snapshot.data!
-                  .where((element) => !element.completed)
-                  .toList();
-
-              return DefaultTabController(
-                length: 3,
-                initialIndex: 1,
-                child: Scaffold(
-                  appBar: const TabBar(
-                    tabs: [
-                      Tab(
-                        text: "Heute",
-                      ),
-                      Tab(
-                        text: "Aktuell",
-                      ),
-                      Tab(
-                        text: "Vergangen",
-                      ),
-                    ],
-                  ),
-                  body: TabBarView(
-                    children: [
-                      const Text("No data"),
-                      if (snapshot.data!.isEmpty)
-                        const Center(child: Text("Keine Hausaufgaben")),
-                      if (snapshot.data!.isNotEmpty)
-                        SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              const SizedBox(height: 10),
-                              const Text(
-                                "Zu erledigen",
-                                style: TextStyle(
-                                    fontSize: 20, fontWeight: FontWeight.bold),
-                              ),
-                              Column(
-                                children: List.generate(
-                                    nichtErledigteHausaufgaben.length,
-                                    (i) => Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 10, vertical: 3),
-                                          child: SingleHomeworkWidget(
-                                            hausaufgabe:
-                                                nichtErledigteHausaufgaben[i],
-                                          ),
-                                        )),
-                              ),
-                              const SizedBox(height: 10),
-                              const Text(
-                                "Erledigt",
-                                style: TextStyle(
-                                    fontSize: 20, fontWeight: FontWeight.bold),
-                              ),
-                              Column(
-                                children: List.generate(
-                                    erledigteHausaufgaben.length,
-                                    (i) => Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 10, vertical: 3),
-                                          child: SingleHomeworkWidget(
-                                            hausaufgabe:
-                                                erledigteHausaufgaben[i],
-                                          ),
-                                        )),
-                              )
-                            ],
-                          ),
-                        ),
-                      const Text("No Data"),
-                    ],
-                  ),
-                ),
-              );
-            } else {
-              return const Text("Error: Data not available");
-            }
-          } else {
-            return const Center(child: CircularProgressIndicator());
-          }
-        },
-      ),
+      body: DataLoader.cachedHomework != null
+          ? buildTabController(DataLoader.cachedHomework as List<Hausaufgabe>)
+          : FutureBuilder(
+              future: DataLoader.getHomework(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (snapshot.hasData) {
+                    return buildTabController(snapshot.data!);
+                  } else {
+                    return const Text("Error: Data not available");
+                  }
+                } else {
+                  return const Center(child: CircularProgressIndicator());
+                }
+              },
+            ),
     );
   }
 }

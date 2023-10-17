@@ -37,25 +37,23 @@ class _HomeWidget extends State<StatefulWidget> {
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
                     ),
                     Expanded(
-                      child: SingleChildScrollView(
-                        child: FutureBuilder(
-                          future: DataLoader.getNews(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.done) {
-                              if (snapshot.hasData) {
-                                return NewsWidget(
-                                    news: snapshot.data as List<News>);
-                              } else {
-                                return const Text(
-                                    "Error: Data not available");
-                              }
+                      child: FutureBuilder(
+                        future: DataLoader.getNews(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.done) {
+                            if (snapshot.hasData) {
+                              return NewsWidget(
+                                  news: snapshot.data as List<News>);
                             } else {
-                              return const Center(
-                                  child: CircularProgressIndicator());
+                              return const Text(
+                                  "Error: Data not available");
                             }
-                          },
-                        ),
+                          } else {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
+                        },
                       ),
                     ),
                   ],
@@ -95,35 +93,37 @@ class NewsWidget extends StatelessWidget {
       return const Center(child: Text("Keine Nachrichten"));
     }
 
-    return Center(
-      child: Column(
-        children: List.generate(news.length, (i) {
-          return Container(
-            margin: const EdgeInsets.all(10),
-            child: Column(
-              children: [
-                Center(
-                    child: Text(
-                  news[i].title,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 20),
-                )),
-                Center(
-                    child: Text(
-                  news[i].content,
-                  style: const TextStyle(fontSize: 12),
-                )),
-                const SizedBox(
-                  height: 10,
-                ),
-                if (news[i].file != null)
-                  ElevatedButton(
-                      onPressed: () async {}, child: Text(news[i].file!.name)),
-                if (i != news.length - 1) const Divider(),
-              ],
-            ),
-          );
-        }),
+    return SingleChildScrollView(
+      child: Center(
+        child: Column(
+          children: List.generate(news.length, (i) {
+            return Container(
+              margin: const EdgeInsets.all(10),
+              child: Column(
+                children: [
+                  Center(
+                      child: Text(
+                    news[i].title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 20),
+                  )),
+                  Center(
+                      child: Text(
+                    news[i].content,
+                    style: const TextStyle(fontSize: 12),
+                  )),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  if (news[i].file != null)
+                    ElevatedButton(
+                        onPressed: () async {}, child: Text(news[i].file!.name)),
+                  if (i != news.length - 1) const Divider(),
+                ],
+              ),
+            );
+          }),
+        ),
       ),
     );
   }

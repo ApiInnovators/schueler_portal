@@ -141,7 +141,7 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
     return SizedBox(
       height: 100,
       child: OutlinedButton(
-          style: ElevatedButton.styleFrom(
+          style: OutlinedButton.styleFrom(
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             foregroundColor: Colors.black,

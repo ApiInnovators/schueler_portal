@@ -3,6 +3,7 @@ import 'package:schueler_portal/api/response_models/api/stundenplan.dart';
 import 'package:schueler_portal/api/response_models/api/vertretungsplan.dart';
 import 'package:schueler_portal/main.dart';
 
+import 'api/response_models/api/chat.dart';
 import 'api/response_models/api/news.dart';
 
 class DataLoader {
@@ -10,6 +11,7 @@ class DataLoader {
   static Vertretungsplan? cachedVertretungsplan;
   static List<News>? cachedNews;
   static List<Hausaufgabe>? cachedHomework;
+  static List<Chat>? cachedChats;
 
   static fetchData() {
     apiClient.getNews().then((value) => cachedNews = value);
@@ -18,6 +20,7 @@ class DataLoader {
         .getVertretungsplan()
         .then((value) => cachedVertretungsplan = value);
     apiClient.getHomework().then((value) => cachedHomework = value);
+    apiClient.getChats().then((value) => cachedChats = value);
   }
 
   static Future<Stundenplan> getStundenplan() async {
@@ -46,5 +49,12 @@ class DataLoader {
       await Future.delayed(const Duration(milliseconds: 50));
     }
     return cachedHomework!;
+  }
+
+  static Future<List<Chat>> getChats() async {
+    while (cachedChats == null) {
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
+    return cachedChats!;
   }
 }

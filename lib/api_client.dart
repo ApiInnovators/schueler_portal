@@ -6,6 +6,7 @@ import 'package:schueler_portal/api/request_models/base_request.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 import 'package:schueler_portal/api/response_models/api/news.dart';
 
+import 'api/response_models/api/chat.dart';
 import 'api/response_models/api/stundenplan.dart';
 import 'api/response_models/api/vertretungsplan.dart';
 
@@ -46,4 +47,7 @@ class ApiClient {
 
   Future<List<Hausaufgabe>> getHomework() async =>
       hausaufgabeFromJson(utf8.decode((await _put("/hausaufgaben")).bodyBytes));
+
+  Future<List<Chat>> getChats() async => 
+      chatFromJson(utf8.decode((await _put("/chat")).bodyBytes));
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:schueler_portal/chats.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/home.dart';
 import 'package:schueler_portal/homework.dart';
@@ -43,6 +44,65 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int currentPageIndex = 0;
 
+  Widget chatsNavigationDestination() {
+    NavigationDestination constructDestination(int unreadChats) {
+      return NavigationDestination(
+        selectedIcon: Badge(
+          label: Text(unreadChats.toString()),
+          child: const Icon(Icons.chat_bubble),
+        ),
+        icon: Badge(
+          label: Text(unreadChats.toString()),
+          child: const Icon(Icons.chat_bubble_outline),
+        ),
+        label: 'Chats',
+      );
+    }
+
+    if (DataLoader.cachedChats != null) {
+      int unreadChats = DataLoader.cachedChats!
+          .where((element) => element.unreadMessagesCount > 0)
+          .length;
+      return constructDestination(unreadChats);
+    }
+
+    return FutureBuilder(
+      future: DataLoader.getChats(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData) {
+          int unreadChats = snapshot.data!
+              .where((element) => element.unreadMessagesCount > 0)
+              .length;
+          return constructDestination(unreadChats);
+        }
+
+        return const NavigationDestination(
+          selectedIcon: Badge(
+              label: SizedBox.square(
+                dimension: 5,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 1.5,
+                ),
+              ),
+              child: Icon(Icons.chat_bubble)),
+          icon: Badge(
+            label: SizedBox.square(
+              dimension: 5,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 1.5,
+              ),
+            ),
+            child: Icon(Icons.chat_bubble_outline),
+          ),
+          label: 'Chats',
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,23 +113,19 @@ class _MyHomePageState extends State<MyHomePage> {
           });
         },
         selectedIndex: currentPageIndex,
-        destinations: const <Widget>[
-          NavigationDestination(
+        destinations: <Widget>[
+          const NavigationDestination(
             selectedIcon: Icon(Icons.home),
             icon: Icon(Icons.home_outlined),
             label: 'Home',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             selectedIcon: Icon(Icons.edit),
             icon: Icon(Icons.edit_outlined),
             label: 'Hausaufgaben',
           ),
-          NavigationDestination(
-            selectedIcon: Icon(Icons.chat_bubble),
-            icon: Icon(Icons.chat_bubble_outline),
-            label: 'Chats',
-          ),
-          NavigationDestination(
+          chatsNavigationDestination(),
+          const NavigationDestination(
             selectedIcon: Icon(Icons.table_chart),
             icon: Icon(Icons.table_chart_outlined),
             label: 'Stundenplan',
@@ -79,10 +135,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: <Widget>[
         const HomeWidget(),
         const HomeworkWidget(),
-        Container(
-          alignment: Alignment.center,
-          child: const Text('Chats'),
-        ),
+        const ChatsWidget(),
         const StundenplanContainer(),
       ][currentPageIndex],
     );

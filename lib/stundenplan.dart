@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_scroll_shadow/flutter_scroll_shadow.dart';
 import 'package:intl/intl.dart';
 import 'package:schueler_portal/api/response_models/api/vertretungsplan.dart'
     as vertretungsplan_package;
@@ -54,61 +53,59 @@ class _StundenplanContainer extends State<StatefulWidget> {
               ],
             ),
             Expanded(
-              child: ScrollShadow(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      FutureBuilder(
-                        future: DataLoader.getStundenplan(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.done) {
-                            if (snapshot.hasData) {
-                              return StundenplanWidget(
-                                scheduleData: snapshot.data
-                                    as stundenplan_package.Stundenplan,
-                                stundenplanContainer: this,
-                              );
-                            } else {
-                              return const Text("Error: Data not available");
-                            }
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    FutureBuilder(
+                      future: DataLoader.getStundenplan(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.done) {
+                          if (snapshot.hasData) {
+                            return StundenplanWidget(
+                              scheduleData: snapshot.data
+                                  as stundenplan_package.Stundenplan,
+                              stundenplanContainer: this,
+                            );
                           } else {
-                            return const Center(
-                                child: CircularProgressIndicator());
+                            return const Text("Error: Data not available");
                           }
-                        },
-                      ),
-                      const SizedBox(
-                        height: 50,
-                        child: Center(
-                          child: Text(
-                            "Vertretungsplan",
-                            style: TextStyle(fontSize: 20),
-                          ),
+                        } else {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+                      },
+                    ),
+                    const SizedBox(
+                      height: 50,
+                      child: Center(
+                        child: Text(
+                          "Vertretungsplan",
+                          style: TextStyle(fontSize: 20),
                         ),
                       ),
-                      FutureBuilder(
-                        future: DataLoader.getVertretungsplan(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.done) {
-                            if (snapshot.hasData) {
-                              return VertretungsplanWidget(
-                                vertretungsplanData: snapshot.data
-                                    as vertretungsplan_package.Vertretungsplan,
-                                stundenplanContainer: this,
-                              );
-                            } else {
-                              return const Text("Error: Data not available");
-                            }
+                    ),
+                    FutureBuilder(
+                      future: DataLoader.getVertretungsplan(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.done) {
+                          if (snapshot.hasData) {
+                            return VertretungsplanWidget(
+                              vertretungsplanData: snapshot.data
+                                  as vertretungsplan_package.Vertretungsplan,
+                              stundenplanContainer: this,
+                            );
                           } else {
-                            return const Center(
-                                child: CircularProgressIndicator());
+                            return const Text("Error: Data not available");
                           }
-                        },
-                      ),
-                    ],
-                  ),
+                        } else {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),

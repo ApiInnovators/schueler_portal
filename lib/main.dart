@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:schueler_portal/api/response_models/api/user.dart';
 import 'package:schueler_portal/chats.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/home.dart';
@@ -9,10 +10,12 @@ import 'package:schueler_portal/api_client.dart';
 
 ApiClient apiClient =
     ApiClient(Secrets.email, Secrets.password, Secrets.schulkuerzel);
+late User user;
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
   DataLoader.fetchData();
+  user = await DataLoader.getUser();
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {

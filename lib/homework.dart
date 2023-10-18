@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:fading_edge_scrollview/fading_edge_scrollview.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:open_file/open_file.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 import 'package:schueler_portal/data_loader.dart';
+import 'package:schueler_portal/main.dart';
 
 class HomeworkWidget extends StatefulWidget {
   const HomeworkWidget({super.key});
@@ -165,7 +169,12 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
                           children: List.generate(
                             widget.hausaufgabe.files.length,
                             (i) => ElevatedButton(
-                                onPressed: () {},
+                                onPressed: () async {
+                                  File? file = await apiClient.downloadFile(widget.hausaufgabe.files[i]);
+                                  if (file != null) {
+                                    OpenFile.open(file.path);
+                                  }
+                                },
                                 child: Text(widget.hausaufgabe.files[i].name)),
                           ),
                         ),

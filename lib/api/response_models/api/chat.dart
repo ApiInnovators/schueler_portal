@@ -4,6 +4,8 @@
 
 import 'dart:convert';
 
+import 'chat/id.dart';
+
 List<Chat> chatFromJson(String str) => List<Chat>.from(json.decode(str).map((x) => Chat.fromJson(x)));
 
 String chatToJson(List<Chat> data) => json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
@@ -144,10 +146,6 @@ class Owner {
     "role": roleValues.reverse[role],
     "info": info,
   };
-}
-
-enum Role {
-  IP_USER
 }
 
 final roleValues = EnumValues({

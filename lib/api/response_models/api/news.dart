@@ -4,6 +4,8 @@
 
 import 'dart:convert';
 
+import 'hausaufgaben.dart';
+
 List<News> newsFromJson(String str) =>
     List<News>.from(json.decode(str).map((x) => News.fromJson(x)));
 
@@ -14,7 +16,7 @@ class News {
   final int id;
   final String title;
   final String content;
-  final FileClass? file;
+  final FileElement? file;
   final DateTime validFrom;
   final DateTime validTo;
   final DateTime createdAt;
@@ -39,7 +41,7 @@ class News {
         id: json["id"],
         title: json["title"],
         content: json["content"],
-        file: json["file"] == null ? null : FileClass.fromJson(json["file"]),
+        file: json["file"] == null ? null : FileElement.fromJson(json["file"]),
         validFrom: DateTime.parse(json["valid_from"]),
         validTo: DateTime.parse(json["valid_to"]),
         createdAt: DateTime.parse(json["created_at"]),
@@ -66,29 +68,5 @@ class News {
         "restricted_to_user_groups": restrictedToUserGroups == null
             ? []
             : List<dynamic>.from(restrictedToUserGroups!.map((x) => x)),
-      };
-}
-
-class FileClass {
-  final int id;
-  final String name;
-  final String link;
-
-  FileClass({
-    required this.id,
-    required this.name,
-    required this.link,
-  });
-
-  factory FileClass.fromJson(Map<String, dynamic> json) => FileClass(
-        id: json["id"],
-        name: json["name"],
-        link: json["link"],
-      );
-
-  Map<String, dynamic> toJson() => {
-        "id": id,
-        "name": name,
-        "link": link,
       };
 }

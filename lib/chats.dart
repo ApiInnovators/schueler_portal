@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'api/response_models/api/chat.dart';
+import 'chat_room.dart';
 import 'data_loader.dart';
 
 class ChatsWidget extends StatefulWidget {
@@ -37,8 +38,8 @@ class _ChatsWidget extends State<StatefulWidget> {
         return -1; // b comes after a
       }
 
-      return (aTimestamp ?? DateTime.fromMillisecondsSinceEpoch(0))
-          .compareTo(bTimestamp ?? DateTime.fromMillisecondsSinceEpoch(0));
+      return (bTimestamp ?? DateTime.fromMillisecondsSinceEpoch(0))
+          .compareTo(aTimestamp ?? DateTime.fromMillisecondsSinceEpoch(0));
     });
 
     List<Chat> searchResult = data;
@@ -125,7 +126,8 @@ class SingleChatWidget extends StatefulWidget {
     } else if (difference.inDays > 1) {
       return 'vor ${difference.inDays} Tagen';
     } else if (difference.inHours > 0) {
-      return DateFormat.jm().format(dateTime); // Format time if it's more than an hour ago
+      return DateFormat.jm()
+          .format(dateTime); // Format time if it's more than an hour ago
     } else {
       return 'vor ${difference.inMinutes} minuten'; // Less than an hour ago
     }
@@ -148,7 +150,14 @@ class _SingleChatsWidget extends State<SingleChatWidget> {
               foregroundColor: Colors.black,
               padding: const EdgeInsets.only(left: 5, right: 5, bottom: 5),
             ),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatRoom(chat: widget.chat),
+                ),
+              );
+            },
             child: Column(
               children: [
                 Row(
@@ -188,7 +197,8 @@ class _SingleChatsWidget extends State<SingleChatWidget> {
                           Expanded(
                             child: Column(
                               children: [
-                                if (widget.chat.latestMessage!.text != null) ...[
+                                if (widget.chat.latestMessage!.text !=
+                                    null) ...[
                                   Flexible(
                                     child: Container(
                                       alignment: Alignment.topLeft,
@@ -201,13 +211,15 @@ class _SingleChatsWidget extends State<SingleChatWidget> {
                                 ] else ...[
                                   const Text(
                                     "Nachricht gelöscht",
-                                    style: TextStyle(fontStyle: FontStyle.italic),
+                                    style:
+                                        TextStyle(fontStyle: FontStyle.italic),
                                   )
                                 ],
                                 Container(
                                   alignment: Alignment.bottomLeft,
                                   child: Text(
-                                    SingleChatWidget.timeDifferenceAsString(widget.chat.latestMessage!.timestamp),
+                                    SingleChatWidget.timeDifferenceAsString(
+                                        widget.chat.latestMessage!.timestamp),
                                     style: const TextStyle(fontSize: 10),
                                   ),
                                 ),

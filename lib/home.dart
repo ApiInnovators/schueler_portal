@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:open_file/open_file.dart';
+import 'package:schueler_portal/main.dart';
 
 import 'api/response_models/api/news.dart';
 import 'data_loader.dart';
@@ -119,7 +123,12 @@ class NewsWidget extends StatelessWidget {
                   ),
                   if (news[i].file != null)
                     ElevatedButton(
-                        onPressed: () async {},
+                        onPressed: () async {
+                          File? file = await apiClient.downloadFile(news[i].file!);
+                          if (file != null) {
+                            OpenFile.open(file.path);
+                          }
+                        },
                         child: Text(news[i].file!.name)),
                   if (i != news.length - 1) const Divider(),
                 ],

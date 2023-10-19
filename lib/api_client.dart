@@ -18,7 +18,7 @@ import 'api/response_models/api/vertretungsplan.dart';
 
 class ApiClient {
   IOClient client = IOClient();
-  String baseUri = "http://192.168.178.42:8134/schueler_portal";
+  String baseUri = "https://apiinnovators.site/schueler_portal";
 
   late BaseRequest baseRequest;
   late String baseRequestJson;

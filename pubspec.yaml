@@ -33,14 +33,7 @@ dependencies:
   http: ^1.1.0
   intl: ^0.17.0
   fading_edge_scrollview: ^3.0.0
-  flutter_chat_ui: ^1.6.9
-  flutter_chat_types: ^3.6.2
-  file_picker: ^6.0.0
-  image_picker: ^1.0.4
-  mime: ^1.0.4
-  open_filex: ^4.3.4
   path_provider: ^2.1.1
-  uuid: ^4.1.0
   permission_handler: ^11.0.1
   fluttertoast: ^8.2.2
   open_file: ^3.3.2

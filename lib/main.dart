@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:schueler_portal/api/response_models/api/user.dart';
 import 'package:schueler_portal/chats.dart';
 import 'package:schueler_portal/data_loader.dart';
+import 'package:schueler_portal/failed_request.dart';
 import 'package:schueler_portal/home.dart';
 import 'package:schueler_portal/homework.dart';
 import 'package:schueler_portal/secrets.dart';
 import 'package:schueler_portal/stundenplan.dart';
 import 'package:schueler_portal/api_client.dart';
 
+import 'api/response_models/api/chat.dart';
+
 ApiClient apiClient =
     ApiClient(Secrets.email, Secrets.password, Secrets.schulkuerzel);
-late User user;
 
 Future<void> main() async {
-  DataLoader.fetchData();
-  user = await DataLoader.getUser();
+  DataLoader.cacheData();
   runApp(const MyApp());
 }
 
@@ -26,8 +26,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Schüler Portal',
       theme: ThemeData(
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Home Page'),
@@ -62,22 +61,40 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
 
-    if (DataLoader.cachedChats != null) {
-      int unreadChats = DataLoader.cachedChats!
+    int countUnreadChats() {
+      if (DataLoader.cache.chats == null) {
+        return -1;
+      }
+
+      ApiResponse<List<Chat>>? chats = DataLoader.cache.chats;
+
+      if (chats!.statusCode != 200) {
+        return -1;
+      }
+
+      return chats.data!
           .where((element) => element.unreadMessagesCount > 0)
           .length;
-      return constructDestination(unreadChats);
+    }
+
+    if (DataLoader.cache.chats != null) {
+      return constructDestination(countUnreadChats());
     }
 
     return FutureBuilder(
       future: DataLoader.getChats(),
+      initialData: DataLoader.cache.chats,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.hasData) {
-          int unreadChats = snapshot.data!
-              .where((element) => element.unreadMessagesCount > 0)
-              .length;
-          return constructDestination(unreadChats);
+          if (snapshot.data!.statusCode == 200) {
+            int unreadChats = snapshot.data!.data!
+                .where((element) => element.unreadMessagesCount > 0)
+                .length;
+            return constructDestination(unreadChats);
+          } else {
+            return FailedRequestWidget(apiResponse: snapshot.data!);
+          }
         }
 
         return const NavigationDestination(

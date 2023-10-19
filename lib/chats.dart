@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:schueler_portal/failed_request.dart';
 
 import 'api/response_models/api/chat.dart';
 import 'chat_room.dart';
@@ -92,22 +93,25 @@ class _ChatsWidget extends State<StatefulWidget> {
         centerTitle: true,
         title: const Text("Chats"),
       ),
-      body: DataLoader.cachedChats != null
-          ? buildChats(DataLoader.cachedChats!)
-          : FutureBuilder(
-              future: DataLoader.getChats(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (snapshot.hasData) {
-                    return buildChats(snapshot.data!);
-                  } else {
-                    return const Text("Error: Data not available");
-                  }
-                } else {
-                  return const Center(child: CircularProgressIndicator());
-                }
-              },
-            ),
+      body: FutureBuilder(
+        future: DataLoader.getChats(),
+        initialData: DataLoader.cache.chats,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasData) {
+              if (snapshot.data!.statusCode == 200) {
+                return buildChats(snapshot.data!.data!);
+              } else {
+                return FailedRequestWidget(apiResponse: snapshot.data!);
+              }
+            } else {
+              return const Text("Error: Data not available");
+            }
+          } else {
+            return const Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
     );
   }
 }

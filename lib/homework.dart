@@ -8,6 +8,8 @@ import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/main.dart';
 
+import 'failed_request.dart';
+
 class HomeworkWidget extends StatefulWidget {
   const HomeworkWidget({super.key});
 
@@ -101,22 +103,25 @@ class _HomeworkWidget extends State<StatefulWidget> {
         title: const Text("Hausaufgaben"),
         centerTitle: true,
       ),
-      body: DataLoader.cachedHomework != null
-          ? buildTabController(DataLoader.cachedHomework as List<Hausaufgabe>)
-          : FutureBuilder(
-              future: DataLoader.getHomework(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (snapshot.hasData) {
-                    return buildTabController(snapshot.data!);
-                  } else {
-                    return const Text("Error: Data not available");
-                  }
-                } else {
-                  return const Center(child: CircularProgressIndicator());
-                }
-              },
-            ),
+      body: FutureBuilder(
+        future: DataLoader.getHausaufgaben(),
+        initialData: DataLoader.cache.hausaufgaben,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasData) {
+              if (snapshot.data!.data != null) {
+                return buildTabController(snapshot.data!.data!);
+              } else {
+                return FailedRequestWidget(apiResponse: snapshot.data!);
+              }
+            } else {
+              return const Text("Error: Data not available");
+            }
+          } else {
+            return const Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
     );
   }
 }
@@ -170,7 +175,8 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
                             widget.hausaufgabe.files.length,
                             (i) => ElevatedButton(
                                 onPressed: () async {
-                                  File? file = await apiClient.downloadFile(widget.hausaufgabe.files[i]);
+                                  File? file = await apiClient.downloadFile(
+                                      widget.hausaufgabe.files[i]);
                                   if (file != null) {
                                     OpenFile.open(file.path);
                                   }

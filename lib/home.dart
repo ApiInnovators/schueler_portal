@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
+import 'package:schueler_portal/failed_request.dart';
 import 'package:schueler_portal/main.dart';
 
 import 'api/response_models/api/news.dart';
@@ -41,26 +42,27 @@ class _HomeWidget extends State<StatefulWidget> {
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
                     ),
                     Expanded(
-                      child: DataLoader.cachedNews != null
-                          ? NewsWidget(news: DataLoader.cachedNews!)
-                          : FutureBuilder(
-                              future: DataLoader.getNews(),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.done) {
-                                  if (snapshot.hasData) {
-                                    return NewsWidget(
-                                        news: snapshot.data as List<News>);
-                                  } else {
-                                    return const Text(
-                                        "Error: Data not available");
-                                  }
-                                } else {
-                                  return const Center(
-                                      child: CircularProgressIndicator());
-                                }
-                              },
-                            ),
+                      child: FutureBuilder(
+                        future: DataLoader.getNews(),
+                        initialData: DataLoader.cache.news,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.done) {
+                            if (snapshot.hasData) {
+                              if (snapshot.data!.data != null) {
+                                return NewsWidget(news: snapshot.data!.data!);
+                              } else {
+                                return FailedRequestWidget(apiResponse: snapshot.data!);
+                              }
+                            } else {
+                              return const Text("Error: Data not available");
+                            }
+                          } else {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -124,7 +126,8 @@ class NewsWidget extends StatelessWidget {
                   if (news[i].file != null)
                     ElevatedButton(
                         onPressed: () async {
-                          File? file = await apiClient.downloadFile(news[i].file!);
+                          File? file =
+                              await apiClient.downloadFile(news[i].file!);
                           if (file != null) {
                             OpenFile.open(file.path);
                           }

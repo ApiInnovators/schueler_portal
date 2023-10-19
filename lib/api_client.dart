@@ -8,13 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:schueler_portal/api/request_models/base_request.dart';
 import 'package:schueler_portal/api/request_models/download_file.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
-import 'package:schueler_portal/api/response_models/api/news.dart';
 
-import 'api/response_models/api/chat.dart';
-import 'api/response_models/api/chat/id.dart';
-import 'api/response_models/api/stundenplan.dart';
-import 'api/response_models/api/user.dart';
-import 'api/response_models/api/vertretungsplan.dart';
 
 class ApiClient {
   IOClient client = IOClient();
@@ -51,26 +45,16 @@ class ApiClient {
         headers: {"Content-Type": "application/json"}, body: body);
   }
 
-  Future<List<News>> getNews() async =>
-      newsFromJson(utf8.decode((await _put("/news")).bodyBytes));
+  Future<ApiResponse<T>> putAndParse<T>(
+      String url, T Function(String) parser) async {
+    Response resp = await _put(url);
 
-  Future<Vertretungsplan> getVertretungsplan() async => vertretungsplanFromJson(
-      utf8.decode((await _put("/vertretungsplan")).bodyBytes));
+    if (resp.statusCode == 200) {
+      return ApiResponse(resp, data: parser(utf8.decode(resp.bodyBytes)));
+    }
 
-  Future<Stundenplan> getStundenplan() async =>
-      stundenplanFromJson(utf8.decode((await _put("/stundenplan")).bodyBytes));
-
-  Future<List<Hausaufgabe>> getHomework() async =>
-      hausaufgabeFromJson(utf8.decode((await _put("/hausaufgaben")).bodyBytes));
-
-  Future<List<Chat>> getChats() async =>
-      chatFromJson(utf8.decode((await _put("/chat")).bodyBytes));
-
-  Future<ChatDetails> getChatDetails(int chatId) async => chatDetailsFromJson(
-      utf8.decode((await _put("/chat--$chatId")).bodyBytes));
-
-  Future<User> getUser() async =>
-      userFromJson(utf8.decode((await _put("/user")).bodyBytes));
+    return ApiResponse(resp);
+  }
 
   Future<File?> downloadFile(FileElement file,
       {bool checkIfCached = true}) async {
@@ -104,4 +88,18 @@ class ApiClient {
     Fluttertoast.showToast(msg: "Download failed: ${response.reasonPhrase}");
     return null;
   }
+}
+
+class ApiResponse<T> extends Response {
+  final T? data;
+
+  ApiResponse(Response response, {this.data})
+      : super(
+          response.reasonPhrase ?? "",
+          response.statusCode,
+          headers: response.headers,
+          isRedirect: response.isRedirect,
+          persistentConnection: response.persistentConnection,
+          request: response.request,
+        );
 }

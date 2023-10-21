@@ -1,25 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:schueler_portal/api/request_models/base_request.dart';
 import 'package:schueler_portal/chats.dart';
 import 'package:schueler_portal/data_loader.dart';
-import 'package:schueler_portal/failed_request.dart';
 import 'package:schueler_portal/home.dart';
 import 'package:schueler_portal/homework.dart';
-import 'package:schueler_portal/secrets.dart';
 import 'package:schueler_portal/stundenplan.dart';
 import 'package:schueler_portal/api_client.dart';
+import 'package:schueler_portal/user_login.dart';
 
 import 'api/response_models/api/chat.dart';
-
-ApiClient apiClient =
-    ApiClient(Secrets.email, Secrets.password, Secrets.schulkuerzel);
+import 'my_future_builder.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  BaseRequest? loadedLogin = await UserLogin.load();
+
+  if (loadedLogin == null) {
+    runApp(const MyApp(openLoginPage: true));
+    return;
+  }
+
+  ApiClient.updateCredentials(loadedLogin);
   DataLoader.cacheData();
-  runApp(const MyApp());
+
+  runApp(const MyApp(openLoginPage: false));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget {
+  final bool openLoginPage;
+
+  const MyApp({Key? key, required this.openLoginPage}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => MyAppState();
+}
+
+class MyAppState extends State<MyApp> {
+  late bool _loginSuccessful;
+
+  @override
+  void initState() {
+    super.initState();
+    _loginSuccessful = !widget.openLoginPage;
+    if (!widget.openLoginPage) _initLogin();
+  }
+
+  setLogin(bool success) {
+    setState(() {
+      _loginSuccessful = success;
+    });
+  }
+
+  Future<void> _initLogin() async {
+    var loginReq = ApiClient.baseRequest;
+
+    final result = await ApiClient.validateLogin(loginReq);
+
+    if (result.statusCode != 200 || result.data != true) {
+      setLogin(false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +70,9 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Home Page'),
+      home: _loginSuccessful
+          ? const MyHomePage(title: 'Home Page')
+          : UserLoginWidget(myAppState: this), // Placeholder widget
     );
   }
 }
@@ -81,33 +124,10 @@ class _MyHomePageState extends State<MyHomePage> {
       return constructDestination(countUnreadChats());
     }
 
-    return FutureBuilder(
+    return MyFutureBuilder(
       future: DataLoader.getChats(),
-      initialData: DataLoader.cache.chats,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done &&
-            snapshot.hasData) {
-          if (snapshot.data!.statusCode == 200) {
-            int unreadChats = snapshot.data!.data!
-                .where((element) => element.unreadMessagesCount > 0)
-                .length;
-            return constructDestination(unreadChats);
-          } else {
-            return FailedRequestWidget(apiResponse: snapshot.data!);
-          }
-        }
-
-        return const NavigationDestination(
-          selectedIcon: Badge(
-              label: SizedBox.square(
-                dimension: 5,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 1.5,
-                ),
-              ),
-              child: Icon(Icons.chat_bubble)),
-          icon: Badge(
+      loadingIndicator: const NavigationDestination(
+        selectedIcon: Badge(
             label: SizedBox.square(
               dimension: 5,
               child: CircularProgressIndicator(
@@ -115,10 +135,24 @@ class _MyHomePageState extends State<MyHomePage> {
                 strokeWidth: 1.5,
               ),
             ),
-            child: Icon(Icons.chat_bubble_outline),
+            child: Icon(Icons.chat_bubble)),
+        icon: Badge(
+          label: SizedBox.square(
+            dimension: 5,
+            child: CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 1.5,
+            ),
           ),
-          label: 'Chats',
-        );
+          child: Icon(Icons.chat_bubble_outline),
+        ),
+        label: 'Chats',
+      ),
+      customBuilder: (context, snapshot) {
+        int unreadChats = snapshot.data!.data!
+            .where((element) => element.unreadMessagesCount > 0)
+            .length;
+        return constructDestination(unreadChats);
       },
     );
   }

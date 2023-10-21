@@ -9,25 +9,19 @@ import 'package:schueler_portal/api/request_models/base_request.dart';
 import 'package:schueler_portal/api/request_models/download_file.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 
-
 class ApiClient {
-  IOClient client = IOClient();
-  String baseUri = "https://apiinnovators.de/schueler_portal";
+  static IOClient client = IOClient();
+  static const String baseUri = "https://apiinnovators.de/schueler_portal";
 
-  late BaseRequest baseRequest;
-  late String baseRequestJson;
+  static late BaseRequest baseRequest;
+  static late String baseRequestJson;
 
-  ApiClient(String email, String password, String schulkuerzel) {
-    updateCredentials(email, password, schulkuerzel);
-  }
-
-  updateCredentials(String email, String password, String schulkuerzel) {
-    baseRequest = BaseRequest(
-        email: email, password: password, schulkuerzel: schulkuerzel);
+  static updateCredentials(BaseRequest login) {
+    baseRequest = login;
     baseRequestJson = baseRequestToJson(baseRequest);
   }
 
-  Future<Response> _put(String subUri) async {
+  static Future<Response> _put(String subUri) async {
     if (!subUri.startsWith("/")) {
       subUri = "/$subUri";
     }
@@ -36,7 +30,7 @@ class ApiClient {
         headers: {"Content-Type": "application/json"}, body: baseRequestJson);
   }
 
-  Future<Response> _post(String subUri, String body) async {
+  static Future<Response> _post(String subUri, String body) async {
     if (!subUri.startsWith("/")) {
       subUri = "$subUri/";
     }
@@ -45,7 +39,7 @@ class ApiClient {
         headers: {"Content-Type": "application/json"}, body: body);
   }
 
-  Future<ApiResponse<T>> putAndParse<T>(
+  static Future<ApiResponse<T>> putAndParse<T>(
       String url, T Function(String) parser) async {
     Response resp = await _put(url);
 
@@ -56,7 +50,17 @@ class ApiClient {
     return ApiResponse(resp);
   }
 
-  Future<File?> downloadFile(FileElement file,
+  static Future<ApiResponse<bool>> validateLogin(BaseRequest login) async {
+    Response resp = await _post("/validate_login", baseRequestToJson(login));
+
+    if (resp.statusCode == 200) {
+      return ApiResponse<bool>(resp, data: bool.parse(resp.body));
+    }
+
+    return ApiResponse(resp);
+  }
+
+  static Future<File?> downloadFile(FileElement file,
       {bool checkIfCached = true}) async {
     final downloadsDirectory = await getDownloadsDirectory();
     final filePath = '${downloadsDirectory!.path}/${file.id}-${file.name}';

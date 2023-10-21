@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:schueler_portal/api/response_models/api/vertretungsplan.dart'
     as vertretungsplan_package;
 import 'package:schueler_portal/data_loader.dart';
-import 'package:schueler_portal/failed_request.dart';
+import 'package:schueler_portal/my_future_builder.dart';
 import 'package:schueler_portal/user_data.dart';
 
 import 'api/response_models/api/stundenplan.dart' as stundenplan_package;
@@ -57,30 +57,12 @@ class _StundenplanContainer extends State<StatefulWidget> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    FutureBuilder(
+                    MyFutureBuilder(
                       future: DataLoader.getStundenplan(),
-                      initialData: DataLoader.cache.stundenplan,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done) {
-                          if (snapshot.hasData) {
-                            if (snapshot.data!.statusCode == 200) {
-                              return StundenplanWidget(
+                      customBuilder: (context, snapshot) => StundenplanWidget(
                                 scheduleData: snapshot.data!.data!,
                                 stundenplanContainer: this,
-                              );
-                            } else {
-                              return FailedRequestWidget(
-                                apiResponse: snapshot.data!,
-                              );
-                            }
-                          } else {
-                            return const Text("Error: Data not available");
-                          }
-                        } else {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-                      },
+                              ),
                     ),
                     const SizedBox(
                       height: 50,
@@ -91,29 +73,13 @@ class _StundenplanContainer extends State<StatefulWidget> {
                         ),
                       ),
                     ),
-                    FutureBuilder(
+                    MyFutureBuilder(
                       future: DataLoader.getVertretungsplan(),
-                      initialData: DataLoader.cache.vertretungsplan,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done) {
-                          if (snapshot.hasData) {
-                            if (snapshot.data!.statusCode == 200) {
-                              return VertretungsplanWidget(
-                                vertretungsplanData: snapshot.data!.data!,
-                                stundenplanContainer: this,
-                              );
-                            } else {
-                              return FailedRequestWidget(
-                                  apiResponse: snapshot.data!);
-                            }
-                          } else {
-                            return const Text("Error: Data not available");
-                          }
-                        } else {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-                      },
+                      customBuilder: (context, snapshot) =>
+                          VertretungsplanWidget(
+                        vertretungsplanData: snapshot.data!.data!,
+                        stundenplanContainer: this,
+                      ),
                     ),
                   ],
                 ),

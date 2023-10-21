@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
-import 'package:schueler_portal/failed_request.dart';
-import 'package:schueler_portal/main.dart';
+import 'package:schueler_portal/my_future_builder.dart';
 
 import 'api/response_models/api/news.dart';
+import 'api_client.dart';
 import 'data_loader.dart';
 
 class HomeWidget extends StatefulWidget {
@@ -42,26 +42,10 @@ class _HomeWidget extends State<StatefulWidget> {
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
                     ),
                     Expanded(
-                      child: FutureBuilder(
+                      child: MyFutureBuilder(
                         future: DataLoader.getNews(),
-                        initialData: DataLoader.cache.news,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.done) {
-                            if (snapshot.hasData) {
-                              if (snapshot.data!.data != null) {
-                                return NewsWidget(news: snapshot.data!.data!);
-                              } else {
-                                return FailedRequestWidget(apiResponse: snapshot.data!);
-                              }
-                            } else {
-                              return const Text("Error: Data not available");
-                            }
-                          } else {
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          }
-                        },
+                        customBuilder: (context, snapshot) =>
+                            NewsWidget(news: snapshot.data!.data!),
                       ),
                     ),
                   ],
@@ -127,7 +111,7 @@ class NewsWidget extends StatelessWidget {
                     ElevatedButton(
                         onPressed: () async {
                           File? file =
-                              await apiClient.downloadFile(news[i].file!);
+                              await ApiClient.downloadFile(news[i].file!);
                           if (file != null) {
                             OpenFile.open(file.path);
                           }

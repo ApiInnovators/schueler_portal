@@ -6,9 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 import 'package:schueler_portal/data_loader.dart';
-import 'package:schueler_portal/main.dart';
 
-import 'failed_request.dart';
+import 'api_client.dart';
+import 'my_future_builder.dart';
 
 class HomeworkWidget extends StatefulWidget {
   const HomeworkWidget({super.key});
@@ -103,24 +103,10 @@ class _HomeworkWidget extends State<StatefulWidget> {
         title: const Text("Hausaufgaben"),
         centerTitle: true,
       ),
-      body: FutureBuilder(
+      body: MyFutureBuilder(
         future: DataLoader.getHausaufgaben(),
-        initialData: DataLoader.cache.hausaufgaben,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasData) {
-              if (snapshot.data!.data != null) {
-                return buildTabController(snapshot.data!.data!);
-              } else {
-                return FailedRequestWidget(apiResponse: snapshot.data!);
-              }
-            } else {
-              return const Text("Error: Data not available");
-            }
-          } else {
-            return const Center(child: CircularProgressIndicator());
-          }
-        },
+        customBuilder: (context, snapshot) =>
+            buildTabController(snapshot.data!.data!),
       ),
     );
   }
@@ -175,7 +161,7 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
                             widget.hausaufgabe.files.length,
                             (i) => ElevatedButton(
                                 onPressed: () async {
-                                  File? file = await apiClient.downloadFile(
+                                  File? file = await ApiClient.downloadFile(
                                       widget.hausaufgabe.files[i]);
                                   if (file != null) {
                                     OpenFile.open(file.path);

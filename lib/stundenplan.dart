@@ -285,10 +285,6 @@ class _VertretungsplanWidget extends State<VertretungsplanWidget> {
     Table table = Table(
       border: TableBorder.symmetric(inside: const BorderSide(width: 1)),
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-      columnWidths: const <int, TableColumnWidth>{
-        0: IntrinsicColumnWidth(),
-        1: FlexColumnWidth(),
-      },
       children: List.empty(growable: true),
     );
 
@@ -301,16 +297,21 @@ class _VertretungsplanWidget extends State<VertretungsplanWidget> {
       "Grund"
     ];
 
-    table.children.add(TableRow(
+    table.children.add(
+      TableRow(
         children: List.generate(titles.length, (i) {
-      return SizedBox(
-          height: 40,
-          child: Center(
+          return Padding(
+            padding: const EdgeInsets.all(4),
+            child: Center(
               child: Text(
-            titles[i],
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          )));
-    })));
+                titles[i],
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
 
     for (vertretungsplan_package.Datum element in filteredUserVertretung) {
       List<String> cellStrings = [
@@ -323,13 +324,15 @@ class _VertretungsplanWidget extends State<VertretungsplanWidget> {
       ];
 
       TableRow tableRow = TableRow(
-          children: List.generate(cellStrings.length, (i) {
-        return SizedBox(
-          height: 40,
-          child: Center(
-              child: Text(cellStrings[i].isEmpty ? "-" : cellStrings[i])),
-        );
-      }));
+        children: List.generate(cellStrings.length, (i) {
+          return Padding(
+            padding: const EdgeInsets.all(4),
+            child: Center(
+              child: Text(cellStrings[i].isEmpty ? "-" : cellStrings[i]),
+            ),
+          );
+        }),
+      );
 
       table.children.add(tableRow);
     }

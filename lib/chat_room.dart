@@ -184,11 +184,31 @@ class MemberMessage extends ChatRoomMessageWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  message.editor.name,
-                  style: TextStyle(
-                    color: ColorUtils.stringToColor(message.editor.name),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      message.editor.name,
+                      style: TextStyle(
+                        color: ColorUtils.stringToColor(message.editor.name),
+                      ),
+                    ),
+                    if (!message.read)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 2),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.redAccent,
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(15.0),
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child:
+                              const Text("Neu", style: TextStyle(fontSize: 10)),
+                        ),
+                      )
+                  ],
                 ),
                 if (message.isDeleted)
                   const Text(
@@ -291,7 +311,9 @@ class MessageFileAttachment extends StatelessWidget {
           children: [
             Align(
                 alignment: Alignment.centerLeft,
-                child: Text(file.name, style: const TextStyle(fontSize: 10))),
+                child: Text(
+                    "${file.name} (${(snapshot.data!.lengthSync() / 1048576.0).toStringAsFixed(2)}MB)",
+                    style: const TextStyle(fontSize: 10))),
             IconButton(
               onPressed: () {
                 OpenFile.open(snapshot.data!.path);

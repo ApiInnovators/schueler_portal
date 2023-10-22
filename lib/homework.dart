@@ -18,84 +18,6 @@ class HomeworkWidget extends StatefulWidget {
 }
 
 class _HomeworkWidget extends State<StatefulWidget> {
-  DefaultTabController buildTabController(List<Hausaufgabe> data) {
-    data.sort((a, b) => a.dueAt.compareTo(b.dueAt));
-
-    List<Hausaufgabe> erledigteHausaufgaben =
-        data.where((element) => element.completed).toList();
-    List<Hausaufgabe> nichtErledigteHausaufgaben =
-        data.where((element) => !element.completed).toList();
-
-    return DefaultTabController(
-      length: 3,
-      initialIndex: 1,
-      child: Scaffold(
-        appBar: const TabBar(
-          tabs: [
-            Tab(
-              text: "Vergangen",
-            ),
-            Tab(
-              text: "Aktuell",
-            ),
-            Tab(
-              text: "Heute",
-            ),
-          ],
-        ),
-        body: TabBarView(
-          children: [
-            const Text("No data"),
-            data.isEmpty
-                ? const Center(child: Text("Keine Hausaufgaben"))
-                : SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 10),
-                        const Text(
-                          "Zu erledigen",
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        Column(
-                          children: List.generate(
-                              nichtErledigteHausaufgaben.length,
-                              (i) => Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 3),
-                                    child: SingleHomeworkWidget(
-                                      hausaufgabe:
-                                          nichtErledigteHausaufgaben[i],
-                                    ),
-                                  )),
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          "Erledigt",
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        Column(
-                          children: List.generate(
-                              erledigteHausaufgaben.length,
-                              (i) => Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 3),
-                                    child: SingleHomeworkWidget(
-                                      hausaufgabe: erledigteHausaufgaben[i],
-                                    ),
-                                  )),
-                        )
-                      ],
-                    ),
-                  ),
-            const Text("No Data"),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -103,10 +25,94 @@ class _HomeworkWidget extends State<StatefulWidget> {
         title: const Text("Hausaufgaben"),
         centerTitle: true,
       ),
-      body: MyFutureBuilder(
-        future: DataLoader.getHausaufgaben(),
-        customBuilder: (context, snapshot) =>
-            buildTabController(snapshot.data!.data!),
+      body: DefaultTabController(
+        length: 3,
+        initialIndex: 1,
+        child: Scaffold(
+          appBar: const TabBar(
+            tabs: [
+              Tab(
+                text: "Vergangen",
+              ),
+              Tab(
+                text: "Aktuell",
+              ),
+              Tab(
+                text: "Heute",
+              ),
+            ],
+          ),
+          body: TabBarView(
+            children: [
+              const Text("Nothing here"),
+              RefreshIndicator(
+                  child: MyFutureBuilder(
+                    future: DataLoader.getHausaufgaben(),
+                    customBuilder: (context, snapshot) {
+                      List<Hausaufgabe> data = snapshot.data!.data!;
+
+                      data.sort((a, b) => a.dueAt.compareTo(b.dueAt));
+
+                      List<Hausaufgabe> erledigteHausaufgaben =
+                          data.where((element) => element.completed).toList();
+                      List<Hausaufgabe> nichtErledigteHausaufgaben =
+                          data.where((element) => !element.completed).toList();
+
+                      return SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 10),
+                            const Text(
+                              "Zu erledigen",
+                              style: TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            Column(
+                              children: List.generate(
+                                  nichtErledigteHausaufgaben.length,
+                                  (i) => Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 3),
+                                        child: SingleHomeworkWidget(
+                                          hausaufgabe:
+                                              nichtErledigteHausaufgaben[i],
+                                        ),
+                                      )),
+                            ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              "Erledigt",
+                              style: TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            Column(
+                              children: List.generate(
+                                erledigteHausaufgaben.length,
+                                (i) => Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 3),
+                                  child: SingleHomeworkWidget(
+                                    hausaufgabe: erledigteHausaufgaben[i],
+                                  ),
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  onRefresh: () async {
+                    DataLoader.cache.hausaufgaben = null;
+                    DataLoader.cacheData();
+                    await DataLoader.getHausaufgaben();
+                    setState(() {});
+                  }),
+              const Text("Nothing here"),
+            ],
+          ),
+        ),
       ),
     );
   }

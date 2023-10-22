@@ -17,7 +17,7 @@ class StundenplanContainer extends StatefulWidget {
   State<StatefulWidget> createState() => _StundenplanContainer();
 }
 
-class _StundenplanContainer extends State<StatefulWidget> {
+class _StundenplanContainer extends State<StundenplanContainer> {
   late DateTime userRequestedDate;
   bool showOnlyUsersLessons = true;
 
@@ -25,8 +25,9 @@ class _StundenplanContainer extends State<StatefulWidget> {
     userRequestedDate = DateTime.now();
     if (userRequestedDate.weekday == DateTime.sunday) {
       userRequestedDate = userRequestedDate.add(const Duration(days: 1));
-    } else if (userRequestedDate.weekday == DateTime.saturday)
+    } else if (userRequestedDate.weekday == DateTime.saturday) {
       userRequestedDate = userRequestedDate.add(const Duration(days: 2));
+    }
   }
 
   @override
@@ -54,34 +55,44 @@ class _StundenplanContainer extends State<StatefulWidget> {
               ],
             ),
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    MyFutureBuilder(
-                      future: DataLoader.getStundenplan(),
-                      customBuilder: (context, snapshot) => StundenplanWidget(
-                                scheduleData: snapshot.data!.data!,
-                                stundenplanContainer: this,
-                              ),
-                    ),
-                    const SizedBox(
-                      height: 50,
-                      child: Center(
-                        child: Text(
-                          "Vertretungsplan",
-                          style: TextStyle(fontSize: 20),
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  DataLoader.cache.vertretungsplan = null;
+                  DataLoader.cache.stundenplan = null;
+                  DataLoader.cacheData();
+                  await DataLoader.getStundenplan();
+                  await DataLoader.getVertretungsplan();
+                  setState(() {});
+                },
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      MyFutureBuilder(
+                        future: DataLoader.getStundenplan(),
+                        customBuilder: (context, snapshot) => StundenplanWidget(
+                          scheduleData: snapshot.data!.data!,
+                          stundenplanContainer: this,
                         ),
                       ),
-                    ),
-                    MyFutureBuilder(
-                      future: DataLoader.getVertretungsplan(),
-                      customBuilder: (context, snapshot) =>
-                          VertretungsplanWidget(
-                        vertretungsplanData: snapshot.data!.data!,
-                        stundenplanContainer: this,
+                      const SizedBox(
+                        height: 50,
+                        child: Center(
+                          child: Text(
+                            "Vertretungsplan",
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                      MyFutureBuilder(
+                        future: DataLoader.getVertretungsplan(),
+                        customBuilder: (context, snapshot) =>
+                            VertretungsplanWidget(
+                          vertretungsplanData: snapshot.data!.data!,
+                          stundenplanContainer: this,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -146,24 +157,17 @@ class StundenplanWidget extends StatefulWidget {
       required this.stundenplanContainer});
 
   @override
-  State<StatefulWidget> createState() => _StundenplanWidget(
-      stundenplanContainer: stundenplanContainer, scheduleData: scheduleData);
+  State<StatefulWidget> createState() => _StundenplanWidget();
 }
 
 class _StundenplanWidget extends State<StundenplanWidget> {
-  final stundenplan_package.Stundenplan scheduleData;
-  final _StundenplanContainer stundenplanContainer;
-
-  _StundenplanWidget(
-      {required this.stundenplanContainer, required this.scheduleData});
-
   Map<int, Map<int, List<stundenplan_package.Datum>>>
       groupLessonsByDayAndHour() {
-    List<stundenplan_package.Datum> stundenplan = scheduleData.data;
+    List<stundenplan_package.Datum> stundenplan = widget.scheduleData.data;
     Map<int, Map<int, List<stundenplan_package.Datum>>> grouped = {};
 
     for (final lesson in stundenplan) {
-      if (stundenplanContainer.showOnlyUsersLessons &&
+      if (widget.stundenplanContainer.showOnlyUsersLessons &&
           !UserData.userIsRegisteredForCourse(lesson.uf)) {
         continue;
       }
@@ -182,7 +186,7 @@ class _StundenplanWidget extends State<StundenplanWidget> {
   @override
   Widget build(BuildContext context) {
     var grouped = groupLessonsByDayAndHour();
-    int weekday = stundenplanContainer.userRequestedDate.weekday - 1;
+    int weekday = widget.stundenplanContainer.userRequestedDate.weekday - 1;
 
     if (!grouped.containsKey(weekday)) {
       return const Center(child: Text("Kein Unterricht"));
@@ -204,8 +208,8 @@ class _StundenplanWidget extends State<StundenplanWidget> {
     int lastLesson = usersLessonsToday.keys.reduce(max);
 
     for (int i = 0; i < lastLesson; ++i) {
-      String time = scheduleData.zeittafel[i].value;
-      int hour = scheduleData.zeittafel[i].hour;
+      String time = widget.scheduleData.zeittafel[i].value;
+      int hour = widget.scheduleData.zeittafel[i].hour;
 
       TableRow tableRow = TableRow(children: <Widget>[
         Container(
@@ -253,24 +257,15 @@ class VertretungsplanWidget extends StatefulWidget {
       required this.vertretungsplanData});
 
   @override
-  State<StatefulWidget> createState() => _VertretungsplanWidget(
-        vertretungsplanData: vertretungsplanData,
-        stundenplanContainer: stundenplanContainer,
-      );
+  State<StatefulWidget> createState() => _VertretungsplanWidget();
 }
 
-class _VertretungsplanWidget extends State<StatefulWidget> {
-  final vertretungsplan_package.Vertretungsplan vertretungsplanData;
-  final _StundenplanContainer stundenplanContainer;
-
-  _VertretungsplanWidget(
-      {required this.stundenplanContainer, required this.vertretungsplanData});
-
+class _VertretungsplanWidget extends State<VertretungsplanWidget> {
   Iterable<vertretungsplan_package.Datum> filterUserVertretung(
       List<vertretungsplan_package.Datum> data, DateTime date) sync* {
     for (final item in data) {
       if (date.isSameDate(item.date) &&
-          (!stundenplanContainer.showOnlyUsersLessons ||
+          (!widget.stundenplanContainer.showOnlyUsersLessons ||
               UserData.userIsRegisteredForCourse(item.uf))) {
         yield item;
       }
@@ -280,8 +275,8 @@ class _VertretungsplanWidget extends State<StatefulWidget> {
   @override
   Widget build(BuildContext context) {
     Iterable<vertretungsplan_package.Datum> filteredUserVertretung =
-        filterUserVertretung(
-            vertretungsplanData.data, stundenplanContainer.userRequestedDate);
+        filterUserVertretung(widget.vertretungsplanData.data,
+            widget.stundenplanContainer.userRequestedDate);
 
     if (filteredUserVertretung.isEmpty) {
       return const Text("Keine Vertretungen/Daten");

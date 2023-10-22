@@ -15,7 +15,7 @@ class DataLoader {
   static final _completers = <Completer<void>>[];
   static List<Future<void>> _futures = [];
 
-  static Future<void> cacheData() async {
+  static cacheData() {
     final chatCompleter = Completer<void>();
     final newsCompleter = Completer<void>();
     final userCompleter = Completer<void>();
@@ -32,42 +32,48 @@ class DataLoader {
       hausaufgabenCompleter,
     ]);
 
-    // Start the asynchronous operations
-    ApiClient.putAndParse("/chat", chatFromJson)
-        .then((value) {
-      cache.chats = value;
-      chatCompleter.complete();
-    });
+    if (cache.chats == null) {
+      ApiClient.putAndParse("/chat", chatFromJson).then((value) {
+        cache.chats = value;
+        chatCompleter.complete();
+      });
+    }
 
-    ApiClient.putAndParse("/news", newsFromJson)
-        .then((value) {
-      cache.news = value;
-      newsCompleter.complete();
-    });
+    if (cache.news == null) {
+      ApiClient.putAndParse("/news", newsFromJson).then((value) {
+        cache.news = value;
+        newsCompleter.complete();
+      });
+    }
 
-    ApiClient.putAndParse("/user", userFromJson)
-        .then((value) {
-      cache.user = value;
-      userCompleter.complete();
-    });
+    if (cache.user == null) {
+      ApiClient.putAndParse("/user", userFromJson).then((value) {
+        cache.user = value;
+        userCompleter.complete();
+      });
+    }
 
-    ApiClient.putAndParse("/stundenplan", stundenplanFromJson)
-        .then((value) {
-      cache.stundenplan = value;
-      stundenplanCompleter.complete();
-    });
+    if (cache.stundenplan == null) {
+      ApiClient.putAndParse("/stundenplan", stundenplanFromJson).then((value) {
+        cache.stundenplan = value;
+        stundenplanCompleter.complete();
+      });
+    }
 
-    ApiClient.putAndParse("/vertretungsplan", vertretungsplanFromJson)
-        .then((value) {
-      cache.vertretungsplan = value;
-      vertretungsplanCompleter.complete();
-    });
+    if (cache.vertretungsplan == null) {
+      ApiClient.putAndParse("/vertretungsplan", vertretungsplanFromJson)
+          .then((value) {
+        cache.vertretungsplan = value;
+        vertretungsplanCompleter.complete();
+      });
+    }
 
-    ApiClient.putAndParse("/hausaufgaben", hausaufgabeFromJson)
-        .then((value) {
-      cache.hausaufgaben = value;
-      hausaufgabenCompleter.complete();
-    });
+    if (cache.hausaufgaben == null) {
+      ApiClient.putAndParse("/hausaufgaben", hausaufgabeFromJson).then((value) {
+        cache.hausaufgaben = value;
+        hausaufgabenCompleter.complete();
+      });
+    }
 
     _futures = _completers.map((completer) => completer.future).toList();
   }
@@ -83,47 +89,30 @@ class DataLoader {
     _futures.clear();
   }
 
-  static Future<ApiResponse<User>> getUser() async {
-    while (cache.user == null) {
+  static Future<T> _waitForProperty<T>(T? Function() getter) async {
+    while (getter() == null) {
       await Future.delayed(const Duration(milliseconds: 50));
     }
-    return cache.user!;
+    return getter()!;
   }
 
-  static Future<ApiResponse<Vertretungsplan>> getVertretungsplan() async {
-    while (cache.vertretungsplan == null) {
-      await Future.delayed(const Duration(milliseconds: 50));
-    }
-    return cache.vertretungsplan!;
-  }
+  static Future<ApiResponse<User>> getUser() async =>
+      await _waitForProperty(cache.getUser);
 
-  static Future<ApiResponse<Stundenplan>> getStundenplan() async {
-    while (cache.stundenplan == null) {
-      await Future.delayed(const Duration(milliseconds: 50));
-    }
-    return cache.stundenplan!;
-  }
+  static Future<ApiResponse<Vertretungsplan>> getVertretungsplan() async =>
+      await _waitForProperty(cache.getVertretungsplan);
 
-  static Future<ApiResponse<List<News>>> getNews() async {
-    while (cache.news == null) {
-      await Future.delayed(const Duration(milliseconds: 50));
-    }
-    return cache.news!;
-  }
+  static Future<ApiResponse<Stundenplan>> getStundenplan() async =>
+      await _waitForProperty(cache.getStundenplan);
 
-  static Future<ApiResponse<List<Chat>>> getChats() async {
-    while (cache.chats == null) {
-      await Future.delayed(const Duration(milliseconds: 50));
-    }
-    return cache.chats!;
-  }
+  static Future<ApiResponse<List<News>>> getNews() async =>
+      await _waitForProperty(cache.getNews);
 
-  static Future<ApiResponse<List<Hausaufgabe>>> getHausaufgaben() async {
-    while (cache.hausaufgaben == null) {
-      await Future.delayed(const Duration(milliseconds: 50));
-    }
-    return cache.hausaufgaben!;
-  }
+  static Future<ApiResponse<List<Chat>>> getChats() async =>
+      await _waitForProperty(cache.getChats);
+
+  static Future<ApiResponse<List<Hausaufgabe>>> getHausaufgaben() async =>
+      _waitForProperty(cache.getHausaufgaben);
 }
 
 class ApiCache {
@@ -133,4 +122,16 @@ class ApiCache {
   ApiResponse<List<News>>? news;
   ApiResponse<List<Chat>>? chats;
   ApiResponse<List<Hausaufgabe>>? hausaufgaben;
+
+  ApiResponse<User>? getUser() => user;
+
+  ApiResponse<Vertretungsplan>? getVertretungsplan() => vertretungsplan;
+
+  ApiResponse<Stundenplan>? getStundenplan() => stundenplan;
+
+  ApiResponse<List<News>>? getNews() => news;
+
+  ApiResponse<List<Chat>>? getChats() => chats;
+
+  ApiResponse<List<Hausaufgabe>>? getHausaufgaben() => hausaufgaben;
 }

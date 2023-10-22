@@ -13,7 +13,7 @@ class ChatsWidget extends StatefulWidget {
   State<StatefulWidget> createState() => _ChatsWidget();
 }
 
-class _ChatsWidget extends State<StatefulWidget> {
+class _ChatsWidget extends State<ChatsWidget> {
   String searchText = "";
 
   Widget buildChats(List<Chat> data) {
@@ -93,9 +93,18 @@ class _ChatsWidget extends State<StatefulWidget> {
         centerTitle: true,
         title: const Text("Chats"),
       ),
-      body: MyFutureBuilder(
-        future: DataLoader.getChats(),
-        customBuilder: (context, snapshot) => buildChats(snapshot.data!.data!),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          DataLoader.cache.chats = null;
+          DataLoader.cacheData();
+          await DataLoader.getChats();
+          setState(() {});
+        },
+        child: MyFutureBuilder(
+          future: DataLoader.getChats(),
+          customBuilder: (context, snapshot) =>
+              buildChats(snapshot.data!.data!),
+        ),
       ),
     );
   }

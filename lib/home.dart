@@ -42,10 +42,18 @@ class _HomeWidget extends State<StatefulWidget> {
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
                     ),
                     Expanded(
-                      child: MyFutureBuilder(
-                        future: DataLoader.getNews(),
-                        customBuilder: (context, snapshot) =>
-                            NewsWidget(news: snapshot.data!.data!),
+                      child: RefreshIndicator(
+                        onRefresh: () async {
+                          DataLoader.cache.news = null;
+                          DataLoader.cacheData();
+                          await DataLoader.getNews();
+                          setState(() {});
+                        },
+                        child: MyFutureBuilder(
+                          future: DataLoader.getNews(),
+                          customBuilder: (context, snapshot) =>
+                              NewsWidget(news: snapshot.data!.data!),
+                        ),
                       ),
                     ),
                   ],
@@ -86,6 +94,7 @@ class NewsWidget extends StatelessWidget {
     }
 
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       child: Center(
         child: Column(
           children: List.generate(news.length, (i) {

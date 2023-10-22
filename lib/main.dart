@@ -89,41 +89,69 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int currentPageIndex = 0;
 
-  Widget chatsNavigationDestination() {
-    NavigationDestination constructDestination(int unreadChats) {
-      return NavigationDestination(
-        selectedIcon: Badge(
-          label: Text(unreadChats.toString()),
-          child: const Icon(Icons.chat_bubble),
-        ),
-        icon: Badge(
-          label: Text(unreadChats.toString()),
-          child: const Icon(Icons.chat_bubble_outline),
-        ),
-        label: 'Chats',
-      );
-    }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      bottomNavigationBar: NavigationBar(
+        onDestinationSelected: (int index) {
+          setState(() {
+            currentPageIndex = index;
+          });
+        },
+        selectedIndex: currentPageIndex,
+        destinations: const <Widget>[
+          NavigationDestination(
+            selectedIcon: Icon(Icons.home),
+            icon: Icon(Icons.home_outlined),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            selectedIcon: Icon(Icons.edit),
+            icon: Icon(Icons.edit_outlined),
+            label: 'Hausaufgaben',
+          ),
+          ChatsNavigationDestination(),
+          NavigationDestination(
+            selectedIcon: Icon(Icons.table_chart),
+            icon: Icon(Icons.table_chart_outlined),
+            label: 'Stundenplan',
+          ),
+        ],
+      ),
+      body: <Widget>[
+        const HomeWidget(),
+        const HomeworkWidget(),
+        const ChatsWidget(),
+        const StundenplanContainer(),
+      ][currentPageIndex],
+    );
+  }
+}
 
-    int countUnreadChats() {
-      if (DataLoader.cache.chats == null) {
-        return -1;
-      }
+class ChatsNavigationDestination extends StatefulWidget {
+  const ChatsNavigationDestination({super.key});
 
-      ApiResponse<List<Chat>>? chats = DataLoader.cache.chats;
+  @override
+  State<ChatsNavigationDestination> createState() =>
+      _ChatsNavigationDestinationState();
+}
 
-      if (chats!.statusCode != 200) {
-        return -1;
-      }
+class _ChatsNavigationDestinationState
+    extends State<ChatsNavigationDestination> {
 
-      return chats.data!
-          .where((element) => element.unreadMessagesCount > 0)
-          .length;
-    }
+  // TODO: update unreadChats when chats gets refreshed
 
-    if (DataLoader.cache.chats != null) {
-      return constructDestination(countUnreadChats());
-    }
+  int? _unreadChats;
 
+  int _countUnreadChats(ApiResponse<List<Chat>> chatResp) {
+    if (chatResp.statusCode != 200) return -1;
+    return chatResp.data!
+        .where((element) => element.unreadMessagesCount > 0)
+        .length;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return MyFutureBuilder(
       future: DataLoader.getChats(),
       loadingIndicator: const NavigationDestination(
@@ -149,49 +177,28 @@ class _MyHomePageState extends State<MyHomePage> {
         label: 'Chats',
       ),
       customBuilder: (context, snapshot) {
-        int unreadChats = snapshot.data!.data!
-            .where((element) => element.unreadMessagesCount > 0)
-            .length;
-        return constructDestination(unreadChats);
-      },
-    );
-  }
+        _unreadChats ??= _countUnreadChats(snapshot.data!);
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (int index) {
-          setState(() {
-            currentPageIndex = index;
-          });
-        },
-        selectedIndex: currentPageIndex,
-        destinations: <Widget>[
+        if (_unreadChats! < 1) {
           const NavigationDestination(
-            selectedIcon: Icon(Icons.home),
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
+            selectedIcon: Icon(Icons.chat_bubble),
+            icon: Icon(Icons.chat_bubble_outline),
+            label: 'Chats',
+          );
+        }
+
+        return NavigationDestination(
+          selectedIcon: Badge(
+            label: Text(_unreadChats.toString()),
+            child: const Icon(Icons.chat_bubble),
           ),
-          const NavigationDestination(
-            selectedIcon: Icon(Icons.edit),
-            icon: Icon(Icons.edit_outlined),
-            label: 'Hausaufgaben',
+          icon: Badge(
+            label: Text(_unreadChats.toString()),
+            child: const Icon(Icons.chat_bubble_outline),
           ),
-          chatsNavigationDestination(),
-          const NavigationDestination(
-            selectedIcon: Icon(Icons.table_chart),
-            icon: Icon(Icons.table_chart_outlined),
-            label: 'Stundenplan',
-          ),
-        ],
-      ),
-      body: <Widget>[
-        const HomeWidget(),
-        const HomeworkWidget(),
-        const ChatsWidget(),
-        const StundenplanContainer(),
-      ][currentPageIndex],
+          label: 'Chats',
+        );
+      },
     );
   }
 }

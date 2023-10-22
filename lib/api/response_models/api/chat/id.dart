@@ -4,6 +4,8 @@
 
 import 'dart:convert';
 
+import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
+
 ChatDetails chatDetailsFromJson(String str) => ChatDetails.fromJson(json.decode(str));
 
 String chatDetailsToJson(ChatDetails data) => json.encode(data.toJson());
@@ -84,7 +86,7 @@ class Message {
   final bool isDeletable;
   final bool read;
   final Owner editor;
-  final FileClass? file;
+  final FileElement? file;
 
   Message({
     required this.id,
@@ -105,7 +107,7 @@ class Message {
     isDeletable: json["isDeletable"],
     read: json["read"],
     editor: Owner.fromJson(json["editor"]),
-    file: json["file"] == null ? null : FileClass.fromJson(json["file"]),
+    file: json["file"] == null ? null : FileElement.fromJson(json["file"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -157,30 +159,6 @@ final roleValues = EnumValues({
   "ip-user": Role.IP_USER,
   "student": Role.STUDENT
 });
-
-class FileClass {
-  final int id;
-  final String name;
-  final String link;
-
-  FileClass({
-    required this.id,
-    required this.name,
-    required this.link,
-  });
-
-  factory FileClass.fromJson(Map<String, dynamic> json) => FileClass(
-    id: json["id"],
-    name: json["name"],
-    link: json["link"],
-  );
-
-  Map<String, dynamic> toJson() => {
-    "id": id,
-    "name": name,
-    "link": link,
-  };
-}
 
 class EnumValues<T> {
   Map<String, T> map;

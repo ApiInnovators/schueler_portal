@@ -23,6 +23,7 @@ Future<void> main() async {
 
   ApiClient.updateCredentials(loadedLogin);
   DataLoader.cacheData();
+  DataLoader.getUser().then((value) => UserLogin.user = value.data!);
 
   runApp(const MyApp(openLoginPage: false));
 }

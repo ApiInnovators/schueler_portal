@@ -34,7 +34,7 @@ packages:
     source: hosted
     version: "1.1.1"
   collection:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: collection
       sha256: f092b211a4319e98e5ff58223576de6c2803db36221657b46c82574721240687
@@ -49,6 +49,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.6"
+  date_utils:
+    dependency: "direct main"
+    description:
+      name: date_utils
+      sha256: c0d05994c411abe76f56917f05c30c41ccc466842bfa7f05d2c532ad3026c249
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.0"
   fading_edge_scrollview:
     dependency: "direct main"
     description:
@@ -216,6 +224,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.9.1"
+  mime:
+    dependency: "direct main"
+    description:
+      name: mime
+      sha256: e4ff8e8564c03f255408decd16e7899da1733852a9110a58fe6d1b817684a63e
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.4"
   open_file:
     dependency: "direct main"
     description:
@@ -373,6 +389,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.0"
+  string_to_color:
+    dependency: "direct main"
+    description:
+      name: string_to_color
+      sha256: cb33e3fd98c3005ac088bd2f3eac5fef9fac5a36ca7364766087cdbd9ca6f1a7
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
   term_glyph:
     dependency: transitive
     description:

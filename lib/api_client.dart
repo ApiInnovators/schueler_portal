@@ -61,7 +61,7 @@ class ApiClient {
   }
 
   static Future<File?> downloadFile(FileElement file,
-      {bool checkIfCached = true}) async {
+      {bool checkIfCached = true, bool showToast = true}) async {
     final downloadsDirectory = await getDownloadsDirectory();
     final filePath = '${downloadsDirectory!.path}/${file.id}-${file.name}';
 
@@ -85,11 +85,11 @@ class ApiClient {
     if (response.statusCode == 200) {
       File file = File(filePath);
       await file.writeAsBytes(response.bodyBytes);
-      Fluttertoast.showToast(msg: "Download completed");
+      if (showToast) Fluttertoast.showToast(msg: "Download completed");
       return file;
     }
 
-    Fluttertoast.showToast(msg: "Download failed: ${response.reasonPhrase}");
+    if (showToast) Fluttertoast.showToast(msg: "Download failed: ${response.reasonPhrase}");
     return null;
   }
 }

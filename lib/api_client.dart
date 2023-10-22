@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http/http.dart';
 import 'package:http/io_client.dart';
-import 'package:http/src/response.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:schueler_portal/api/request_models/base_request.dart';
+import 'package:schueler_portal/api/request_models/base_request.dart' as base_request;
 import 'package:schueler_portal/api/request_models/download_file.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 
@@ -13,12 +13,12 @@ class ApiClient {
   static IOClient client = IOClient();
   static const String baseUri = "https://apiinnovators.de/schueler_portal";
 
-  static late BaseRequest baseRequest;
+  static late base_request.BaseRequest baseRequest;
   static late String baseRequestJson;
 
-  static updateCredentials(BaseRequest login) {
+  static updateCredentials(base_request.BaseRequest login) {
     baseRequest = login;
-    baseRequestJson = baseRequestToJson(baseRequest);
+    baseRequestJson = base_request.baseRequestToJson(baseRequest);
   }
 
   static Future<Response> _put(String subUri) async {
@@ -50,8 +50,8 @@ class ApiClient {
     return ApiResponse(resp);
   }
 
-  static Future<ApiResponse<bool>> validateLogin(BaseRequest login) async {
-    Response resp = await _post("/validate_login", baseRequestToJson(login));
+  static Future<ApiResponse<bool>> validateLogin(base_request.BaseRequest login) async {
+    Response resp = await _post("/validate_login", base_request.baseRequestToJson(login));
 
     if (resp.statusCode == 200) {
       return ApiResponse<bool>(resp, data: bool.parse(resp.body));

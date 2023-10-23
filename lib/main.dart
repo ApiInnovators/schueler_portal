@@ -68,9 +68,20 @@ class MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'Schüler Portal',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.redAccent,
+          brightness: Brightness.light,
+        ),
         useMaterial3: true,
       ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.redAccent,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
+      themeMode: ThemeMode.system,
       home: _loginSuccessful
           ? const MyHomePage(title: 'Home Page')
           : UserLoginWidget(myAppState: this), // Placeholder widget
@@ -139,7 +150,6 @@ class ChatsNavigationDestination extends StatefulWidget {
 
 class _ChatsNavigationDestinationState
     extends State<ChatsNavigationDestination> {
-
   // TODO: update unreadChats when chats gets refreshed
 
   int? _unreadChats;

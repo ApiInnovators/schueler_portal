@@ -32,8 +32,10 @@ class _HomeWidget extends State<StatefulWidget> {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                    border: Border.all(width: 2),
-                    borderRadius: const BorderRadius.all(Radius.circular(10))),
+                  border: Border.all(
+                      width: 2, color: Theme.of(context).colorScheme.secondary),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                ),
                 child: Column(
                   children: [
                     const Text(

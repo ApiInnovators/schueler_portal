@@ -16,8 +16,71 @@ class ChatsWidget extends StatefulWidget {
 class _ChatsWidget extends State<ChatsWidget> {
   String searchText = "";
 
-  Widget buildChats(List<Chat> data) {
-    data.sort((a, b) {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text("Chats"),
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          DataLoader.cache.chats = null;
+          DataLoader.cacheData();
+          await DataLoader.getChats();
+          setState(() {});
+        },
+        child: MyFutureBuilder(
+          future: DataLoader.getChats(),
+          customBuilder: (context, snapshot) {
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: SearchAnchor(
+                    builder:
+                        (BuildContext context, SearchController controller) {
+                      return SearchBar(
+                          hintText: "Chat suchen...",
+                          controller: controller,
+                          onChanged: (value) => setState(() {
+                                searchText = value;
+                              }));
+                    },
+                    suggestionsBuilder:
+                        (BuildContext context, SearchController controller) =>
+                            [],
+                  ),
+                ),
+                ChatsListWidget(
+                    filterText: searchText, data: snapshot.data!.data!),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class ChatsListWidget extends StatefulWidget {
+  final String filterText;
+  final List<Chat> data;
+
+  const ChatsListWidget({
+    super.key,
+    required this.filterText,
+    required this.data,
+  });
+
+  @override
+  State<ChatsListWidget> createState() => _ChatsListWidgetState();
+}
+
+class _ChatsListWidgetState extends State<ChatsListWidget> {
+  @override
+  Widget build(BuildContext context) {
+    widget.data.sort((a, b) {
       if (a.pinned && !b.pinned) {
         return -1; // a comes before b
       } else if (!a.pinned && b.pinned) {
@@ -43,67 +106,28 @@ class _ChatsWidget extends State<ChatsWidget> {
           .compareTo(aTimestamp ?? DateTime.fromMillisecondsSinceEpoch(0));
     });
 
-    List<Chat> searchResult = data;
+    List<Chat> searchResult = widget.data;
 
-    if (searchText.isNotEmpty) {
+    if (widget.filterText.isNotEmpty) {
       searchResult = searchResult
-          .where((element) =>
-              element.name.toLowerCase().contains(searchText.toLowerCase()))
+          .where((element) => element.name
+              .toLowerCase()
+              .contains(widget.filterText.toLowerCase()))
           .toList();
     }
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(10),
-          child: SearchAnchor(
-            builder: (BuildContext context, SearchController controller) {
-              return SearchBar(
-                  hintText: "Chat suchen...",
-                  controller: controller,
-                  onChanged: (value) => setState(() {
-                        searchText = value;
-                      }));
-            },
-            suggestionsBuilder:
-                (BuildContext context, SearchController controller) => [],
-          ),
-        ),
-        searchResult.isEmpty
-            ? const Text(
-                "Keine Treffer",
-                textAlign: TextAlign.center,
-              )
-            : Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: List.generate(searchResult.length,
-                        (i) => SingleChatWidget(chat: searchResult[i])),
-                  ),
-                ),
-              ),
-      ],
-    );
-  }
+    if (searchResult.isEmpty) {
+      return const Text(
+        "Keine Treffer",
+        textAlign: TextAlign.center,
+      );
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text("Chats"),
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          DataLoader.cache.chats = null;
-          DataLoader.cacheData();
-          await DataLoader.getChats();
-          setState(() {});
-        },
-        child: MyFutureBuilder(
-          future: DataLoader.getChats(),
-          customBuilder: (context, snapshot) =>
-              buildChats(snapshot.data!.data!),
+    return Expanded(
+      child: SingleChildScrollView(
+        child: Column(
+          children: List.generate(searchResult.length,
+              (i) => SingleChatWidget(chat: searchResult[i])),
         ),
       ),
     );
@@ -145,7 +169,6 @@ class _SingleChatsWidget extends State<SingleChatWidget> {
             style: OutlinedButton.styleFrom(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
-              foregroundColor: Colors.black,
               padding: const EdgeInsets.only(left: 5, right: 5, bottom: 5),
             ),
             onPressed: () {

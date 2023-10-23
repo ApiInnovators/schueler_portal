@@ -56,7 +56,9 @@ class ChatRoom extends StatelessWidget {
                 padding: const EdgeInsets.all(10),
                 child: Container(
                   decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
                       borderRadius: BorderRadius.circular(10)),
                   child: Row(
                     children: [
@@ -112,7 +114,7 @@ class ChatDaySection extends StatelessWidget {
           child: Text(
             DateFormat("dd.MM.yyyy").format(dateTime),
             style: TextStyle(
-              color: Colors.black.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
             ),
           ),
         ),
@@ -169,65 +171,73 @@ class MemberMessage extends ChatRoomMessageWidget {
       child: Align(
         // align the child within the container
         alignment: Alignment.centerLeft,
-        child: DecoratedBox(
-          // chat bubble decoration
-          decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(16),
-              bottomRight: Radius.circular(16),
-              topRight: Radius.circular(16),
+        child: Badge(
+          isLabelVisible: !message.read,
+          label: const Text("Neu"),
+          offset: const Offset(-9, -4),
+          child: DecoratedBox(
+            // chat bubble decoration
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.secondary,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        message.editor.name,
+                        style: TextStyle(
+                          color: ColorUtils.stringToColor(message.editor.name),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (message.isDeleted)
                     Text(
-                      message.editor.name,
+                      "Nachricht wurde gelöscht",
                       style: TextStyle(
-                        color: ColorUtils.stringToColor(message.editor.name),
+                        fontStyle: FontStyle.italic,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSecondary
+                            .withOpacity(0.6),
                       ),
                     ),
-                    if (!message.read)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 2),
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            color: Colors.redAccent,
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(15.0),
-                            ),
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child:
-                              const Text("Neu", style: TextStyle(fontSize: 10)),
-                        ),
-                      )
+                  if (message.text != null)
+                    Text(
+                      message.text!,
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSecondary),
+                    ),
+                  if (message.file != null) ...[
+                    MessageFileAttachment(file: message.file!),
                   ],
-                ),
-                if (message.isDeleted)
-                  const Text(
-                    "Nachricht wurde gelöscht",
-                    style: TextStyle(fontStyle: FontStyle.italic),
-                  ),
-                if (message.text != null) Text(message.text!),
-                if (message.file != null) ...[
-                  MessageFileAttachment(file: message.file!),
-                ],
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: Text(
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Text(
                       DateFormat("HH:mm").format(
-                          DateTime.fromMillisecondsSinceEpoch(
-                              message.createdAt * 1000)),
-                      style: TextStyle(color: Colors.black.withOpacity(0.5))),
-                ),
-              ],
+                        DateTime.fromMillisecondsSinceEpoch(
+                            message.createdAt * 1000),
+                      ),
+                      style: TextStyle(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSecondary
+                            .withOpacity(0.5),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -254,7 +264,7 @@ class UserMessage extends ChatRoomMessageWidget {
         child: DecoratedBox(
           // chat bubble decoration
           decoration: BoxDecoration(
-            color: Colors.blue[200],
+            color: Theme.of(context).colorScheme.primary,
             borderRadius: const BorderRadius.only(
               bottomLeft: Radius.circular(16),
               bottomRight: Radius.circular(16),
@@ -267,11 +277,22 @@ class UserMessage extends ChatRoomMessageWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (message.isDeleted)
-                  const Text(
+                  Text(
                     "Du hast diese nachricht gelöscht",
-                    style: TextStyle(fontStyle: FontStyle.italic),
+                    style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onPrimary
+                          .withOpacity(0.6),
+                    ),
                   ),
-                if (message.text != null) Text(message.text!),
+                if (message.text != null)
+                  Text(
+                    message.text!,
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary),
+                  ),
                 if (message.file != null) ...[
                   MessageFileAttachment(file: message.file!),
                 ],
@@ -279,10 +300,14 @@ class UserMessage extends ChatRoomMessageWidget {
                   alignment: Alignment.bottomRight,
                   child: Text(
                     DateFormat("HH:mm").format(
-                        DateTime.fromMillisecondsSinceEpoch(
-                            message.createdAt * 1000)),
+                      DateTime.fromMillisecondsSinceEpoch(
+                          message.createdAt * 1000),
+                    ),
                     style: TextStyle(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onPrimary
+                          .withOpacity(0.5),
                     ),
                   ),
                 ),
@@ -339,7 +364,6 @@ class MessageFileAttachment extends StatelessWidget {
       },
       icon: const Icon(Icons.file_download),
       label: Text(file.name),
-      style: ElevatedButton.styleFrom(foregroundColor: Colors.black),
     );
   }
 }

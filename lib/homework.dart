@@ -145,7 +145,6 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
           style: OutlinedButton.styleFrom(
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            foregroundColor: Colors.black,
             padding: const EdgeInsets.all(0),
           ),
           onPressed: () {

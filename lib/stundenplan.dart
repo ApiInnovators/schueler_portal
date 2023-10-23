@@ -196,7 +196,10 @@ class _StundenplanWidget extends State<StundenplanWidget> {
         grouped[weekday]!;
 
     Table table = Table(
-      border: TableBorder.symmetric(inside: const BorderSide(width: 1)),
+      border: TableBorder.symmetric(
+        inside: BorderSide(
+            width: 1, color: Theme.of(context).colorScheme.secondary),
+      ),
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
       columnWidths: const <int, TableColumnWidth>{
         0: IntrinsicColumnWidth(),
@@ -239,11 +242,19 @@ class _StundenplanWidget extends State<StundenplanWidget> {
       table.children.add(tableRow);
     }
 
-    return Container(
+    return Theme(
+      data: Theme.of(context),
+      child: Container(
         decoration: BoxDecoration(
-            border: Border.all(width: 2),
-            borderRadius: const BorderRadius.all(Radius.circular(10))),
-        child: table);
+          border: Border.all(
+            width: 2,
+            color: Theme.of(context).colorScheme.secondary,
+          ),
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
+        ),
+        child: table,
+      ),
+    );
   }
 }
 
@@ -283,7 +294,10 @@ class _VertretungsplanWidget extends State<VertretungsplanWidget> {
     }
 
     Table table = Table(
-      border: TableBorder.symmetric(inside: const BorderSide(width: 1)),
+      border: TableBorder.symmetric(
+        inside: BorderSide(
+            width: 1, color: Theme.of(context).colorScheme.secondary),
+      ),
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
       children: List.empty(growable: true),
     );
@@ -339,7 +353,10 @@ class _VertretungsplanWidget extends State<VertretungsplanWidget> {
 
     return Container(
         decoration: BoxDecoration(
-            border: Border.all(width: 2),
+            border: Border.all(
+              width: 2,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
             borderRadius: const BorderRadius.all(Radius.circular(10))),
         child: table);
   }

@@ -172,8 +172,12 @@ class MemberMessage extends ChatRoomMessageWidget {
         // align the child within the container
         alignment: Alignment.centerLeft,
         child: Badge(
+          backgroundColor: Theme.of(context).colorScheme.primary,
           isLabelVisible: !message.read,
-          label: const Text("Neu"),
+          label: Text(
+            "Neu",
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+          ),
           offset: const Offset(-9, -4),
           child: DecoratedBox(
             // chat bubble decoration
@@ -335,10 +339,14 @@ class MessageFileAttachment extends StatelessWidget {
         customBuilder: (context, snapshot) => Column(
           children: [
             Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                    "${file.name} (${(snapshot.data!.lengthSync() / 1048576.0).toStringAsFixed(2)}MB)",
-                    style: const TextStyle(fontSize: 10))),
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "${file.name} (${(snapshot.data!.lengthSync() / 1048576.0).toStringAsFixed(2)}MB)",
+                style: TextStyle(
+                    fontSize: 10,
+                    color: Theme.of(context).colorScheme.onPrimary),
+              ),
+            ),
             IconButton(
               onPressed: () {
                 OpenFile.open(snapshot.data!.path);

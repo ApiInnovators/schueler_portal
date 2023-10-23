@@ -184,7 +184,12 @@ class _SingleChatsWidget extends State<SingleChatWidget> {
                 Row(
                   children: [
                     Badge(
-                      label: Text(widget.chat.unreadMessagesCount.toString()),
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                      label: Text(
+                        widget.chat.unreadMessagesCount.toString(),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSecondary),
+                      ),
                       isLabelVisible: widget.chat.unreadMessagesCount > 0,
                       child: Icon(widget.chat.members.length > 1 ||
                               widget.chat.members.any((element) =>

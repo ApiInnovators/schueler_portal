@@ -69,14 +69,14 @@ class MyAppState extends State<MyApp> {
       title: 'Schüler Portal',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.redAccent,
+          seedColor: Colors.lightBlue,
           brightness: Brightness.light,
         ),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.redAccent,
+          seedColor: Colors.lightBlue,
           brightness: Brightness.dark,
         ),
         useMaterial3: true,
@@ -165,25 +165,27 @@ class _ChatsNavigationDestinationState
   Widget build(BuildContext context) {
     return MyFutureBuilder(
       future: DataLoader.getChats(),
-      loadingIndicator: const NavigationDestination(
+      loadingIndicator: NavigationDestination(
         selectedIcon: Badge(
+            backgroundColor: Theme.of(context).colorScheme.secondary,
             label: SizedBox.square(
               dimension: 5,
               child: CircularProgressIndicator(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onSecondary,
                 strokeWidth: 1.5,
               ),
             ),
-            child: Icon(Icons.chat_bubble)),
+            child: const Icon(Icons.chat_bubble)),
         icon: Badge(
+          backgroundColor: Theme.of(context).colorScheme.secondary,
           label: SizedBox.square(
             dimension: 5,
             child: CircularProgressIndicator(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onSecondary,
               strokeWidth: 1.5,
             ),
           ),
-          child: Icon(Icons.chat_bubble_outline),
+          child: const Icon(Icons.chat_bubble_outline),
         ),
         label: 'Chats',
       ),
@@ -200,11 +202,21 @@ class _ChatsNavigationDestinationState
 
         return NavigationDestination(
           selectedIcon: Badge(
-            label: Text(_unreadChats.toString()),
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+            label: Text(
+              _unreadChats.toString(),
+              style:
+                  TextStyle(color: Theme.of(context).colorScheme.onSecondary),
+            ),
             child: const Icon(Icons.chat_bubble),
           ),
           icon: Badge(
-            label: Text(_unreadChats.toString()),
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+            label: Text(
+              _unreadChats.toString(),
+              style:
+                  TextStyle(color: Theme.of(context).colorScheme.onSecondary),
+            ),
             child: const Icon(Icons.chat_bubble_outline),
           ),
           label: 'Chats',

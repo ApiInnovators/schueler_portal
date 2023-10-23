@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
 import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
+import 'package:schueler_portal/pages/home/termine.dart';
 
 import '../../api/response_models/api/news.dart';
 import '../../api/api_client.dart';
@@ -68,7 +69,14 @@ class _HomeWidget extends State<StatefulWidget> {
                   child: Text("Unterricht"),
                 )),
             ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TermineWidget(),
+                    ),
+                  );
+                },
                 child: const Center(
                   child: Text("Termine"),
                 )),

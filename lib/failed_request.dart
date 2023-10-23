@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:schueler_portal/api_client.dart';
+import 'package:schueler_portal/api/api_client.dart';
 
 class FailedRequestWidget extends StatelessWidget {
   final ApiResponse apiResponse;

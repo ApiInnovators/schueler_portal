@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:schueler_portal/my_future_builder.dart';
+import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
 
-import 'api/response_models/api/chat.dart';
+import '../../api/response_models/api/chat.dart';
 import 'chat_room.dart';
-import 'data_loader.dart';
+import '../../data_loader.dart';
 
 class ChatsWidget extends StatefulWidget {
   const ChatsWidget({super.key});

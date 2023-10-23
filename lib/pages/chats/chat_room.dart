@@ -5,12 +5,12 @@ import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
 import 'package:schueler_portal/api/response_models/api/chat/id.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
-import 'package:schueler_portal/api_client.dart';
-import 'package:schueler_portal/my_future_builder.dart';
-import 'package:schueler_portal/user_login.dart';
+import 'package:schueler_portal/api/api_client.dart';
+import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
+import 'package:schueler_portal/pages/user_login.dart';
 import 'package:string_to_color/string_to_color.dart';
 
-import 'api/response_models/api/chat.dart';
+import '../../api/response_models/api/chat.dart';
 
 class ChatRoom extends StatelessWidget {
   final Chat chat;

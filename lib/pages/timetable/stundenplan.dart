@@ -5,10 +5,10 @@ import 'package:intl/intl.dart';
 import 'package:schueler_portal/api/response_models/api/vertretungsplan.dart'
     as vertretungsplan_package;
 import 'package:schueler_portal/data_loader.dart';
-import 'package:schueler_portal/my_future_builder.dart';
+import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
 import 'package:schueler_portal/user_data.dart';
 
-import 'api/response_models/api/stundenplan.dart' as stundenplan_package;
+import '../../api/response_models/api/stundenplan.dart' as stundenplan_package;
 
 class StundenplanContainer extends StatefulWidget {
   const StundenplanContainer({super.key});

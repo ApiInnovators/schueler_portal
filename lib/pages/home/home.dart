@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
-import 'package:schueler_portal/my_future_builder.dart';
+import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
 
-import 'api/response_models/api/news.dart';
-import 'api_client.dart';
-import 'data_loader.dart';
+import '../../api/response_models/api/news.dart';
+import '../../api/api_client.dart';
+import '../../data_loader.dart';
 
 class HomeWidget extends StatefulWidget {
   const HomeWidget({super.key});

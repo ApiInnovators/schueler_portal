@@ -7,8 +7,8 @@ import 'package:open_file/open_file.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 import 'package:schueler_portal/data_loader.dart';
 
-import 'api_client.dart';
-import 'my_future_builder.dart';
+import '../../api/api_client.dart';
+import '../../custom_widgets/my_future_builder.dart';
 
 class HomeworkWidget extends StatefulWidget {
   const HomeworkWidget({super.key});

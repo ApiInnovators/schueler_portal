@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:schueler_portal/api/request_models/base_request.dart';
-import 'package:schueler_portal/chats.dart';
+import 'package:schueler_portal/pages/chats/chats.dart';
 import 'package:schueler_portal/data_loader.dart';
-import 'package:schueler_portal/home.dart';
-import 'package:schueler_portal/homework.dart';
-import 'package:schueler_portal/stundenplan.dart';
-import 'package:schueler_portal/api_client.dart';
-import 'package:schueler_portal/user_login.dart';
+import 'package:schueler_portal/pages/home/home.dart';
+import 'package:schueler_portal/pages/homework/homework.dart';
+import 'package:schueler_portal/pages/timetable/stundenplan.dart';
+import 'package:schueler_portal/api/api_client.dart';
+import 'package:schueler_portal/pages/user_login.dart';
 
 import 'api/response_models/api/chat.dart';
-import 'my_future_builder.dart';
+import 'custom_widgets/my_future_builder.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

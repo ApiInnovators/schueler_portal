@@ -26,8 +26,11 @@ class TermineWidget extends StatelessWidget {
             firstDayOfWeek: 1,
             scheduleViewSettings: ScheduleViewSettings(
               monthHeaderSettings: MonthHeaderSettings(
-                  backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-                  height: 80,
+                backgroundColor:
+                    Theme.of(context).colorScheme.secondaryContainer,
+                monthTextStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onSecondaryContainer),
+                height: 80,
               ),
             ),
           );

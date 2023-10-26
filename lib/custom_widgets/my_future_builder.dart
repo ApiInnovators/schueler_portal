@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:schueler_portal/api/api_client.dart';
-import 'package:schueler_portal/failed_request.dart';
+import 'package:schueler_portal/custom_widgets/failed_request.dart';
 
 class MyFutureBuilder<T> extends FutureBuilder<T> {
   final Widget Function(BuildContext, AsyncSnapshot<T>) customBuilder;

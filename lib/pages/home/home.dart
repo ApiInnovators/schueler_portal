@@ -1,9 +1,9 @@
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
 import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
 import 'package:schueler_portal/pages/home/termine.dart';
+import 'package:schueler_portal/pages/home/unterricht.dart';
 
 import '../../api/response_models/api/news.dart';
 import '../../data_loader.dart';
@@ -63,7 +63,14 @@ class _HomeWidget extends State<StatefulWidget> {
               ),
             ),
             ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const UnterrichtWidget(),
+                    ),
+                  );
+                },
                 child: const Center(
                   child: Text("Unterricht"),
                 )),

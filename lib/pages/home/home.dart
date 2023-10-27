@@ -1,12 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:open_file/open_file.dart';
+import 'package:schueler_portal/custom_widgets/file_download_button.dart';
 import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
 import 'package:schueler_portal/pages/home/termine.dart';
 
 import '../../api/response_models/api/news.dart';
-import '../../api/api_client.dart';
 import '../../data_loader.dart';
 
 class HomeWidget extends StatefulWidget {
@@ -127,15 +126,7 @@ class NewsWidget extends StatelessWidget {
                     height: 10,
                   ),
                   if (news[i].file != null)
-                    ElevatedButton(
-                        onPressed: () async {
-                          File? file =
-                              await ApiClient.downloadFile(news[i].file!);
-                          if (file != null) {
-                            OpenFile.open(file.path);
-                          }
-                        },
-                        child: Text(news[i].file!.name)),
+                    FileDownloadButton(file: news[i].file!),
                   if (i != news.length - 1) const Divider(),
                 ],
               ),

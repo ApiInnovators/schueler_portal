@@ -6,6 +6,7 @@ import 'package:open_file/open_file.dart';
 import 'package:schueler_portal/api/response_models/api/chat/id.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 import 'package:schueler_portal/api/api_client.dart';
+import 'package:schueler_portal/custom_widgets/file_download_button.dart';
 import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
 import 'package:schueler_portal/pages/user_login.dart';
 import 'package:string_to_color/string_to_color.dart';
@@ -366,12 +367,6 @@ class MessageFileAttachment extends StatelessWidget {
       );
     }
 
-    return ElevatedButton.icon(
-      onPressed: () async {
-        OpenFile.open((await ApiClient.downloadFile(file))!.path);
-      },
-      icon: const Icon(Icons.file_download),
-      label: Text(file.name),
-    );
+    return FileDownloadButton(file: file);
   }
 }

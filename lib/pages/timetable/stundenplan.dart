@@ -65,6 +65,7 @@ class _StundenplanContainer extends State<StundenplanContainer> {
                   setState(() {});
                 },
                 child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   child: Column(
                     children: [
                       MyFutureBuilder(

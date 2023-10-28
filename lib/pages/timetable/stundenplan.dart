@@ -1,14 +1,15 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/api/response_models/api/vertretungsplan.dart'
     as vertretungsplan_package;
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
 import 'package:schueler_portal/user_data.dart';
+import 'package:string_to_color/string_to_color.dart';
+import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../../api/response_models/api/stundenplan.dart' as stundenplan_package;
+import '../../tools.dart';
 
 class StundenplanContainer extends StatefulWidget {
   const StundenplanContainer({super.key});
@@ -18,11 +19,12 @@ class StundenplanContainer extends StatefulWidget {
 }
 
 class _StundenplanContainer extends State<StundenplanContainer> {
-  late DateTime userRequestedDate;
+  DateTime userRequestedDate = DateTime.now();
   bool showOnlyUsersLessons = true;
 
-  _StundenplanContainer() {
-    userRequestedDate = DateTime.now();
+  @override
+  initState() {
+    super.initState();
     if (userRequestedDate.weekday == DateTime.sunday) {
       userRequestedDate = userRequestedDate.add(const Duration(days: 1));
     } else if (userRequestedDate.weekday == DateTime.saturday) {
@@ -32,335 +34,211 @@ class _StundenplanContainer extends State<StundenplanContainer> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Stundenplan"),
-        centerTitle: true,
-      ),
-      body: Container(
-        margin: const EdgeInsets.only(left: 10, right: 10),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Nur deine Stunden"),
-                Switch(
-                    value: showOnlyUsersLessons,
-                    onChanged: (value) {
-                      setState(() {
-                        showOnlyUsersLessons = value;
-                      });
-                    }),
-              ],
-            ),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: () async {
-                  DataLoader.cache.vertretungsplan = null;
-                  DataLoader.cache.stundenplan = null;
-                  DataLoader.cacheData();
-                  await DataLoader.getStundenplan();
-                  await DataLoader.getVertretungsplan();
-                  setState(() {});
-                },
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    children: [
-                      MyFutureBuilder(
-                        future: DataLoader.getStundenplan(),
-                        customBuilder: (context, snapshot) => StundenplanWidget(
-                          scheduleData: snapshot.data!.data!,
-                          stundenplanContainer: this,
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 50,
-                        child: Center(
-                          child: Text(
-                            "Vertretungsplan",
-                            style: TextStyle(fontSize: 20),
-                          ),
-                        ),
-                      ),
-                      MyFutureBuilder(
-                        future: DataLoader.getVertretungsplan(),
-                        customBuilder: (context, snapshot) =>
-                            VertretungsplanWidget(
-                          vertretungsplanData: snapshot.data!.data!,
-                          stundenplanContainer: this,
-                        ),
-                      ),
-                    ],
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 6, right: 6, top: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Nur deine Stunden"),
+              Switch(
+                  value: showOnlyUsersLessons,
+                  onChanged: (value) {
+                    setState(() {
+                      showOnlyUsersLessons = value;
+                    });
+                  }),
+            ],
+          ),
+        ),
+        Divider(),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              DataLoader.cache.vertretungsplan = null;
+              DataLoader.cache.stundenplan = null;
+              DataLoader.cacheData();
+              await DataLoader.getStundenplan();
+              await DataLoader.getVertretungsplan();
+              setState(() {});
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: SizedBox(
+                height: 600,
+                child: MyFutureBuilder(
+                  future: getData(),
+                  customBuilder: (context, snapshot) => StundenplanWidget(
+                    scheduleData: snapshot.data!.$1.data!,
+                    vertretungsplan: snapshot.data!.$2.data!,
+                    showOnlyUsersLessons: showOnlyUsersLessons,
                   ),
                 ),
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_left),
-                  onPressed: () {
-                    setState(() {
-                      if (userRequestedDate.weekday == DateTime.monday) {
-                        userRequestedDate =
-                            userRequestedDate.subtract(const Duration(days: 3));
-                      } else if (userRequestedDate.weekday == DateTime.sunday) {
-                        userRequestedDate =
-                            userRequestedDate.subtract(const Duration(days: 2));
-                      } else {
-                        userRequestedDate =
-                            userRequestedDate.subtract(const Duration(days: 1));
-                      }
-                    });
-                  },
-                ),
-                Center(
-                  child: Text(DateFormat("EEEE - dd.MM.yyyy")
-                      .format(userRequestedDate)),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.arrow_right),
-                  onPressed: () {
-                    setState(() {
-                      if (userRequestedDate.weekday == DateTime.friday) {
-                        userRequestedDate =
-                            userRequestedDate.add(const Duration(days: 3));
-                      } else if (userRequestedDate.weekday ==
-                          DateTime.saturday) {
-                        userRequestedDate =
-                            userRequestedDate.add(const Duration(days: 2));
-                      } else {
-                        userRequestedDate =
-                            userRequestedDate.add(const Duration(days: 1));
-                      }
-                    });
-                  },
-                )
-              ],
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
+
+  Future<
+          (
+            ApiResponse<stundenplan_package.Stundenplan>,
+            ApiResponse<vertretungsplan_package.Vertretungsplan>
+          )>
+      getData() async => (
+            await DataLoader.getStundenplan(),
+            await DataLoader.getVertretungsplan()
+          );
 }
 
-class StundenplanWidget extends StatefulWidget {
+class StundenplanWidget extends StatelessWidget {
   final stundenplan_package.Stundenplan scheduleData;
-  final _StundenplanContainer stundenplanContainer;
+  final vertretungsplan_package.Vertretungsplan vertretungsplan;
+  final calendarController = CalendarController();
+  final bool showOnlyUsersLessons;
+  static DateTime lastDisplayedDate = DateTime.now();
+  static CalendarView lastCalendarView = CalendarView.day;
 
-  const StundenplanWidget(
-      {super.key,
-      required this.scheduleData,
-      required this.stundenplanContainer});
-
-  @override
-  State<StatefulWidget> createState() => _StundenplanWidget();
-}
-
-class _StundenplanWidget extends State<StundenplanWidget> {
-  Map<int, Map<int, List<stundenplan_package.Datum>>>
-      groupLessonsByDayAndHour() {
-    List<stundenplan_package.Datum> stundenplan = widget.scheduleData.data;
-    Map<int, Map<int, List<stundenplan_package.Datum>>> grouped = {};
-
-    for (final lesson in stundenplan) {
-      if (widget.stundenplanContainer.showOnlyUsersLessons &&
-          !UserData.isCourseEnabled(lesson.uf)) {
-        continue;
-      }
-
-      grouped.putIfAbsent(
-          lesson.day, () => <int, List<stundenplan_package.Datum>>{});
-      grouped[lesson.day]!
-          .putIfAbsent(lesson.hour, () => <stundenplan_package.Datum>[]);
-
-      grouped[lesson.day]![lesson.hour]!.add(lesson);
-    }
-
-    return grouped;
+  StundenplanWidget({
+    super.key,
+    required this.scheduleData,
+    required this.vertretungsplan,
+    required this.showOnlyUsersLessons,
+  }) {
+    calendarController.displayDate = lastDisplayedDate;
   }
 
   @override
   Widget build(BuildContext context) {
-    var grouped = groupLessonsByDayAndHour();
-    int weekday = widget.stundenplanContainer.userRequestedDate.weekday - 1;
+    DateTime now = DateTime.now().toLocal();
+    DateTime today = DateTime(now.year, now.month, now.day);
 
-    if (!grouped.containsKey(weekday)) {
-      return const Center(child: Text("Kein Unterricht"));
-    }
-
-    Map<int, List<stundenplan_package.Datum>> usersLessonsToday =
-        grouped[weekday]!;
-
-    Table table = Table(
-      border: TableBorder.symmetric(
-        inside: BorderSide(
-            width: 1, color: Theme.of(context).colorScheme.secondary),
-      ),
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-      columnWidths: const <int, TableColumnWidth>{
-        0: IntrinsicColumnWidth(),
-        1: FlexColumnWidth(),
-      },
-      children: List.empty(growable: true),
-    );
-
-    int lastLesson = usersLessonsToday.keys.reduce(max);
-
-    for (int i = 0; i < lastLesson; ++i) {
-      String time = widget.scheduleData.zeittafel[i].value;
-      int hour = widget.scheduleData.zeittafel[i].hour;
-
-      TableRow tableRow = TableRow(children: <Widget>[
-        Container(
-          height: 40,
-          padding: const EdgeInsets.only(left: 10, right: 10),
-          child: Center(
-            child: Text("$hour. $time", textAlign: TextAlign.center),
-          ),
-        ),
-      ]);
-
-      if (usersLessonsToday.containsKey(i + 1)) {
-        String text = "";
-
-        for (stundenplan_package.Datum element in usersLessonsToday[i + 1]!) {
-          text += "\n${element.uf}";
-          if (element.room != null) {
-            text += " (${element.room})";
-          }
+    return SfCalendar(
+      controller: calendarController,
+      onViewChanged: (details) {
+        if (details.visibleDates.length == 1) {
+          lastDisplayedDate = details.visibleDates[0];
         }
-
-        tableRow.children.add(Center(child: Text(text.trim())));
-      } else {
-        tableRow.children.add(const SizedBox.shrink());
-      }
-
-      table.children.add(tableRow);
-    }
-
-    return Theme(
-      data: Theme.of(context),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(
-            width: 2,
-            color: Theme.of(context).colorScheme.secondary,
-          ),
-          borderRadius: const BorderRadius.all(Radius.circular(10)),
-        ),
-        child: table,
+        if (calendarController.view != null) {
+          lastCalendarView = calendarController.view!;
+        }
+      },
+      dataSource: StundenplanDataSource(
+          showOnlyUsersLessons
+              ? scheduleData.data
+                  .where((element) => UserData.isCourseEnabled(element.uf))
+                  .toList()
+              : scheduleData.data,
+          vertretungsplan.data,
+          showOnlyUsersLessons),
+      view: lastCalendarView,
+      allowedViews: const [
+        CalendarView.day,
+        CalendarView.schedule,
+      ],
+      showNavigationArrow: true,
+      showDatePickerButton: true,
+      allowViewNavigation: true,
+      firstDayOfWeek: DateTime.monday,
+      timeSlotViewSettings: const TimeSlotViewSettings(
+        startHour: 7.0 + 55.0 / 60.0,
+        endHour: 18.0 + 15.0 / 60.0,
+        nonWorkingDays: [DateTime.saturday, DateTime.sunday],
       ),
+      minDate: today.subtract(Duration(days: today.weekday - 1)),
     );
   }
 }
 
-class VertretungsplanWidget extends StatefulWidget {
-  final vertretungsplan_package.Vertretungsplan vertretungsplanData;
-  final _StundenplanContainer stundenplanContainer;
+class StundenplanDataSource extends CalendarDataSource {
+  final List<stundenplan_package.Datum> stunden;
+  final List<vertretungsplan_package.Datum> vertretungen;
+  final bool onlyUsersLessons;
 
-  const VertretungsplanWidget(
-      {super.key,
-      required this.stundenplanContainer,
-      required this.vertretungsplanData});
+  StundenplanDataSource(
+    this.stunden,
+    this.vertretungen,
+    this.onlyUsersLessons,
+  ) {
+    appointments = stunden;
+  }
 
   @override
-  State<StatefulWidget> createState() => _VertretungsplanWidget();
-}
+  String getRecurrenceRule(int index) {
+    String byDay = "";
 
-class _VertretungsplanWidget extends State<VertretungsplanWidget> {
-  Iterable<vertretungsplan_package.Datum> filterUserVertretung(
-      List<vertretungsplan_package.Datum> data, DateTime date) sync* {
-    for (final item in data) {
-      if (date.isSameDate(item.date) &&
-          (!widget.stundenplanContainer.showOnlyUsersLessons ||
-              UserData.isCourseEnabled(item.uf))) {
-        yield item;
+    switch (stunden[index].day) {
+      case 0:
+        byDay = "MO";
+        break;
+      case 1:
+        byDay = "TU";
+        break;
+      case 2:
+        byDay = "WE";
+        break;
+      case 3:
+        byDay = "TH";
+        break;
+      case 4:
+        byDay = "FR";
+        break;
+    }
+
+    return "FREQ=WEEKLY;INTERVAL=1;BYDAY=$byDay";
+  }
+
+  @override
+  DateTime getStartTime(int index) {
+    DateTime now = DateTime.now().toLocal();
+
+    return Tools.hourStartToDateTime(
+      stunden[index].hour,
+      DateTime(now.year, now.month, stunden[index].day),
+    );
+  }
+
+  @override
+  DateTime getEndTime(int index) {
+    DateTime now = DateTime.now().toLocal();
+
+    return Tools.hourEndToDateTime(
+      stunden[index].hour,
+      DateTime(now.year, now.month, stunden[index].day),
+    );
+  }
+
+  vertretungsplan_package.Datum? findVertretung(
+      stundenplan_package.Datum stunde) {
+    for (vertretungsplan_package.Datum vertretung in vertretungen) {
+      if (vertretung.date.weekday - 1 == stunde.day &&
+          vertretung.uf == stunde.uf &&
+          vertretung.hour == stunde.hour) {
+        return vertretung;
       }
     }
+    return null;
   }
 
   @override
-  Widget build(BuildContext context) {
-    Iterable<vertretungsplan_package.Datum> filteredUserVertretung =
-        filterUserVertretung(widget.vertretungsplanData.data,
-            widget.stundenplanContainer.userRequestedDate);
+  String getSubject(int index) {
+    stundenplan_package.Datum stunde = stunden[index];
+    String subject = stunde.uf;
 
-    if (filteredUserVertretung.isEmpty) {
-      return const Text("Keine Vertretungen/Daten");
-    }
+    if (stunde.room != null) subject += " (${stunde.room})";
 
-    Table table = Table(
-      border: TableBorder.symmetric(
-        inside: BorderSide(
-            width: 1, color: Theme.of(context).colorScheme.secondary),
-      ),
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-      children: List.empty(growable: true),
-    );
+    vertretungsplan_package.Datum? vertretung = findVertretung(stunde);
 
-    List<String> titles = [
-      "Std.",
-      "Betrifft",
-      "Vertretung",
-      "Fach",
-      "Raum",
-      "Grund"
-    ];
+    if (vertretung != null) subject += " - ${vertretung.reason}";
 
-    table.children.add(
-      TableRow(
-        children: List.generate(titles.length, (i) {
-          return Padding(
-            padding: const EdgeInsets.all(4),
-            child: Center(
-              child: Text(
-                titles[i],
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-
-    for (vertretungsplan_package.Datum element in filteredUserVertretung) {
-      List<String> cellStrings = [
-        element.hour.toString(),
-        element.absTeacher,
-        element.vertrTeacher,
-        element.uf,
-        element.room,
-        element.reason
-      ];
-
-      TableRow tableRow = TableRow(
-        children: List.generate(cellStrings.length, (i) {
-          return Padding(
-            padding: const EdgeInsets.all(4),
-            child: Center(
-              child: Text(cellStrings[i].isEmpty ? "-" : cellStrings[i]),
-            ),
-          );
-        }),
-      );
-
-      table.children.add(tableRow);
-    }
-
-    return Container(
-        decoration: BoxDecoration(
-            border: Border.all(
-              width: 2,
-              color: Theme.of(context).colorScheme.secondary,
-            ),
-            borderRadius: const BorderRadius.all(Radius.circular(10))),
-        child: table);
+    return subject;
   }
+
+  @override
+  Color getColor(int index) => ColorUtils.stringToColor(stunden[index].uf);
 }
 
 extension DateOnlyCompare on DateTime {

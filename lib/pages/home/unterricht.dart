@@ -154,7 +154,7 @@ class UnterrichtDetailsWidget extends StatelessWidget {
             AlignedText(unterricht.homework!.homework.trim()),
             AlignedText(
               "Zu erledigen bis: ${DateFormat("dd.MM.yyyy").format(unterricht.homework!.dueAt)}",
-              style: TextStyle(fontSize: 10),
+              style: const TextStyle(fontSize: 10),
             ),
             for (FileElement file in unterricht.homework!.files)
               FileDownloadButton(file: file),

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:schueler_portal/api/response_models/api/termine.dart';
 import 'package:schueler_portal/custom_widgets/my_future_builder.dart';

@@ -54,7 +54,7 @@ class Member {
   final int id;
   final String type;
   final String name;
-  final String info;
+  final String? info;
 
   Member({
     required this.id,

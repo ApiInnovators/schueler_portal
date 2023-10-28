@@ -1,21 +1,27 @@
-class UserData {
-  static final Set<String> _registeredCourses = {
-    "2M_7",
-    "2SK_7",
-    "2KU_5",
-    "2P_PH1",
-    "2D_7",
-    "2INF_1",
-    "2ETH_1",
-    "2W_M1",
-    "2SP_BAD2",
-    "2PH_1",
-    "2E_7",
-    "2G_7",
-    "2GEO_2"
-  };
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-  static bool userIsRegisteredForCourse(String course) {
-    return _registeredCourses.contains(course.toUpperCase());
+class UserData {
+  static late SharedPreferences _prefs;
+  static const String _accentColorKey = "accent color";
+
+  static Future<void> init() async {
+    _prefs = await SharedPreferences.getInstance();
   }
+
+  static Future<void> setAccentColor(Color color) =>
+      _prefs.setString(_accentColorKey, color.toString());
+
+  static Color getAccentColor() {
+    String? res = _prefs.getString(_accentColorKey);
+
+    if (res == null) return Colors.lightBlue;
+
+    return Color(int.parse(res.split('(0x')[1].split(')')[0], radix: 16));
+  }
+
+  static bool isCourseEnabled(String course) => _prefs.getBool(course) ?? true;
+
+  static Future<void> setCourseIsEnabled(String course, bool value) =>
+      _prefs.setBool(course, value);
 }

@@ -169,7 +169,7 @@ class _StundenplanWidget extends State<StundenplanWidget> {
 
     for (final lesson in stundenplan) {
       if (widget.stundenplanContainer.showOnlyUsersLessons &&
-          !UserData.userIsRegisteredForCourse(lesson.uf)) {
+          !UserData.isCourseEnabled(lesson.uf)) {
         continue;
       }
 
@@ -278,7 +278,7 @@ class _VertretungsplanWidget extends State<VertretungsplanWidget> {
     for (final item in data) {
       if (date.isSameDate(item.date) &&
           (!widget.stundenplanContainer.showOnlyUsersLessons ||
-              UserData.userIsRegisteredForCourse(item.uf))) {
+              UserData.isCourseEnabled(item.uf))) {
         yield item;
       }
     }

@@ -1,3 +1,5 @@
+import 'package:schueler_portal/api/response_models/api/stundenplan.dart';
+
 class Tools {
   static DateTime hourStartToDateTime(int hour, DateTime day) {
     // hour is not zero based!
@@ -62,4 +64,7 @@ class Tools {
 
     return day.add(Duration(days: days));
   }
+
+  static Set<String> getStundenplanCourses(List<Datum> stundenplanData) =>
+      stundenplanData.map((datum) => datum.uf).toSet();
 }

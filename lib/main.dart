@@ -7,6 +7,7 @@ import 'package:schueler_portal/pages/homework/homework.dart';
 import 'package:schueler_portal/pages/timetable/stundenplan.dart';
 import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/pages/user_login.dart';
+import 'package:schueler_portal/user_data.dart';
 
 import 'api/response_models/api/chat.dart';
 import 'custom_widgets/my_future_builder.dart';
@@ -14,6 +15,7 @@ import 'custom_widgets/my_future_builder.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await UserData.init();
   BaseRequest? loadedLogin = await UserLogin.load();
 
   if (loadedLogin == null) {
@@ -31,7 +33,7 @@ Future<void> main() async {
 class MyApp extends StatefulWidget {
   final bool openLoginPage;
 
-  const MyApp({Key? key, required this.openLoginPage}) : super(key: key);
+  const MyApp({super.key, required this.openLoginPage});
 
   @override
   State<StatefulWidget> createState() => MyAppState();
@@ -39,6 +41,7 @@ class MyApp extends StatefulWidget {
 
 class MyAppState extends State<MyApp> {
   late bool _loginSuccessful;
+  Color accentColor = UserData.getAccentColor();
 
   @override
   void initState() {
@@ -47,11 +50,9 @@ class MyAppState extends State<MyApp> {
     if (!widget.openLoginPage) _initLogin();
   }
 
-  setLogin(bool success) {
-    setState(() {
-      _loginSuccessful = success;
-    });
-  }
+  setLogin(bool success) => setState(() => _loginSuccessful = success);
+
+  setAccentColor(Color color) => setState(() => accentColor = color);
 
   Future<void> _initLogin() async {
     var loginReq = ApiClient.baseRequest;
@@ -69,30 +70,30 @@ class MyAppState extends State<MyApp> {
       title: 'Schüler Portal',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.lightBlue,
+          seedColor: accentColor,
           brightness: Brightness.light,
         ),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.lightBlue,
+          seedColor: accentColor,
           brightness: Brightness.dark,
         ),
         useMaterial3: true,
       ),
       themeMode: ThemeMode.system,
       home: _loginSuccessful
-          ? const MyHomePage(title: 'Home Page')
+          ? MyHomePage(myAppState: this)
           : UserLoginWidget(myAppState: this), // Placeholder widget
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  final MyAppState myAppState;
 
-  final String title;
+  const MyHomePage({super.key, required this.myAppState});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -131,7 +132,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       body: <Widget>[
-        const HomeWidget(),
+        HomeWidget(myAppState: widget.myAppState),
         const HomeworkWidget(),
         const ChatsWidget(),
         const StundenplanContainer(),

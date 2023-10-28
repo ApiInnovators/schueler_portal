@@ -1,7 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
 import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
+import 'package:schueler_portal/main.dart';
+import 'package:schueler_portal/pages/home/settings/settings.dart';
 import 'package:schueler_portal/pages/home/termine.dart';
 import 'package:schueler_portal/pages/home/unterricht.dart';
 
@@ -9,13 +10,15 @@ import '../../api/response_models/api/news.dart';
 import '../../data_loader.dart';
 
 class HomeWidget extends StatefulWidget {
-  const HomeWidget({super.key});
+  final MyAppState myAppState;
+
+  const HomeWidget({super.key, required this.myAppState});
 
   @override
   State<StatefulWidget> createState() => _HomeWidget();
 }
 
-class _HomeWidget extends State<StatefulWidget> {
+class _HomeWidget extends State<HomeWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,6 +27,18 @@ class _HomeWidget extends State<StatefulWidget> {
           "Home",
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+              onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SettingsPage(
+                        myAppState: widget.myAppState,
+                      ),
+                    ),
+                  ),
+              icon: const Icon(Icons.settings))
+        ],
       ),
       body: Container(
         margin: const EdgeInsets.all(10),

@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/api/response_models/api/termine.dart';
 import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
+import 'package:schueler_portal/data_loader.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class TermineWidget extends StatelessWidget {
@@ -16,7 +16,7 @@ class TermineWidget extends StatelessWidget {
         centerTitle: true,
       ),
       body: MyFutureBuilder(
-        future: ApiClient.putAndParse("/termine", termineFromJson),
+        future: DataLoader.getTermine(),
         customBuilder: (context, snapshot) {
           Termine termine = snapshot.data!.data!;
 
@@ -43,9 +43,7 @@ class TermineWidget extends StatelessWidget {
 class TermineDataSource extends CalendarDataSource {
   final Termine termine;
 
-  TermineDataSource(
-    this.termine,
-  ) {
+  TermineDataSource(this.termine) {
     appointments = List.empty(growable: true);
     appointments!.addAll(termine.leistungsnachweise.schulaufgaben);
     appointments!.addAll(termine.leistungsnachweise.exTemporalen);

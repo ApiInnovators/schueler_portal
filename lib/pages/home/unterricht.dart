@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 import 'package:schueler_portal/api/response_models/api/unterricht.dart';
 import 'package:schueler_portal/custom_widgets/aligned_text.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
 import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
+import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/tools.dart';
 import 'package:string_to_color/string_to_color.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
@@ -32,46 +32,56 @@ class _UnterrichtWidgetState extends State<UnterrichtWidget> {
       body: Column(
         children: [
           Expanded(
-            child: MyFutureBuilder(
-                future: ApiClient.putAndParse(
-                  "/unterricht--${DateFormat("yyyy-MM-dd").format(userRequestedDate)}",
-                  unterrichtFromJson,
+            child: RefreshIndicator(
+              onRefresh: () async {
+                DataLoader.cache.unterricht.remove(userRequestedDate);
+                await DataLoader.getUnterricht(userRequestedDate);
+                setState(() {});
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height,
+                  child: MyFutureBuilder(
+                      future: DataLoader.getUnterricht(userRequestedDate),
+                      customBuilder: (context, snapshot) {
+                        List<Unterricht> unterricht = snapshot.data!.data!;
+
+                        if (unterricht.isEmpty) {
+                          return const Center(
+                            child: Text("Keine Unterrichtsinhalte"),
+                          );
+                        }
+
+                        int lastHour = unterricht
+                            .reduce((currentUnterricht, nextUnterricht) =>
+                                currentUnterricht.hourTo > nextUnterricht.hourTo
+                                    ? currentUnterricht
+                                    : nextUnterricht)
+                            .hourTo;
+
+                        DateTime endTime = Tools.hourEndToDateTime(
+                          lastHour,
+                          userRequestedDate,
+                        );
+
+                        return SfCalendar(
+                          controller: _calendarController,
+                          view: CalendarView.day,
+                          viewNavigationMode: ViewNavigationMode.none,
+                          firstDayOfWeek: 1,
+                          dataSource: UnterrichtDataSource(unterricht),
+                          timeSlotViewSettings: TimeSlotViewSettings(
+                            startHour: 7.0 + 55.0 / 60.0,
+                            endHour: endTime.hour + endTime.minute / 60.0,
+                            timeIntervalHeight: 100,
+                          ),
+                          onTap: calenderTapped,
+                        );
+                      }),
                 ),
-                customBuilder: (context, snapshot) {
-                  List<Unterricht> unterricht = snapshot.data!.data!;
-
-                  if (unterricht.isEmpty) {
-                    return const Center(
-                      child: Text("Keine Unterrichtsinhalte"),
-                    );
-                  }
-
-                  int lastHour = unterricht
-                      .reduce((currentUnterricht, nextUnterricht) =>
-                          currentUnterricht.hourTo > nextUnterricht.hourTo
-                              ? currentUnterricht
-                              : nextUnterricht)
-                      .hourTo;
-
-                  DateTime endTime = Tools.hourEndToDateTime(
-                    lastHour,
-                    userRequestedDate,
-                  );
-
-                  return SfCalendar(
-                    controller: _calendarController,
-                    view: CalendarView.day,
-                    viewNavigationMode: ViewNavigationMode.none,
-                    firstDayOfWeek: 1,
-                    dataSource: UnterrichtDataSource(unterricht),
-                    timeSlotViewSettings: TimeSlotViewSettings(
-                      startHour: 7.0 + 55.0 / 60.0,
-                      endHour: endTime.hour + endTime.minute / 60.0,
-                      timeIntervalHeight: 100,
-                    ),
-                    onTap: calenderTapped,
-                  );
-                }),
+              ),
+            ),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
-import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
 import 'package:schueler_portal/main.dart';
 import 'package:schueler_portal/pages/home/settings/settings.dart';
 import 'package:schueler_portal/pages/home/termine.dart';
@@ -66,10 +66,11 @@ class _HomeWidget extends State<HomeWidget> {
                           await DataLoader.getNews();
                           setState(() {});
                         },
-                        child: MyFutureBuilder(
+                        child: CachingFutureBuilder(
                           future: DataLoader.getNews(),
-                          customBuilder: (context, snapshot) =>
-                              NewsWidget(news: snapshot.data!.data!),
+                          cacheGetter: () => DataLoader.cache.news,
+                          builder: (context, snapshot) =>
+                              NewsWidget(news: snapshot.data!),
                         ),
                       ),
                     ),

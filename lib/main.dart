@@ -191,7 +191,7 @@ class _ChatsNavigationDestinationState
         label: 'Chats',
       ),
       customBuilder: (context, snapshot) {
-        _unreadChats ??= _countUnreadChats(snapshot.data!);
+        _unreadChats ??= _countUnreadChats(snapshot);
 
         if (_unreadChats! < 1) {
           const NavigationDestination(

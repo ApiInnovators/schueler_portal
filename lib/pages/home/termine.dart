@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:schueler_portal/api/response_models/api/termine.dart';
-import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
+import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
@@ -14,10 +14,11 @@ class TermineWidget extends StatelessWidget {
         title: const Text("Termine"),
         centerTitle: true,
       ),
-      body: MyFutureBuilder(
+      body: CachingFutureBuilder(
         future: DataLoader.getTermine(),
-        customBuilder: (context, snapshot) {
-          Termine termine = snapshot.data!.data!;
+        cacheGetter: () => DataLoader.cache.termine,
+        builder: (context, snapshot) {
+          Termine termine = snapshot.data!;
 
           return SfCalendar(
             view: CalendarView.schedule,

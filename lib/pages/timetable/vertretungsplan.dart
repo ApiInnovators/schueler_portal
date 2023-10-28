@@ -4,7 +4,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:schueler_portal/custom_widgets/aligned_text.dart';
-import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
+import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/pages/timetable/stundenplan.dart';
 import 'package:schueler_portal/user_data.dart';
@@ -49,10 +49,11 @@ class _VertretungsplanWidgetState extends State<VertretungsplanWidget> {
           const Divider(),
           Expanded(
             child: SingleChildScrollView(
-              child: MyFutureBuilder(
+              child: CachingFutureBuilder(
                 future: DataLoader.getVertretungsplan(),
-                customBuilder: (context, snapshot) {
-                  List<Datum> datums = snapshot.data!.data!.data;
+                cacheGetter: () => DataLoader.cache.vertretungsplan,
+                builder: (context, snapshot) {
+                  List<Datum> datums = snapshot.data!.data;
 
                   if (onlyUsersVertretungen) {
                     datums = datums

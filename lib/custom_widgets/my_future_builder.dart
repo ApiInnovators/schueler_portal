@@ -3,7 +3,7 @@ import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/custom_widgets/failed_request.dart';
 
 class MyFutureBuilder<T> extends FutureBuilder<T> {
-  final Widget Function(BuildContext, AsyncSnapshot<T>) customBuilder;
+  final Widget Function(BuildContext, T) customBuilder;
   final Widget loadingIndicator;
   final Widget errorWidget;
 
@@ -35,7 +35,9 @@ class MyFutureBuilder<T> extends FutureBuilder<T> {
             }
 
             if (snapshot.connectionState == ConnectionState.done &&
-                snapshot.hasData) return customBuilder(context, snapshot);
+                snapshot.hasData) {
+              return customBuilder(context, snapshot.data as T);
+            }
 
             return const Text("Error");
           },

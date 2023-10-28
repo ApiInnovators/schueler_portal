@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
+import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 
 import '../../api/response_models/api/chat.dart';
 import 'chat_room.dart';
@@ -30,9 +30,10 @@ class _ChatsWidget extends State<ChatsWidget> {
           await DataLoader.getChats();
           setState(() {});
         },
-        child: MyFutureBuilder(
+        child: CachingFutureBuilder(
           future: DataLoader.getChats(),
-          customBuilder: (context, snapshot) {
+          cacheGetter: () => DataLoader.cache.chats,
+          builder: (context, snapshot) {
             return Column(
               children: [
                 Padding(
@@ -41,19 +42,19 @@ class _ChatsWidget extends State<ChatsWidget> {
                     builder:
                         (BuildContext context, SearchController controller) {
                       return SearchBar(
-                          hintText: "Chat suchen...",
-                          controller: controller,
-                          onChanged: (value) => setState(() {
-                                searchText = value;
-                              }));
+                        hintText: "Chat suchen...",
+                        controller: controller,
+                        onChanged: (value) => setState(() {
+                          searchText = value;
+                        }),
+                      );
                     },
                     suggestionsBuilder:
                         (BuildContext context, SearchController controller) =>
                             [],
                   ),
                 ),
-                ChatsListWidget(
-                    filterText: searchText, data: snapshot.data!.data!),
+                ChatsListWidget(filterText: searchText, data: snapshot.data!),
               ],
             );
           },

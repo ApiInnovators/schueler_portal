@@ -67,4 +67,13 @@ class Tools {
 
   static Set<String> getStundenplanCourses(List<Datum> stundenplanData) =>
       stundenplanData.map((datum) => datum.uf).toSet();
+
+
+}
+
+extension DateUtils on DateTime {
+  DateTime dayOnly() {
+    final local = toLocal();
+    return DateTime(local.year, local.month, local.day);
+  }
 }

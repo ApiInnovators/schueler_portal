@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/api/response_models/api/vertretungsplan.dart'
     as vertretungsplan_package;
+import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/data_loader.dart';
-import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
 import 'package:schueler_portal/user_data.dart';
 import 'package:string_to_color/string_to_color.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
@@ -52,7 +52,7 @@ class _StundenplanContainer extends State<StundenplanContainer> {
             ],
           ),
         ),
-        Divider(),
+        const Divider(),
         Expanded(
           child: RefreshIndicator(
             onRefresh: () async {
@@ -67,11 +67,12 @@ class _StundenplanContainer extends State<StundenplanContainer> {
               physics: const AlwaysScrollableScrollPhysics(),
               child: SizedBox(
                 height: 600,
-                child: MyFutureBuilder(
+                child: CachingFutureBuilder(
                   future: getData(),
-                  customBuilder: (context, snapshot) => StundenplanWidget(
-                    scheduleData: snapshot.data!.$1.data!,
-                    vertretungsplan: snapshot.data!.$2.data!,
+                  cacheGetter: () => (DataLoader.cache.stundenplan, DataLoader.cache.vertretungsplan),
+                  builder: (context, snapshot) => StundenplanWidget(
+                    scheduleData: snapshot.$1!.data!,
+                    vertretungsplan: snapshot.$2!.data!,
                     showOnlyUsersLessons: showOnlyUsersLessons,
                   ),
                 ),

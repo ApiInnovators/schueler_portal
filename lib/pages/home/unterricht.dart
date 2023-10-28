@@ -3,8 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 import 'package:schueler_portal/api/response_models/api/unterricht.dart';
 import 'package:schueler_portal/custom_widgets/aligned_text.dart';
+import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
-import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/tools.dart';
 import 'package:string_to_color/string_to_color.dart';
@@ -18,7 +18,7 @@ class UnterrichtWidget extends StatefulWidget {
 }
 
 class _UnterrichtWidgetState extends State<UnterrichtWidget> {
-  DateTime userRequestedDate = DateTime.now();
+  DateTime userRequestedDate = DateTime.now().dayOnly();
   final _calendarController = CalendarController();
 
   @override
@@ -42,10 +42,12 @@ class _UnterrichtWidgetState extends State<UnterrichtWidget> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: SizedBox(
                   height: MediaQuery.of(context).size.height,
-                  child: MyFutureBuilder(
+                  child: CachingFutureBuilder(
                       future: DataLoader.getUnterricht(userRequestedDate),
-                      customBuilder: (context, snapshot) {
-                        List<Unterricht> unterricht = snapshot.data!.data!;
+                      cacheGetter: () =>
+                          DataLoader.cache.unterricht[userRequestedDate],
+                      builder: (context, data) {
+                        List<Unterricht> unterricht = data!.data!;
 
                         if (unterricht.isEmpty) {
                           return const Center(

@@ -25,7 +25,7 @@ class ChatRoom extends StatelessWidget {
       body: MyFutureBuilder(
         future: ApiClient.putAndParse("chat--${chat.id}", chatDetailsFromJson),
         customBuilder: (context, snapshot) {
-          ChatDetails chatDetails = snapshot.data!.data!;
+          ChatDetails chatDetails = snapshot.data!;
 
           Map<DateTime, List<Message>> groupedMessagesByDate = groupBy(
               chatDetails.messages,
@@ -342,7 +342,7 @@ class MessageFileAttachment extends StatelessWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                "${file.name} (${(snapshot.data!.lengthSync() / 1048576.0).toStringAsFixed(2)}MB)",
+                "${file.name} (${(snapshot!.lengthSync() / 1048576.0).toStringAsFixed(2)}MB)",
                 style: TextStyle(
                     fontSize: 10,
                     color: Theme.of(context).colorScheme.onPrimary),
@@ -350,7 +350,7 @@ class MessageFileAttachment extends StatelessWidget {
             ),
             IconButton(
               onPressed: () {
-                OpenFile.open(snapshot.data!.path);
+                OpenFile.open(snapshot.path);
               },
               style: IconButton.styleFrom(
                 shape: const RoundedRectangleBorder(
@@ -359,7 +359,7 @@ class MessageFileAttachment extends StatelessWidget {
               ),
               icon: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: Image.file(snapshot.data!),
+                child: Image.file(snapshot),
               ),
             ),
           ],

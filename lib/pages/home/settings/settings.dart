@@ -3,7 +3,7 @@ import 'dart:collection';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
+import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/main.dart';
 import 'package:schueler_portal/pages/home/settings/information.dart';
@@ -127,11 +127,12 @@ class CoursesSelectorPage extends StatelessWidget {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: MyFutureBuilder(
+          child: CachingFutureBuilder(
             future: DataLoader.getStundenplan(),
-            customBuilder: (context, snapshot) {
+            cacheGetter: () => DataLoader.cache.stundenplan,
+            builder: (context, snapshot) {
               final allCourses = Tools.getStundenplanCourses(
-                snapshot.data!.data!.data,
+                snapshot.data!.data,
               ).toList();
 
               final grouped = SplayTreeMap<String, List<String>>.from(

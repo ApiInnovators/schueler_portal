@@ -3,10 +3,10 @@ import 'package:fading_edge_scrollview/fading_edge_scrollview.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
+import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
 import 'package:schueler_portal/data_loader.dart';
 
-import '../../custom_widgets/my_future_builder.dart';
 
 class HomeworkWidget extends StatefulWidget {
   const HomeworkWidget({super.key});
@@ -44,10 +44,11 @@ class _HomeworkWidget extends State<StatefulWidget> {
             children: [
               const Text("Nothing here"),
               RefreshIndicator(
-                  child: MyFutureBuilder(
+                  child: CachingFutureBuilder(
                     future: DataLoader.getHausaufgaben(),
-                    customBuilder: (context, snapshot) {
-                      List<Hausaufgabe> data = snapshot.data!.data!;
+                    cacheGetter: () => DataLoader.cache.hausaufgaben,
+                    builder: (context, snapshot) {
+                      List<Hausaufgabe> data = snapshot.data!;
 
                       data.sort((a, b) => a.dueAt.compareTo(b.dueAt));
 

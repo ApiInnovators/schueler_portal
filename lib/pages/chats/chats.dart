@@ -14,7 +14,7 @@ class ChatsWidget extends StatefulWidget {
 }
 
 class _ChatsWidget extends State<ChatsWidget> {
-  String searchText = "";
+  List<Chat> filteredChats = [];
 
   @override
   Widget build(BuildContext context) {
@@ -34,28 +34,37 @@ class _ChatsWidget extends State<ChatsWidget> {
           future: DataLoader.getChats(),
           cacheGetter: () => DataLoader.cache.chats,
           builder: (context, snapshot) {
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: SearchAnchor(
-                    builder:
-                        (BuildContext context, SearchController controller) {
-                      return SearchBar(
-                        hintText: "Chat suchen...",
-                        controller: controller,
-                        onChanged: (value) => setState(() {
-                          searchText = value;
-                        }),
-                      );
-                    },
-                    suggestionsBuilder:
-                        (BuildContext context, SearchController controller) =>
-                            [],
+            filteredChats = snapshot.data!;
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: SearchAnchor(
+                        builder: (BuildContext context,
+                            SearchController controller) {
+                          return SearchBar(
+                            hintText: "Chat suchen...",
+                            controller: controller,
+                            onChanged: (value) {
+                              setState(() {
+                                filteredChats = snapshot.data!
+                                    .where((element) => element.name
+                                        .toLowerCase()
+                                        .contains(value.toLowerCase()))
+                                    .toList();
+                              });
+                            },
+                          );
+                        },
+                        suggestionsBuilder: (BuildContext context,
+                                SearchController controller) =>
+                            []),
                   ),
-                ),
-                ChatsListWidget(filterText: searchText, data: snapshot.data!),
-              ],
+                  ChatsListWidget(data: filteredChats),
+                ],
+              ),
             );
           },
         ),
@@ -64,24 +73,17 @@ class _ChatsWidget extends State<ChatsWidget> {
   }
 }
 
-class ChatsListWidget extends StatefulWidget {
-  final String filterText;
+class ChatsListWidget extends StatelessWidget {
   final List<Chat> data;
 
   const ChatsListWidget({
     super.key,
-    required this.filterText,
     required this.data,
   });
 
   @override
-  State<ChatsListWidget> createState() => _ChatsListWidgetState();
-}
-
-class _ChatsListWidgetState extends State<ChatsListWidget> {
-  @override
   Widget build(BuildContext context) {
-    widget.data.sort((a, b) {
+    data.sort((a, b) {
       if (a.pinned && !b.pinned) {
         return -1; // a comes before b
       } else if (!a.pinned && b.pinned) {
@@ -107,35 +109,22 @@ class _ChatsListWidgetState extends State<ChatsListWidget> {
           .compareTo(aTimestamp ?? DateTime.fromMillisecondsSinceEpoch(0));
     });
 
-    List<Chat> searchResult = widget.data;
-
-    if (widget.filterText.isNotEmpty) {
-      searchResult = searchResult
-          .where((element) => element.name
-              .toLowerCase()
-              .contains(widget.filterText.toLowerCase()))
-          .toList();
-    }
-
-    if (searchResult.isEmpty) {
-      return const Text(
-        "Keine Treffer",
-        textAlign: TextAlign.center,
-      );
-    }
-
     return Expanded(
       child: SingleChildScrollView(
         child: Column(
-          children: List.generate(searchResult.length,
-              (i) => SingleChatWidget(chat: searchResult[i])),
+          children: [
+            for (int i = 0; i < data.length; ++i) ...[
+              SingleChatWidget(chat: data[i]),
+              const SizedBox(height: 5),
+            ],
+          ],
         ),
       ),
     );
   }
 }
 
-class SingleChatWidget extends StatefulWidget {
+class SingleChatWidget extends StatelessWidget {
   final Chat chat;
 
   const SingleChatWidget({super.key, required this.chat});
@@ -157,115 +146,106 @@ class SingleChatWidget extends StatefulWidget {
   }
 
   @override
-  State<StatefulWidget> createState() => _SingleChatsWidget();
-}
-
-class _SingleChatsWidget extends State<SingleChatWidget> {
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-        child: SizedBox(
-          height: 100,
-          child: OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              padding: const EdgeInsets.only(left: 5, right: 5, bottom: 5),
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 100,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          padding: const EdgeInsets.only(left: 5, right: 5, bottom: 5),
+        ),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChatRoom(chat: chat),
             ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatRoom(chat: widget.chat),
-                ),
-              );
-            },
-            child: Column(
+          );
+        },
+        child: Column(
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
-                    Badge(
-                      backgroundColor: Theme.of(context).colorScheme.secondary,
-                      label: Text(
-                        widget.chat.unreadMessagesCount.toString(),
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSecondary),
-                      ),
-                      isLabelVisible: widget.chat.unreadMessagesCount > 0,
-                      child: Icon(widget.chat.members.length > 1 ||
-                              widget.chat.members.any((element) =>
-                                  element.type ==
-                                  ChatMemberType.APP_MODELS_USER_GROUP)
-                          ? Icons.groups
-                          : Icons.chat),
-                    ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: Text(
-                        widget.chat.name,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () {},
-                      icon: Icon(widget.chat.pinned
-                          ? Icons.push_pin
-                          : Icons.push_pin_outlined),
-                    ),
-                  ],
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Row(
-                      children: [
-                        if (widget.chat.latestMessage != null) ...[
-                          Expanded(
-                            child: Column(
-                              children: [
-                                if (widget.chat.latestMessage!.text !=
-                                    null) ...[
-                                  Flexible(
-                                    child: Container(
-                                      alignment: Alignment.topLeft,
-                                      child: Text(
-                                        widget.chat.latestMessage!.text!,
-                                        overflow: TextOverflow.fade,
-                                      ),
-                                    ),
-                                  ),
-                                ] else ...[
-                                  const Text(
-                                    "Nachricht gelöscht",
-                                    style:
-                                        TextStyle(fontStyle: FontStyle.italic),
-                                  )
-                                ],
-                                Container(
-                                  alignment: Alignment.bottomLeft,
-                                  child: Text(
-                                    SingleChatWidget.timeDifferenceAsString(
-                                        widget.chat.latestMessage!.timestamp),
-                                    style: const TextStyle(fontSize: 10),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ] else ...[
-                          const Text(
-                            "Noch keine Nachrichten",
-                            style: TextStyle(fontStyle: FontStyle.italic),
-                          )
-                        ],
-                      ],
-                    ),
+                Badge(
+                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                  label: Text(
+                    chat.unreadMessagesCount.toString(),
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSecondary),
                   ),
+                  isLabelVisible: chat.unreadMessagesCount > 0,
+                  child: Icon(chat.members.length > 1 ||
+                          chat.members.any((element) =>
+                              element.type ==
+                              ChatMemberType.APP_MODELS_USER_GROUP)
+                      ? Icons.groups
+                      : Icons.chat),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Text(
+                    chat.name,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                      chat.pinned ? Icons.push_pin : Icons.push_pin_outlined),
                 ),
               ],
             ),
-          ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
+                  children: [
+                    if (chat.latestMessage != null) ...[
+                      Expanded(
+                        child: Column(
+                          children: [
+                            if (chat.latestMessage!.text != null) ...[
+                              Flexible(
+                                child: Container(
+                                  alignment: Alignment.topLeft,
+                                  child: Text(
+                                    chat.latestMessage!.text!,
+                                    overflow: TextOverflow.fade,
+                                  ),
+                                ),
+                              ),
+                            ] else ...[
+                              const Text(
+                                "Nachricht gelöscht",
+                                style: TextStyle(fontStyle: FontStyle.italic),
+                              )
+                            ],
+                            Container(
+                              alignment: Alignment.bottomLeft,
+                              child: Text(
+                                timeDifferenceAsString(
+                                    chat.latestMessage!.timestamp),
+                                style: const TextStyle(fontSize: 10),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ] else ...[
+                      const Text(
+                        "Noch keine Nachrichten",
+                        style: TextStyle(fontStyle: FontStyle.italic),
+                      )
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
-      );
+      ),
+    );
+  }
 }

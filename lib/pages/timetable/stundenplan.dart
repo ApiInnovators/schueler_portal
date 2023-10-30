@@ -69,7 +69,15 @@ class _StundenplanContainer extends State<StundenplanContainer> {
                 height: 600,
                 child: CachingFutureBuilder(
                   future: getData(),
-                  cacheGetter: () => (DataLoader.cache.stundenplan, DataLoader.cache.vertretungsplan),
+                  cacheGetter: () {
+                    if (DataLoader.cache.stundenplan == null ||
+                        DataLoader.cache.vertretungsplan == null) return null;
+
+                    return (
+                      DataLoader.cache.stundenplan,
+                      DataLoader.cache.vertretungsplan
+                    );
+                  },
                   builder: (context, snapshot) => StundenplanWidget(
                     scheduleData: snapshot.$1!.data!,
                     vertretungsplan: snapshot.$2!.data!,

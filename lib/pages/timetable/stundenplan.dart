@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/api/response_models/api/vertretungsplan.dart'
     as vertretungsplan_package;
 import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
@@ -59,48 +58,42 @@ class _StundenplanContainer extends State<StundenplanContainer> {
               DataLoader.cache.vertretungsplan = null;
               DataLoader.cache.stundenplan = null;
               DataLoader.cacheData();
-              await DataLoader.getStundenplan();
-              await DataLoader.getVertretungsplan();
+              await Future.wait([
+                DataLoader.getStundenplan(),
+                DataLoader.getVertretungsplan(),
+              ]);
               setState(() {});
             },
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: SizedBox(
-                height: 600,
-                child: CachingFutureBuilder(
-                  future: getData(),
-                  cacheGetter: () {
-                    if (DataLoader.cache.stundenplan == null ||
-                        DataLoader.cache.vertretungsplan == null) return null;
-
-                    return (
-                      DataLoader.cache.stundenplan,
-                      DataLoader.cache.vertretungsplan
-                    );
-                  },
-                  builder: (context, snapshot) => StundenplanWidget(
-                    scheduleData: snapshot.$1!.data!,
-                    vertretungsplan: snapshot.$2!.data!,
-                    showOnlyUsersLessons: showOnlyUsersLessons,
-                  ),
-                ),
-              ),
+            child: MultiCachingFutureBuilder(
+              futures: [
+                DataLoader.getStundenplan(),
+                DataLoader.getVertretungsplan()
+              ],
+              cacheGetter: () {
+                return [
+                  DataLoader.cache.stundenplan,
+                  DataLoader.cache.vertretungsplan
+                ];
+              },
+              builder: (context, snapshot) {
+                return StundenplanWidget(
+                  scheduleData: snapshot
+                      .firstWhere((e) =>
+                          e.data is stundenplan_package.Stundenplan)
+                      .data as stundenplan_package.Stundenplan,
+                  vertretungsplan: snapshot
+                      .firstWhere((e) => e.data
+                          is vertretungsplan_package.Vertretungsplan)
+                      .data as vertretungsplan_package.Vertretungsplan,
+                  showOnlyUsersLessons: showOnlyUsersLessons,
+                );
+              },
             ),
           ),
         ),
       ],
     );
   }
-
-  Future<
-          (
-            ApiResponse<stundenplan_package.Stundenplan>,
-            ApiResponse<vertretungsplan_package.Vertretungsplan>
-          )>
-      getData() async => (
-            await DataLoader.getStundenplan(),
-            await DataLoader.getVertretungsplan()
-          );
 }
 
 class StundenplanWidget extends StatelessWidget {

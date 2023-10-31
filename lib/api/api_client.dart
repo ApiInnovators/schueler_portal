@@ -5,7 +5,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart';
 import 'package:http/io_client.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:schueler_portal/api/request_models/base_request.dart' as base_request;
+import 'package:schueler_portal/api/request_models/base_request.dart'
+    as base_request;
 import 'package:schueler_portal/api/request_models/download_file.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 
@@ -21,13 +22,29 @@ class ApiClient {
     baseRequestJson = base_request.baseRequestToJson(baseRequest);
   }
 
+  static Future<Response> _handledRequest(
+      Future<Response> Function() reqFunc) async {
+    try {
+      return await reqFunc();
+    } on ClientException {
+      return Response("Internetverbindung überprüfen.", 499);
+    } catch (e) {
+      return Response("Unbekannter Fehler.", 499);
+    }
+  }
+
   static Future<Response> _put(String subUri) async {
     if (!subUri.startsWith("/")) {
       subUri = "/$subUri";
     }
 
-    return await client.put(Uri.parse(baseUri + subUri),
-        headers: {"Content-Type": "application/json"}, body: baseRequestJson);
+    return _handledRequest(
+      () => client.put(
+        Uri.parse(baseUri + subUri),
+        headers: {"Content-Type": "application/json"},
+        body: baseRequestJson,
+      ),
+    );
   }
 
   static Future<Response> _post(String subUri, String body) async {
@@ -35,8 +52,13 @@ class ApiClient {
       subUri = "$subUri/";
     }
 
-    return await client.post(Uri.parse(baseUri + subUri),
-        headers: {"Content-Type": "application/json"}, body: body);
+    return _handledRequest(
+      () => client.post(
+        Uri.parse(baseUri + subUri),
+        headers: {"Content-Type": "application/json"},
+        body: body,
+      ),
+    );
   }
 
   static Future<ApiResponse<T>> putAndParse<T>(
@@ -50,8 +72,10 @@ class ApiClient {
     return ApiResponse(resp);
   }
 
-  static Future<ApiResponse<bool>> validateLogin(base_request.BaseRequest login) async {
-    Response resp = await _post("/validate_login", base_request.baseRequestToJson(login));
+  static Future<ApiResponse<bool>> validateLogin(
+      base_request.BaseRequest login) async {
+    Response resp =
+        await _post("/validate_login", base_request.baseRequestToJson(login));
 
     if (resp.statusCode == 200) {
       return ApiResponse<bool>(resp, data: bool.parse(resp.body));
@@ -89,7 +113,10 @@ class ApiClient {
       return file;
     }
 
-    if (showToast) Fluttertoast.showToast(msg: "Download failed: ${response.reasonPhrase}");
+    if (showToast) {
+      Fluttertoast.showToast(msg: "Download failed: ${response.reasonPhrase}");
+    }
+
     return null;
   }
 }
@@ -99,11 +126,12 @@ class ApiResponse<T> extends Response {
 
   ApiResponse(Response response, {this.data})
       : super(
-          response.reasonPhrase ?? "",
+          response.body,
           response.statusCode,
           headers: response.headers,
           isRedirect: response.isRedirect,
           persistentConnection: response.persistentConnection,
           request: response.request,
+          reasonPhrase: response.reasonPhrase,
         );
 }

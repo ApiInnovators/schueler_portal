@@ -24,70 +24,64 @@ class _VertretungsplanWidgetState extends State<VertretungsplanWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        DataLoader.cache.vertretungsplan = null;
-        DataLoader.cacheData();
-        await DataLoader.getVertretungsplan();
-        setState(() {});
-      },
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 6, right: 6, top: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Nur deine Vertretungen"),
-                Switch(
-                    value: onlyUsersVertretungen,
-                    onChanged: (value) =>
-                        setState(() => onlyUsersVertretungen = value)),
-              ],
-            ),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 6, right: 6, top: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Nur deine Vertretungen"),
+              Switch(
+                  value: onlyUsersVertretungen,
+                  onChanged: (value) =>
+                      setState(() => onlyUsersVertretungen = value)),
+            ],
           ),
-          const Divider(),
-          Expanded(
-            child: SingleChildScrollView(
-              child: CachingFutureBuilder(
-                future: DataLoader.getVertretungsplan(),
-                cacheGetter: () => DataLoader.cache.vertretungsplan,
-                builder: (context, snapshot) {
-                  List<Datum> datums = snapshot.data!.data;
+        ),
+        const Divider(),
+        Expanded(
+          child: RefreshableCachingFutureBuilder(
+            future: DataLoader.getVertretungsplan(),
+            cacheGetter: () => DataLoader.cache.vertretungsplan,
+            onRefresh: () {
+              DataLoader.cache.vertretungsplan = null;
+              DataLoader.cacheData();
+              return DataLoader.getVertretungsplan();
+            },
+            builder: (context, snapshot) {
+              List<Datum> datums = snapshot.data!.data;
 
-                  if (onlyUsersVertretungen) {
-                    datums = datums
-                        .where(
-                            (element) => UserData.isCourseEnabled(element.uf))
-                        .toList();
-                  }
+              if (onlyUsersVertretungen) {
+                datums = datums
+                    .where((element) => UserData.isCourseEnabled(element.uf))
+                    .toList();
+              }
 
-                  if (datums.isEmpty) {
-                    return const Center(child: Text("Keine Vertretungen"));
-                  }
+              if (datums.isEmpty) {
+                return const Center(child: Text("Keine Vertretungen"));
+              }
 
-                  var groupedByDate = SplayTreeMap<DateTime, List<Datum>>.from(
-                    groupBy(datums, (p0) => p0.date),
-                  );
+              var groupedByDate = SplayTreeMap<DateTime, List<Datum>>.from(
+                groupBy(datums, (p0) => p0.date),
+              );
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Column(
-                      children: List.generate(
-                        groupedByDate.length,
-                        (i) => VertretungDayWidget(
-                          day: groupedByDate.keys.elementAt(i),
-                          data: groupedByDate[groupedByDate.keys.elementAt(i)]!,
-                        ),
-                      ),
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Column(
+                  children: List.generate(
+                    groupedByDate.length,
+                    (i) => VertretungDayWidget(
+                      day: groupedByDate.keys.elementAt(i),
+                      data: groupedByDate[groupedByDate.keys.elementAt(i)]!,
                     ),
-                  );
-                },
-              ),
-            ),
+                  ),
+                ),
+              );
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

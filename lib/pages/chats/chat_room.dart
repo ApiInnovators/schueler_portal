@@ -25,6 +25,10 @@ class ChatRoom extends StatelessWidget {
       body: MyFutureBuilder(
         future: ApiClient.putAndParse("chat--${chat.id}", chatDetailsFromJson),
         customBuilder: (context, snapshot) {
+          if (UserLogin.user == null) {
+            return const Center(child: Text("Failed to get user"));
+          }
+
           ChatDetails chatDetails = snapshot.data!;
 
           Map<DateTime, List<Message>> groupedMessagesByDate = groupBy(
@@ -47,6 +51,7 @@ class ChatRoom extends StatelessWidget {
                           dateTime: entry.key,
                           messages: entry.value,
                           chatRoom: this,
+                          userId: UserLogin.user!.id,
                         ),
                       ]
                     ],
@@ -98,12 +103,14 @@ class ChatDaySection extends StatelessWidget {
   final DateTime dateTime;
   final List<Message> messages;
   final ChatRoom chatRoom;
+  final int userId;
 
   const ChatDaySection({
     super.key,
     required this.dateTime,
     required this.messages,
     required this.chatRoom,
+    required this.userId,
   });
 
   @override
@@ -122,8 +129,11 @@ class ChatDaySection extends StatelessWidget {
         Column(
           children: List.generate(
             messages.length,
-            (i) =>
-                ChatRoomMessageWidget(message: messages[i], chatRoom: chatRoom),
+            (i) => ChatRoomMessageWidget(
+              message: messages[i],
+              chatRoom: chatRoom,
+              isCurrentUser: messages[i].editor.id == userId,
+            ),
           ),
         )
       ],
@@ -134,26 +144,20 @@ class ChatDaySection extends StatelessWidget {
 class ChatRoomMessageWidget extends StatelessWidget {
   final Message message;
   final ChatRoom chatRoom;
+  final bool isCurrentUser;
 
   const ChatRoomMessageWidget({
     super.key,
     required this.message,
     required this.chatRoom,
+    required this.isCurrentUser,
   });
 
   @override
   Widget build(BuildContext context) {
-    bool isCurrentUser = message.editor.id == UserLogin.user.id;
+    if (isCurrentUser) return UserMessage(message: message, chatRoom: chatRoom);
 
-    return isCurrentUser
-        ? UserMessage(
-            message: message,
-            chatRoom: chatRoom,
-          )
-        : MemberMessage(
-            message: message,
-            chatRoom: chatRoom,
-          );
+    return MemberMessage(message: message, chatRoom: chatRoom);
   }
 }
 
@@ -162,7 +166,7 @@ class MemberMessage extends ChatRoomMessageWidget {
     super.key,
     required super.message,
     required super.chatRoom,
-  });
+  }) : super(isCurrentUser: false);
 
   @override
   Widget build(BuildContext context) {
@@ -256,7 +260,7 @@ class UserMessage extends ChatRoomMessageWidget {
     super.key,
     required super.message,
     required super.chatRoom,
-  });
+  }) : super(isCurrentUser: true);
 
   @override
   Widget build(BuildContext context) {

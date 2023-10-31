@@ -1,4 +1,3 @@
-
 import 'package:fading_edge_scrollview/fading_edge_scrollview.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -6,7 +5,6 @@ import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
 import 'package:schueler_portal/data_loader.dart';
-
 
 class HomeworkWidget extends StatefulWidget {
   const HomeworkWidget({super.key});
@@ -43,71 +41,65 @@ class _HomeworkWidget extends State<StatefulWidget> {
           body: TabBarView(
             children: [
               const Text("Nothing here"),
-              RefreshIndicator(
-                  child: CachingFutureBuilder(
-                    future: DataLoader.getHausaufgaben(),
-                    cacheGetter: () => DataLoader.cache.hausaufgaben,
-                    builder: (context, snapshot) {
-                      List<Hausaufgabe> data = snapshot.data!;
+              RefreshableCachingFutureBuilder(
+                future: DataLoader.getHausaufgaben(),
+                cacheGetter: () => DataLoader.cache.hausaufgaben,
+                onRefresh: () {
+                  DataLoader.cache.hausaufgaben = null;
+                  DataLoader.cacheData();
+                  return DataLoader.getHausaufgaben();
+                },
+                builder: (context, snapshot) {
+                  List<Hausaufgabe> data = snapshot.data!;
 
-                      data.sort((a, b) => a.dueAt.compareTo(b.dueAt));
+                  data.sort((a, b) => a.dueAt.compareTo(b.dueAt));
 
-                      List<Hausaufgabe> erledigteHausaufgaben =
-                          data.where((element) => element.completed).toList();
-                      List<Hausaufgabe> nichtErledigteHausaufgaben =
-                          data.where((element) => !element.completed).toList();
+                  List<Hausaufgabe> erledigteHausaufgaben =
+                      data.where((element) => element.completed).toList();
+                  List<Hausaufgabe> nichtErledigteHausaufgaben =
+                      data.where((element) => !element.completed).toList();
 
-                      return SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 10),
-                            const Text(
-                              "Zu erledigen",
-                              style: TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold),
-                            ),
-                            Column(
-                              children: List.generate(
-                                  nichtErledigteHausaufgaben.length,
-                                  (i) => Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 3),
-                                        child: SingleHomeworkWidget(
-                                          hausaufgabe:
-                                              nichtErledigteHausaufgaben[i],
-                                        ),
-                                      )),
-                            ),
-                            const SizedBox(height: 10),
-                            const Text(
-                              "Erledigt",
-                              style: TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold),
-                            ),
-                            Column(
-                              children: List.generate(
-                                erledigteHausaufgaben.length,
-                                (i) => Padding(
+                  return Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Zu erledigen",
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      Column(
+                        children: List.generate(
+                            nichtErledigteHausaufgaben.length,
+                            (i) => Padding(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 10, vertical: 3),
                                   child: SingleHomeworkWidget(
-                                    hausaufgabe: erledigteHausaufgaben[i],
+                                    hausaufgabe: nichtErledigteHausaufgaben[i],
                                   ),
-                                ),
-                              ),
-                            )
-                          ],
+                                )),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Erledigt",
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      Column(
+                        children: List.generate(
+                          erledigteHausaufgaben.length,
+                          (i) => Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 3),
+                            child: SingleHomeworkWidget(
+                              hausaufgabe: erledigteHausaufgaben[i],
+                            ),
+                          ),
                         ),
-                      );
-                    },
-                  ),
-                  onRefresh: () async {
-                    DataLoader.cache.hausaufgaben = null;
-                    DataLoader.cacheData();
-                    await DataLoader.getHausaufgaben();
-                    setState(() {});
-                  }),
+                      )
+                    ],
+                  );
+                },
+              ),
               const Text("Nothing here"),
             ],
           ),

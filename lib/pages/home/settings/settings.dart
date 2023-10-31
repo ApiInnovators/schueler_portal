@@ -124,21 +124,21 @@ class CoursesSelectorPage extends StatelessWidget {
         title: const Text("Kurse auswählen"),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: CachingFutureBuilder(
-            future: DataLoader.getStundenplan(),
-            cacheGetter: () => DataLoader.cache.stundenplan,
-            builder: (context, snapshot) {
-              final allCourses = Tools.getStundenplanCourses(
-                snapshot.data!.data,
-              ).toList();
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: CachingFutureBuilder(
+          future: DataLoader.getStundenplan(),
+          cacheGetter: () => DataLoader.cache.stundenplan,
+          builder: (context, snapshot) {
+            final allCourses = Tools.getStundenplanCourses(
+              snapshot.data!.data,
+            ).toList();
 
-              final grouped = SplayTreeMap<String, List<String>>.from(
-                  groupBy(allCourses, (element) => element.split("_")[0]));
+            final grouped = SplayTreeMap<String, List<String>>.from(
+                groupBy(allCourses, (element) => element.split("_")[0]));
 
-              return Column(children: [
+            return SingleChildScrollView(
+              child: Column(children: [
                 for (MapEntry<String, List<String>> entry
                     in grouped.entries) ...[
                   Column(
@@ -160,9 +160,9 @@ class CoursesSelectorPage extends StatelessWidget {
                     ],
                   )
                 ]
-              ]);
-            },
-          ),
+              ]),
+            );
+          },
         ),
       ),
     );

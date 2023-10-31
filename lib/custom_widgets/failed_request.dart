@@ -7,6 +7,12 @@ class FailedRequestWidget extends StatelessWidget {
   const FailedRequestWidget({super.key, required this.apiResponse});
 
   @override
-  Widget build(BuildContext context) =>
-      Text("${apiResponse.statusCode}: ${apiResponse.reasonPhrase ?? ""}");
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        "Anfrage mit Code ${apiResponse.statusCode} fehlgeschlagen. ${apiResponse.body}",
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
 }

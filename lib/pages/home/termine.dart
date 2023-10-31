@@ -4,9 +4,14 @@ import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
-class TermineWidget extends StatelessWidget {
+class TermineWidget extends StatefulWidget {
   const TermineWidget({super.key});
 
+  @override
+  State<TermineWidget> createState() => _TermineWidgetState();
+}
+
+class _TermineWidgetState extends State<TermineWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -14,27 +19,36 @@ class TermineWidget extends StatelessWidget {
         title: const Text("Termine"),
         centerTitle: true,
       ),
-      body: CachingFutureBuilder(
-        future: DataLoader.getTermine(),
-        cacheGetter: () => DataLoader.cache.termine,
-        builder: (context, snapshot) {
-          Termine termine = snapshot.data!;
-
-          return SfCalendar(
-            view: CalendarView.schedule,
-            dataSource: TermineDataSource(termine),
-            firstDayOfWeek: 1,
-            scheduleViewSettings: ScheduleViewSettings(
-              monthHeaderSettings: MonthHeaderSettings(
-                backgroundColor:
-                    Theme.of(context).colorScheme.secondaryContainer,
-                monthTextStyle: TextStyle(
-                    color: Theme.of(context).colorScheme.onSecondaryContainer),
-                height: 80,
-              ),
-            ),
-          );
+      body: RefreshIndicator(
+        onRefresh: () async {
+          DataLoader.cache.termine = null;
+          DataLoader.cacheData();
+          await DataLoader.getTermine();
+          setState(() {});
         },
+        child: CachingFutureBuilder(
+          future: DataLoader.getTermine(),
+          cacheGetter: () => DataLoader.cache.termine,
+          builder: (context, snapshot) {
+            Termine termine = snapshot.data!;
+
+            return SfCalendar(
+              view: CalendarView.schedule,
+              dataSource: TermineDataSource(termine),
+              firstDayOfWeek: 1,
+              scheduleViewSettings: ScheduleViewSettings(
+                monthHeaderSettings: MonthHeaderSettings(
+                  backgroundColor:
+                      Theme.of(context).colorScheme.secondaryContainer,
+                  monthTextStyle: TextStyle(
+                      color:
+                          Theme.of(context).colorScheme.onSecondaryContainer),
+                  height: 80,
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

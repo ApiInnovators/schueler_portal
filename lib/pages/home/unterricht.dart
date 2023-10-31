@@ -47,7 +47,7 @@ class _UnterrichtWidgetState extends State<UnterrichtWidget> {
                       cacheGetter: () =>
                           DataLoader.cache.unterricht[userRequestedDate],
                       builder: (context, data) {
-                        List<Unterricht> unterricht = data!.data!;
+                        List<Unterricht> unterricht = data.data!;
 
                         if (unterricht.isEmpty) {
                           return const Center(

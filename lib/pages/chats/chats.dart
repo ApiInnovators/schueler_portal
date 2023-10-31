@@ -14,7 +14,7 @@ class ChatsWidget extends StatefulWidget {
 }
 
 class _ChatsWidget extends State<ChatsWidget> {
-  List<Chat> filteredChats = [];
+  List<Chat>? filteredChats;
 
   @override
   Widget build(BuildContext context) {
@@ -23,51 +23,53 @@ class _ChatsWidget extends State<ChatsWidget> {
         centerTitle: true,
         title: const Text("Chats"),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
+      body: RefreshableCachingFutureBuilder(
+        future: DataLoader.getChats(),
+        cacheGetter: () => DataLoader.cache.chats,
+        onRefresh: () {
           DataLoader.cache.chats = null;
           DataLoader.cacheData();
-          await DataLoader.getChats();
-          setState(() {});
+          return DataLoader.getChats();
         },
-        child: CachingFutureBuilder(
-          future: DataLoader.getChats(),
-          cacheGetter: () => DataLoader.cache.chats,
-          builder: (context, snapshot) {
-            filteredChats = snapshot.data!;
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: SearchAnchor(
-                        builder: (BuildContext context,
-                            SearchController controller) {
-                          return SearchBar(
-                            hintText: "Chat suchen...",
-                            controller: controller,
-                            onChanged: (value) {
-                              setState(() {
-                                filteredChats = snapshot.data!
-                                    .where((element) => element.name
-                                        .toLowerCase()
-                                        .contains(value.toLowerCase()))
-                                    .toList();
-                              });
-                            },
-                          );
-                        },
-                        suggestionsBuilder: (BuildContext context,
-                                SearchController controller) =>
-                            []),
-                  ),
-                  ChatsListWidget(data: filteredChats),
+        builder: (context, snapshot) {
+          filteredChats ??= snapshot.data!;
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: SearchAnchor(
+                      builder:
+                          (BuildContext context, SearchController controller) {
+                        return SearchBar(
+                          hintText: "Chat suchen...",
+                          controller: controller,
+                          onChanged: (value) {
+                            setState(() {
+                              filteredChats = snapshot.data!
+                                  .where((element) => element.name
+                                      .toLowerCase()
+                                      .contains(value.toLowerCase()))
+                                  .toList();
+                            });
+                          },
+                        );
+                      },
+                      suggestionsBuilder:
+                          (BuildContext context, SearchController controller) =>
+                              []),
+                ),
+                if (filteredChats!.isEmpty) ...[
+                  const Text("Keine Treffer"),
+                ] else ...[
+                  ChatsListWidget(data: filteredChats!),
                 ],
-              ),
-            );
-          },
-        ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -109,17 +111,13 @@ class ChatsListWidget extends StatelessWidget {
           .compareTo(aTimestamp ?? DateTime.fromMillisecondsSinceEpoch(0));
     });
 
-    return Expanded(
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            for (int i = 0; i < data.length; ++i) ...[
-              SingleChatWidget(chat: data[i]),
-              const SizedBox(height: 5),
-            ],
-          ],
-        ),
-      ),
+    return Column(
+      children: [
+        for (int i = 0; i < data.length; ++i) ...[
+          SingleChatWidget(chat: data[i]),
+          const SizedBox(height: 5),
+        ],
+      ],
     );
   }
 }

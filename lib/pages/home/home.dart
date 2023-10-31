@@ -59,19 +59,16 @@ class _HomeWidget extends State<HomeWidget> {
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
                     ),
                     Expanded(
-                      child: RefreshIndicator(
-                        onRefresh: () async {
+                      child: RefreshableCachingFutureBuilder(
+                        future: DataLoader.getNews(),
+                        cacheGetter: () => DataLoader.cache.news,
+                        onRefresh: () {
                           DataLoader.cache.news = null;
                           DataLoader.cacheData();
-                          await DataLoader.getNews();
-                          setState(() {});
+                          return DataLoader.getNews();
                         },
-                        child: CachingFutureBuilder(
-                          future: DataLoader.getNews(),
-                          cacheGetter: () => DataLoader.cache.news,
-                          builder: (context, snapshot) =>
-                              NewsWidget(news: snapshot.data!),
-                        ),
+                        builder: (context, snapshot) =>
+                            NewsWidget(news: snapshot.data!),
                       ),
                     ),
                   ],
@@ -125,37 +122,34 @@ class NewsWidget extends StatelessWidget {
       return const Center(child: Text("Keine Nachrichten"));
     }
 
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      child: Center(
-        child: Column(
-          children: List.generate(news.length, (i) {
-            return Container(
-              margin: const EdgeInsets.all(10),
-              child: Column(
-                children: [
-                  Center(
-                      child: Text(
-                    news[i].title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 20),
-                  )),
-                  Center(
-                      child: Text(
-                    news[i].content,
-                    style: const TextStyle(fontSize: 12),
-                  )),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  if (news[i].file != null)
-                    FileDownloadButton(file: news[i].file!),
-                  if (i != news.length - 1) const Divider(),
-                ],
-              ),
-            );
-          }),
-        ),
+    return Center(
+      child: Column(
+        children: List.generate(news.length, (i) {
+          return Container(
+            margin: const EdgeInsets.all(10),
+            child: Column(
+              children: [
+                Center(
+                    child: Text(
+                  news[i].title,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 20),
+                )),
+                Center(
+                    child: Text(
+                  news[i].content,
+                  style: const TextStyle(fontSize: 12),
+                )),
+                const SizedBox(
+                  height: 10,
+                ),
+                if (news[i].file != null)
+                  FileDownloadButton(file: news[i].file!),
+                if (i != news.length - 1) const Divider(),
+              ],
+            ),
+          );
+        }),
       ),
     );
   }

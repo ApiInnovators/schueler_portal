@@ -6,13 +6,17 @@ class MyFutureBuilder<T> extends FutureBuilder<T> {
   final Widget Function(BuildContext, T) customBuilder;
   final Widget loadingIndicator;
   final Widget errorWidget;
+  final Widget? failedRequestWidget;
+  final Widget dataNotAvailableWidget;
 
   MyFutureBuilder({
     super.key,
+    this.failedRequestWidget,
     required Future<T> future,
     required this.customBuilder,
     this.loadingIndicator = const Center(child: CircularProgressIndicator()),
     this.errorWidget = const Text('An error occurred'),
+    this.dataNotAvailableWidget = const Text("Error: Data not available"),
   }) : super(
           future: future,
           builder: (context, snapshot) {
@@ -22,15 +26,14 @@ class MyFutureBuilder<T> extends FutureBuilder<T> {
 
             if (snapshot.hasError) return errorWidget;
 
-            if (!snapshot.hasData) {
-              return const Text("Error: Data not available");
-            }
+            if (!snapshot.hasData) return dataNotAvailableWidget;
 
             if (snapshot.data is ApiResponse?) {
               ApiResponse apiResp = snapshot.data as ApiResponse;
 
               if (apiResp.data == null || apiResp.statusCode != 200) {
-                return FailedRequestWidget(apiResponse: apiResp);
+                return failedRequestWidget ??
+                    FailedRequestWidget(apiResponse: apiResp);
               }
             }
 
@@ -39,7 +42,7 @@ class MyFutureBuilder<T> extends FutureBuilder<T> {
               return customBuilder(context, snapshot.data as T);
             }
 
-            return const Text("Error");
+            return errorWidget;
           },
         );
 }

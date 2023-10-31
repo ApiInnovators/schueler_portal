@@ -25,7 +25,7 @@ Future<void> main() async {
 
   ApiClient.updateCredentials(loadedLogin);
   DataLoader.cacheData();
-  DataLoader.getUser().then((value) => UserLogin.user = value.data!);
+  DataLoader.getUser().then((value) => UserLogin.user = value.data);
 
   runApp(const MyApp(openLoginPage: false));
 }
@@ -59,7 +59,7 @@ class MyAppState extends State<MyApp> {
 
     final result = await ApiClient.validateLogin(loginReq);
 
-    if (result.statusCode != 200 || result.data != true) {
+    if (result.statusCode == 401 || result.data == false) {
       setLogin(false);
     }
   }
@@ -154,6 +154,11 @@ class _ChatsNavigationDestinationState
   // TODO: update unreadChats when chats gets refreshed
 
   int? _unreadChats;
+  static const defaultNavDest = NavigationDestination(
+    selectedIcon: Icon(Icons.chat_bubble),
+    icon: Icon(Icons.chat_bubble_outline),
+    label: 'Chats',
+  );
 
   int _countUnreadChats(ApiResponse<List<Chat>> chatResp) {
     if (chatResp.statusCode != 200) return -1;
@@ -166,6 +171,9 @@ class _ChatsNavigationDestinationState
   Widget build(BuildContext context) {
     return MyFutureBuilder(
       future: DataLoader.getChats(),
+      errorWidget: defaultNavDest,
+      dataNotAvailableWidget: defaultNavDest,
+      failedRequestWidget: defaultNavDest,
       loadingIndicator: NavigationDestination(
         selectedIcon: Badge(
             backgroundColor: Theme.of(context).colorScheme.secondary,
@@ -193,13 +201,7 @@ class _ChatsNavigationDestinationState
       customBuilder: (context, snapshot) {
         _unreadChats ??= _countUnreadChats(snapshot);
 
-        if (_unreadChats! < 1) {
-          const NavigationDestination(
-            selectedIcon: Icon(Icons.chat_bubble),
-            icon: Icon(Icons.chat_bubble_outline),
-            label: 'Chats',
-          );
-        }
+        if (_unreadChats! < 1) return defaultNavDest;
 
         return NavigationDestination(
           selectedIcon: Badge(

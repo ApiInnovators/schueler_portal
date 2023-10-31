@@ -67,8 +67,6 @@ class Tools {
 
   static Set<String> getStundenplanCourses(List<Datum> stundenplanData) =>
       stundenplanData.map((datum) => datum.uf).toSet();
-
-
 }
 
 extension DateUtils on DateTime {

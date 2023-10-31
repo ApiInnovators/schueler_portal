@@ -4,7 +4,8 @@
 
 import 'dart:convert';
 
-Stundenplan stundenplanFromJson(String str) => Stundenplan.fromJson(json.decode(str));
+Stundenplan stundenplanFromJson(String str) =>
+    Stundenplan.fromJson(json.decode(str));
 
 String stundenplanToJson(Stundenplan data) => json.encode(data.toJson());
 
@@ -18,14 +19,15 @@ class Stundenplan {
   });
 
   factory Stundenplan.fromJson(Map<String, dynamic> json) => Stundenplan(
-    data: List<Datum>.from(json["data"].map((x) => Datum.fromJson(x))),
-    zeittafel: List<Zeittafel>.from(json["zeittafel"].map((x) => Zeittafel.fromJson(x))),
-  );
+        data: List<Datum>.from(json["data"].map((x) => Datum.fromJson(x))),
+        zeittafel: List<Zeittafel>.from(
+            json["zeittafel"].map((x) => Zeittafel.fromJson(x))),
+      );
 
   Map<String, dynamic> toJson() => {
-    "data": List<dynamic>.from(data.map((x) => x.toJson())),
-    "zeittafel": List<dynamic>.from(zeittafel.map((x) => x.toJson())),
-  };
+        "data": List<dynamic>.from(data.map((x) => x.toJson())),
+        "zeittafel": List<dynamic>.from(zeittafel.map((x) => x.toJson())),
+      };
 }
 
 class Datum {
@@ -42,18 +44,18 @@ class Datum {
   });
 
   factory Datum.fromJson(Map<String, dynamic> json) => Datum(
-    day: json["day"],
-    hour: json["hour"],
-    uf: json["uf"],
-    room: json["room"],
-  );
+        day: json["day"],
+        hour: json["hour"],
+        uf: json["uf"],
+        room: json["room"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "day": day,
-    "hour": hour,
-    "uf": uf,
-    "room": room,
-  };
+        "day": day,
+        "hour": hour,
+        "uf": uf,
+        "room": room,
+      };
 }
 
 class Zeittafel {
@@ -68,14 +70,14 @@ class Zeittafel {
   });
 
   factory Zeittafel.fromJson(Map<String, dynamic> json) => Zeittafel(
-    hour: json["hour"],
-    value: json["value"],
-    name: json["name"],
-  );
+        hour: json["hour"],
+        value: json["value"],
+        name: json["name"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "hour": hour,
-    "value": value,
-    "name": name,
-  };
+        "hour": hour,
+        "value": value,
+        "name": name,
+      };
 }

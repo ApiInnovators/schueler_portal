@@ -8,10 +8,11 @@ import 'package:schueler_portal/api/request_models/base_request.dart';
 
 import '../response_models/api/hausaufgaben.dart';
 
+DownloadFileRequest downloadFileRequestFromJson(String str) =>
+    DownloadFileRequest.fromJson(json.decode(str));
 
-DownloadFileRequest downloadFileRequestFromJson(String str) => DownloadFileRequest.fromJson(json.decode(str));
-
-String downloadFileRequestToJson(DownloadFileRequest data) => json.encode(data.toJson());
+String downloadFileRequestToJson(DownloadFileRequest data) =>
+    json.encode(data.toJson());
 
 class DownloadFileRequest extends BaseRequest {
   final FileElement fileElement;
@@ -23,18 +24,19 @@ class DownloadFileRequest extends BaseRequest {
     required this.fileElement,
   });
 
-  factory DownloadFileRequest.fromJson(Map<String, dynamic> json) => DownloadFileRequest(
-    email: json["email"],
-    password: json["password"],
-    schulkuerzel: json["schulkuerzel"],
-    fileElement: FileElement.fromJson(json["file_element"]),
-  );
+  factory DownloadFileRequest.fromJson(Map<String, dynamic> json) =>
+      DownloadFileRequest(
+        email: json["email"],
+        password: json["password"],
+        schulkuerzel: json["schulkuerzel"],
+        fileElement: FileElement.fromJson(json["file_element"]),
+      );
 
   @override
   Map<String, dynamic> toJson() => {
-    "email": email,
-    "password": password,
-    "schulkuerzel": schulkuerzel,
-    "file_element": fileElement.toJson(),
-  };
+        "email": email,
+        "password": password,
+        "schulkuerzel": schulkuerzel,
+        "file_element": fileElement.toJson(),
+      };
 }

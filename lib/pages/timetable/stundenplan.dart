@@ -78,12 +78,12 @@ class _StundenplanContainer extends State<StundenplanContainer> {
               builder: (context, snapshot) {
                 return StundenplanWidget(
                   scheduleData: snapshot
-                      .firstWhere((e) =>
-                          e.data is stundenplan_package.Stundenplan)
+                      .firstWhere(
+                          (e) => e.data is stundenplan_package.Stundenplan)
                       .data as stundenplan_package.Stundenplan,
                   vertretungsplan: snapshot
-                      .firstWhere((e) => e.data
-                          is vertretungsplan_package.Vertretungsplan)
+                      .firstWhere((e) =>
+                          e.data is vertretungsplan_package.Vertretungsplan)
                       .data as vertretungsplan_package.Vertretungsplan,
                   showOnlyUsersLessons: showOnlyUsersLessons,
                 );

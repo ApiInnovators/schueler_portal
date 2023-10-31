@@ -6,9 +6,11 @@ import 'dart:convert';
 
 import 'chat/id.dart';
 
-List<Chat> chatFromJson(String str) => List<Chat>.from(json.decode(str).map((x) => Chat.fromJson(x)));
+List<Chat> chatFromJson(String str) =>
+    List<Chat>.from(json.decode(str).map((x) => Chat.fromJson(x)));
 
-String chatToJson(List<Chat> data) => json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
+String chatToJson(List<Chat> data) =>
+    json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
 class Chat {
   final int id;
@@ -34,28 +36,31 @@ class Chat {
   });
 
   factory Chat.fromJson(Map<String, dynamic> json) => Chat(
-    id: json["id"],
-    name: json["name"],
-    broadcast: json["broadcast"],
-    createdAt: json["createdAt"],
-    owner: Owner.fromJson(json["owner"]),
-    members: List<Member>.from(json["members"].map((x) => Member.fromJson(x))),
-    unreadMessagesCount: json["unreadMessagesCount"],
-    latestMessage: json["latestMessage"] == null ? null : LatestMessage.fromJson(json["latestMessage"]),
-    pinned: json["pinned"],
-  );
+        id: json["id"],
+        name: json["name"],
+        broadcast: json["broadcast"],
+        createdAt: json["createdAt"],
+        owner: Owner.fromJson(json["owner"]),
+        members:
+            List<Member>.from(json["members"].map((x) => Member.fromJson(x))),
+        unreadMessagesCount: json["unreadMessagesCount"],
+        latestMessage: json["latestMessage"] == null
+            ? null
+            : LatestMessage.fromJson(json["latestMessage"]),
+        pinned: json["pinned"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "name": name,
-    "broadcast": broadcast,
-    "createdAt": createdAt,
-    "owner": owner.toJson(),
-    "members": List<dynamic>.from(members.map((x) => x.toJson())),
-    "unreadMessagesCount": unreadMessagesCount,
-    "latestMessage": latestMessage?.toJson(),
-    "pinned": pinned,
-  };
+        "id": id,
+        "name": name,
+        "broadcast": broadcast,
+        "createdAt": createdAt,
+        "owner": owner.toJson(),
+        "members": List<dynamic>.from(members.map((x) => x.toJson())),
+        "unreadMessagesCount": unreadMessagesCount,
+        "latestMessage": latestMessage?.toJson(),
+        "pinned": pinned,
+      };
 }
 
 class LatestMessage {
@@ -70,16 +75,17 @@ class LatestMessage {
   });
 
   factory LatestMessage.fromJson(Map<String, dynamic> json) => LatestMessage(
-    timestamp: DateTime.fromMillisecondsSinceEpoch(json["timestamp"] * 1000),
-    text: json["text"],
-    file: json["file"],
-  );
+        timestamp:
+            DateTime.fromMillisecondsSinceEpoch(json["timestamp"] * 1000),
+        text: json["text"],
+        file: json["file"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "timestamp": (timestamp.millisecondsSinceEpoch / 1000) as int,
-    "text": text,
-    "file": file,
-  };
+        "timestamp": (timestamp.millisecondsSinceEpoch / 1000) as int,
+        "text": text,
+        "file": file,
+      };
 }
 
 class Member {
@@ -96,24 +102,21 @@ class Member {
   });
 
   factory Member.fromJson(Map<String, dynamic> json) => Member(
-    id: json["id"],
-    type: typeValues.map[json["type"]]!,
-    name: json["name"],
-    info: json["info"],
-  );
+        id: json["id"],
+        type: typeValues.map[json["type"]]!,
+        name: json["name"],
+        info: json["info"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "type": typeValues.reverse[type],
-    "name": name,
-    "info": info,
-  };
+        "id": id,
+        "type": typeValues.reverse[type],
+        "name": name,
+        "info": info,
+      };
 }
 
-enum ChatMemberType {
-  APP_MODELS_USER,
-  APP_MODELS_USER_GROUP
-}
+enum ChatMemberType { APP_MODELS_USER, APP_MODELS_USER_GROUP }
 
 final typeValues = EnumValues({
   "App\\Models\\User": ChatMemberType.APP_MODELS_USER,
@@ -134,23 +137,21 @@ class Owner {
   });
 
   factory Owner.fromJson(Map<String, dynamic> json) => Owner(
-    id: json["id"],
-    name: json["name"],
-    role: roleValues.map[json["role"]]!,
-    info: json["info"],
-  );
+        id: json["id"],
+        name: json["name"],
+        role: roleValues.map[json["role"]]!,
+        info: json["info"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "name": name,
-    "role": roleValues.reverse[role],
-    "info": info,
-  };
+        "id": id,
+        "name": name,
+        "role": roleValues.reverse[role],
+        "info": info,
+      };
 }
 
-final roleValues = EnumValues({
-  "ip-user": Role.IP_USER
-});
+final roleValues = EnumValues({"ip-user": Role.IP_USER});
 
 class EnumValues<T> {
   Map<String, T> map;

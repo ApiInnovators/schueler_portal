@@ -36,30 +36,30 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
-    id: json["id"],
-    name: json["name"],
-    email: json["email"],
-    emailVerifiedAt: DateTime.parse(json["emailVerifiedAt"]),
-    hasPassword: json["hasPassword"],
-    role: json["role"],
-    ipId: json["ipId"],
-    info: json["info"],
-    isDeleted: json["isDeleted"],
-    adminMode: json["adminMode"],
-    latestMail: json["latestMail"],
-  );
+        id: json["id"],
+        name: json["name"],
+        email: json["email"],
+        emailVerifiedAt: DateTime.parse(json["emailVerifiedAt"]),
+        hasPassword: json["hasPassword"],
+        role: json["role"],
+        ipId: json["ipId"],
+        info: json["info"],
+        isDeleted: json["isDeleted"],
+        adminMode: json["adminMode"],
+        latestMail: json["latestMail"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "name": name,
-    "email": email,
-    "emailVerifiedAt": emailVerifiedAt.toIso8601String(),
-    "hasPassword": hasPassword,
-    "role": role,
-    "ipId": ipId,
-    "info": info,
-    "isDeleted": isDeleted,
-    "adminMode": adminMode,
-    "latestMail": latestMail,
-  };
+        "id": id,
+        "name": name,
+        "email": email,
+        "emailVerifiedAt": emailVerifiedAt.toIso8601String(),
+        "hasPassword": hasPassword,
+        "role": role,
+        "ipId": ipId,
+        "info": info,
+        "isDeleted": isDeleted,
+        "adminMode": adminMode,
+        "latestMail": latestMail,
+      };
 }

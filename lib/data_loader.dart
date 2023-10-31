@@ -131,7 +131,6 @@ class DataLoader {
 
   static Future<ApiResponse<List<Unterricht>>> getUnterricht(
       DateTime day) async {
-
     if (!cache.unterricht.containsKey(day)) {
       ApiResponse<List<Unterricht>> unterricht = await ApiClient.putAndParse(
         "/unterricht--${DateFormat("yyyy-MM-dd").format(day)}",

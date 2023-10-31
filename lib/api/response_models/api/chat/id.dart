@@ -6,7 +6,8 @@ import 'dart:convert';
 
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 
-ChatDetails chatDetailsFromJson(String str) => ChatDetails.fromJson(json.decode(str));
+ChatDetails chatDetailsFromJson(String str) =>
+    ChatDetails.fromJson(json.decode(str));
 
 String chatDetailsToJson(ChatDetails data) => json.encode(data.toJson());
 
@@ -30,24 +31,26 @@ class ChatDetails {
   });
 
   factory ChatDetails.fromJson(Map<String, dynamic> json) => ChatDetails(
-    id: json["id"],
-    name: json["name"],
-    broadcast: json["broadcast"],
-    createdAt: json["createdAt"],
-    owner: Owner.fromJson(json["owner"]),
-    members: List<Member>.from(json["members"].map((x) => Member.fromJson(x))),
-    messages: List<Message>.from(json["messages"].map((x) => Message.fromJson(x))),
-  );
+        id: json["id"],
+        name: json["name"],
+        broadcast: json["broadcast"],
+        createdAt: json["createdAt"],
+        owner: Owner.fromJson(json["owner"]),
+        members:
+            List<Member>.from(json["members"].map((x) => Member.fromJson(x))),
+        messages: List<Message>.from(
+            json["messages"].map((x) => Message.fromJson(x))),
+      );
 
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "name": name,
-    "broadcast": broadcast,
-    "createdAt": createdAt,
-    "owner": owner.toJson(),
-    "members": List<dynamic>.from(members.map((x) => x.toJson())),
-    "messages": List<dynamic>.from(messages.map((x) => x.toJson())),
-  };
+        "id": id,
+        "name": name,
+        "broadcast": broadcast,
+        "createdAt": createdAt,
+        "owner": owner.toJson(),
+        "members": List<dynamic>.from(members.map((x) => x.toJson())),
+        "messages": List<dynamic>.from(messages.map((x) => x.toJson())),
+      };
 }
 
 class Member {
@@ -64,18 +67,18 @@ class Member {
   });
 
   factory Member.fromJson(Map<String, dynamic> json) => Member(
-    id: json["id"],
-    type: json["type"],
-    name: json["name"],
-    info: json["info"],
-  );
+        id: json["id"],
+        type: json["type"],
+        name: json["name"],
+        info: json["info"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "type": type,
-    "name": name,
-    "info": info,
-  };
+        "id": id,
+        "type": type,
+        "name": name,
+        "info": info,
+      };
 }
 
 class Message {
@@ -100,26 +103,26 @@ class Message {
   });
 
   factory Message.fromJson(Map<String, dynamic> json) => Message(
-    id: json["id"],
-    text: json["text"],
-    createdAt: json["createdAt"],
-    isDeleted: json["isDeleted"],
-    isDeletable: json["isDeletable"],
-    read: json["read"],
-    editor: Owner.fromJson(json["editor"]),
-    file: json["file"] == null ? null : FileElement.fromJson(json["file"]),
-  );
+        id: json["id"],
+        text: json["text"],
+        createdAt: json["createdAt"],
+        isDeleted: json["isDeleted"],
+        isDeletable: json["isDeletable"],
+        read: json["read"],
+        editor: Owner.fromJson(json["editor"]),
+        file: json["file"] == null ? null : FileElement.fromJson(json["file"]),
+      );
 
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "text": text,
-    "createdAt": createdAt,
-    "isDeleted": isDeleted,
-    "isDeletable": isDeletable,
-    "read": read,
-    "editor": editor.toJson(),
-    "file": file?.toJson(),
-  };
+        "id": id,
+        "text": text,
+        "createdAt": createdAt,
+        "isDeleted": isDeleted,
+        "isDeletable": isDeletable,
+        "read": read,
+        "editor": editor.toJson(),
+        "file": file?.toJson(),
+      };
 }
 
 class Owner {
@@ -136,29 +139,24 @@ class Owner {
   });
 
   factory Owner.fromJson(Map<String, dynamic> json) => Owner(
-    id: json["id"],
-    name: json["name"],
-    role: roleValues.map[json["role"]]!,
-    info: json["info"],
-  );
+        id: json["id"],
+        name: json["name"],
+        role: roleValues.map[json["role"]]!,
+        info: json["info"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "name": name,
-    "role": roleValues.reverse[role],
-    "info": info,
-  };
+        "id": id,
+        "name": name,
+        "role": roleValues.reverse[role],
+        "info": info,
+      };
 }
 
-enum Role {
-  IP_USER,
-  STUDENT
-}
+enum Role { IP_USER, STUDENT }
 
-final roleValues = EnumValues({
-  "ip-user": Role.IP_USER,
-  "student": Role.STUDENT
-});
+final roleValues =
+    EnumValues({"ip-user": Role.IP_USER, "student": Role.STUDENT});
 
 class EnumValues<T> {
   Map<String, T> map;

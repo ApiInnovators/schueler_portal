@@ -4,9 +4,12 @@
 
 import 'dart:convert';
 
-List<KontaktanfrageLehrer> kontaktanfrageLehrerFromJson(String str) => List<KontaktanfrageLehrer>.from(json.decode(str).map((x) => KontaktanfrageLehrer.fromJson(x)));
+List<KontaktanfrageLehrer> kontaktanfrageLehrerFromJson(String str) =>
+    List<KontaktanfrageLehrer>.from(
+        json.decode(str).map((x) => KontaktanfrageLehrer.fromJson(x)));
 
-String kontaktanfrageLehrerToJson(List<KontaktanfrageLehrer> data) => json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
+String kontaktanfrageLehrerToJson(List<KontaktanfrageLehrer> data) =>
+    json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
 class KontaktanfrageLehrer {
   final int userId;
@@ -19,15 +22,16 @@ class KontaktanfrageLehrer {
     required this.info,
   });
 
-  factory KontaktanfrageLehrer.fromJson(Map<String, dynamic> json) => KontaktanfrageLehrer(
-    userId: json["user_id"],
-    name: json["name"],
-    info: json["info"],
-  );
+  factory KontaktanfrageLehrer.fromJson(Map<String, dynamic> json) =>
+      KontaktanfrageLehrer(
+        userId: json["user_id"],
+        name: json["name"],
+        info: json["info"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "user_id": userId,
-    "name": name,
-    "info": info,
-  };
+        "user_id": userId,
+        "name": name,
+        "info": info,
+      };
 }

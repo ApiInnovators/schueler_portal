@@ -1,11 +1,11 @@
-import 'package:mime/mime.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mime/mime.dart';
 import 'package:open_file/open_file.dart';
+import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/api/response_models/api/chat/id.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
-import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
 import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
 import 'package:schueler_portal/pages/user_login.dart';

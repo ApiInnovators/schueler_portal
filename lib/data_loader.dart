@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:intl/intl.dart';
+import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 import 'package:schueler_portal/api/response_models/api/stundenplan.dart';
 import 'package:schueler_portal/api/response_models/api/unterricht.dart';
 import 'package:schueler_portal/api/response_models/api/vertretungsplan.dart';
-import 'package:schueler_portal/api/api_client.dart';
 
 import 'api/response_models/api/chat.dart';
 import 'api/response_models/api/news.dart';

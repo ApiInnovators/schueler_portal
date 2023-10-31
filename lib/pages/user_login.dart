@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:schueler_portal/api/request_models/base_request.dart';
 import 'package:schueler_portal/api/api_client.dart';
+import 'package:schueler_portal/api/request_models/base_request.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/main.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../api/response_models/api/user.dart';
 

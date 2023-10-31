@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/api/request_models/base_request.dart';
-import 'package:schueler_portal/pages/chats/chats.dart';
 import 'package:schueler_portal/data_loader.dart';
+import 'package:schueler_portal/pages/chats/chats.dart';
 import 'package:schueler_portal/pages/home/home.dart';
 import 'package:schueler_portal/pages/homework/homework.dart';
-import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/pages/timetable/stundenplan_page.dart';
 import 'package:schueler_portal/pages/user_login.dart';
 import 'package:schueler_portal/user_data.dart';

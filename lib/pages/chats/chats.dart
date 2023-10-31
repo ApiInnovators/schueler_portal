@@ -3,8 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 
 import '../../api/response_models/api/chat.dart';
-import 'chat_room.dart';
 import '../../data_loader.dart';
+import 'chat_room.dart';
 
 class ChatsWidget extends StatefulWidget {
   const ChatsWidget({super.key});

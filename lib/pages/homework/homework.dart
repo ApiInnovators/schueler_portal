@@ -67,35 +67,32 @@ class _HomeworkWidget extends State<StatefulWidget> {
                         style: TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold),
                       ),
-                      Column(
-                        children: List.generate(
-                            nichtErledigteHausaufgaben.length,
-                            (i) => Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 3),
-                                  child: SingleHomeworkWidget(
-                                    hausaufgabe: nichtErledigteHausaufgaben[i],
-                                  ),
-                                )),
-                      ),
+                      if (nichtErledigteHausaufgaben.isEmpty) ...[
+                        const Text("Keine unerledigten Hausaufgaben"),
+                      ] else ...[
+                        Column(children: [
+                          for (var ha in nichtErledigteHausaufgaben) ...[
+                            SingleHomeworkWidget(hausaufgabe: ha),
+                            const SizedBox(height: 5),
+                          ],
+                        ]),
+                      ],
                       const SizedBox(height: 10),
                       const Text(
                         "Erledigt",
                         style: TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold),
                       ),
-                      Column(
-                        children: List.generate(
-                          erledigteHausaufgaben.length,
-                          (i) => Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 3),
-                            child: SingleHomeworkWidget(
-                              hausaufgabe: erledigteHausaufgaben[i],
-                            ),
-                          ),
-                        ),
-                      )
+                      if (erledigteHausaufgaben.isEmpty) ...[
+                        const Text("Noch nichts erledigt"),
+                      ] else ...[
+                        Column(children: [
+                          for (var ha in erledigteHausaufgaben) ...[
+                            SingleHomeworkWidget(hausaufgabe: ha),
+                            const SizedBox(height: 5),
+                          ],
+                        ]),
+                      ],
                     ],
                   );
                 },

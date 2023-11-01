@@ -12,76 +12,62 @@ import 'package:string_to_color/string_to_color.dart';
 
 import '../../api/response_models/api/vertretungsplan.dart';
 
-class VertretungsplanWidget extends StatefulWidget {
+class VertretungsplanWidget extends StatelessWidget {
   const VertretungsplanWidget({super.key});
 
   @override
-  State<VertretungsplanWidget> createState() => _VertretungsplanWidgetState();
-}
-
-class _VertretungsplanWidgetState extends State<VertretungsplanWidget> {
-  bool onlyUsersVertretungen = true;
-
-  @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 6, right: 6, top: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("Nur deine Vertretungen"),
-              Switch(
-                  value: onlyUsersVertretungen,
-                  onChanged: (value) =>
-                      setState(() => onlyUsersVertretungen = value)),
-            ],
-          ),
-        ),
-        const Divider(),
-        Expanded(
-          child: RefreshableCachingFutureBuilder(
-            future: DataLoader.getVertretungsplan(),
-            cacheGetter: () => DataLoader.cache.vertretungsplan,
-            onRefresh: () {
-              DataLoader.cache.vertretungsplan = null;
-              DataLoader.cacheData();
-              return DataLoader.getVertretungsplan();
-            },
-            builder: (context, snapshot) {
-              List<Datum> datums = snapshot.data!.data;
+    return RefreshableCachingFutureBuilder(
+      dataLoaderFuture: DataLoader.getVertretungsplan,
+      cache: DataLoader.cache.vertretungsplan,
+      builder: (context, snapshot) {
 
-              if (onlyUsersVertretungen) {
-                datums = datums
-                    .where((element) => UserData.isCourseEnabled(element.uf))
-                    .toList();
-              }
+        bool onlyUsersVertretungen = true;
 
-              if (datums.isEmpty) {
-                return const Center(child: Text("Keine Vertretungen"));
-              }
+        return StatefulBuilder(
+          builder: (context, setState) {
 
-              var groupedByDate = SplayTreeMap<DateTime, List<Datum>>.from(
-                groupBy(datums, (p0) => p0.date),
-              );
+            List<Datum> datums = snapshot.data;
+            if (onlyUsersVertretungen) {
+              datums = datums
+                  .where((element) => UserData.isCourseEnabled(element.uf) != false)
+                  .toList();
+            }
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Column(
-                  children: List.generate(
-                    groupedByDate.length,
-                    (i) => VertretungDayWidget(
-                      day: groupedByDate.keys.elementAt(i),
-                      data: groupedByDate[groupedByDate.keys.elementAt(i)]!,
-                    ),
+            return Column(children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 6, right: 6, top: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Nur deine Vertretungen"),
+                    Switch(
+                        value: onlyUsersVertretungen,
+                        onChanged: (value) =>
+                            setState(() => onlyUsersVertretungen = value)),
+                  ],
+                ),
+              ),
+              const Divider(),
+              if (datums.isEmpty) ...[
+                const Center(child: Text("Keine Vertretungen")),
+              ] else ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Column(
+                    children: [
+                      for (MapEntry<DateTime, List<Datum>> entry
+                          in SplayTreeMap<DateTime, List<Datum>>.from(
+                              groupBy(datums, (p0) => p0.date)).entries)
+                        VertretungDayWidget(day: entry.key, data: entry.value)
+                    ],
                   ),
                 ),
-              );
-            },
-          ),
-        ),
-      ],
+              ],
+            ]);
+          },
+        );
+      },
     );
   }
 }

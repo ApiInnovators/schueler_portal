@@ -6,15 +6,8 @@ import '../../api/response_models/api/chat.dart';
 import '../../data_loader.dart';
 import 'chat_room.dart';
 
-class ChatsWidget extends StatefulWidget {
+class ChatsWidget extends StatelessWidget {
   const ChatsWidget({super.key});
-
-  @override
-  State<StatefulWidget> createState() => _ChatsWidget();
-}
-
-class _ChatsWidget extends State<ChatsWidget> {
-  List<Chat>? filteredChats;
 
   @override
   Widget build(BuildContext context) {
@@ -23,49 +16,16 @@ class _ChatsWidget extends State<ChatsWidget> {
         centerTitle: true,
         title: const Text("Chats"),
       ),
-      body: RefreshableCachingFutureBuilder(
-        future: DataLoader.getChats(),
-        cacheGetter: () => DataLoader.cache.chats,
-        onRefresh: () {
-          DataLoader.cache.chats = null;
-          DataLoader.cacheData();
-          return DataLoader.getChats();
-        },
+      body: RefreshableCachingFutureBuilder<List<Chat>>(
+        dataLoaderFuture: DataLoader.getChats,
+        cache: DataLoader.cache.chats,
         builder: (context, snapshot) {
-          filteredChats ??= snapshot.data!;
-
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: SearchAnchor(
-                      builder:
-                          (BuildContext context, SearchController controller) {
-                        return SearchBar(
-                          hintText: "Chat suchen...",
-                          controller: controller,
-                          onChanged: (value) {
-                            setState(() {
-                              filteredChats = snapshot.data!
-                                  .where((element) => element.name
-                                      .toLowerCase()
-                                      .contains(value.toLowerCase()))
-                                  .toList();
-                            });
-                          },
-                        );
-                      },
-                      suggestionsBuilder:
-                          (BuildContext context, SearchController controller) =>
-                              []),
-                ),
-                if (filteredChats!.isEmpty) ...[
-                  const Text("Keine Treffer"),
-                ] else ...[
-                  ChatsListWidget(data: filteredChats!),
-                ],
+                  ChatsListWidget(data: snapshot),
+
               ],
             ),
           );

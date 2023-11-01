@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/api/request_models/base_request.dart';
 import 'package:schueler_portal/data_loader.dart';
+import 'package:schueler_portal/globals.dart';
 import 'package:schueler_portal/pages/chats/chats.dart';
 import 'package:schueler_portal/pages/home/home.dart';
 import 'package:schueler_portal/pages/homework/homework.dart';
@@ -15,7 +16,7 @@ import 'custom_widgets/my_future_builder.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await UserData.init();
+  await Future.wait([UserData.init(), LocallyCachedApiData.init()]);
   BaseRequest? loadedLogin = await UserLogin.load();
 
   if (loadedLogin == null) {
@@ -67,7 +68,9 @@ class MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Schüler Portal',
+      scaffoldMessengerKey: snackbarKey,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: accentColor,

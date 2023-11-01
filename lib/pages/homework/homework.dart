@@ -6,14 +6,9 @@ import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
 import 'package:schueler_portal/data_loader.dart';
 
-class HomeworkWidget extends StatefulWidget {
+class HomeworkWidget extends StatelessWidget {
   const HomeworkWidget({super.key});
 
-  @override
-  State<StatefulWidget> createState() => _HomeworkWidget();
-}
-
-class _HomeworkWidget extends State<StatefulWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,15 +37,10 @@ class _HomeworkWidget extends State<StatefulWidget> {
             children: [
               const Text("Nothing here"),
               RefreshableCachingFutureBuilder(
-                future: DataLoader.getHausaufgaben(),
-                cacheGetter: () => DataLoader.cache.hausaufgaben,
-                onRefresh: () {
-                  DataLoader.cache.hausaufgaben = null;
-                  DataLoader.cacheData();
-                  return DataLoader.getHausaufgaben();
-                },
+                dataLoaderFuture: DataLoader.getHausaufgaben,
+                cache: DataLoader.cache.hausaufgaben,
                 builder: (context, snapshot) {
-                  List<Hausaufgabe> data = snapshot.data!;
+                  List<Hausaufgabe> data = snapshot;
 
                   data.sort((a, b) => a.dueAt.compareTo(b.dueAt));
 

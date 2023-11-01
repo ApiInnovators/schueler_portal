@@ -128,10 +128,10 @@ class CoursesSelectorPage extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         child: CachingFutureBuilder(
           future: DataLoader.getStundenplan(),
-          cacheGetter: () => DataLoader.cache.stundenplan,
+          cacheGetter: DataLoader.cache.stundenplan.getCached,
           builder: (context, snapshot) {
             final allCourses = Tools.getStundenplanCourses(
-              snapshot.data!.data,
+              snapshot.data,
             ).toList();
 
             final grouped = SplayTreeMap<String, List<String>>.from(
@@ -179,12 +179,12 @@ class CourseSwitch extends StatefulWidget {
 }
 
 class _CourseSwitchState extends State<CourseSwitch> {
-  late bool enabled = UserData.isCourseEnabled(widget.course);
+  late bool? enabled = UserData.isCourseEnabled(widget.course);
 
   @override
   Widget build(BuildContext context) => Switch(
-      value: enabled,
-      onChanged: (value) {
+      value: enabled == true,
+      onChanged: (value)  {
         UserData.setCourseIsEnabled(
           widget.course,
           value,

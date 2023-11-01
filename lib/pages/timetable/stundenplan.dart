@@ -55,12 +55,9 @@ class _StundenplanContainer extends State<StundenplanContainer> {
         Expanded(
           child: RefreshIndicator(
             onRefresh: () async {
-              DataLoader.cache.vertretungsplan = null;
-              DataLoader.cache.stundenplan = null;
-              DataLoader.cacheData();
               await Future.wait([
-                DataLoader.getStundenplan(),
-                DataLoader.getVertretungsplan(),
+                DataLoader.cache.stundenplan.fetchData(),
+                DataLoader.cache.vertretungsplan.fetchData(),
               ]);
               setState(() {});
             },
@@ -69,22 +66,18 @@ class _StundenplanContainer extends State<StundenplanContainer> {
                 DataLoader.getStundenplan(),
                 DataLoader.getVertretungsplan()
               ],
-              cacheGetter: () {
-                return [
-                  DataLoader.cache.stundenplan,
-                  DataLoader.cache.vertretungsplan
-                ];
-              },
+              cacheGetter: () => [
+                DataLoader.cache.stundenplan.getCached(),
+                DataLoader.cache.vertretungsplan.getCached(),
+              ],
               builder: (context, snapshot) {
                 return StundenplanWidget(
-                  scheduleData: snapshot
-                      .firstWhere(
-                          (e) => e.data is stundenplan_package.Stundenplan)
-                      .data as stundenplan_package.Stundenplan,
-                  vertretungsplan: snapshot
-                      .firstWhere((e) =>
-                          e.data is vertretungsplan_package.Vertretungsplan)
-                      .data as vertretungsplan_package.Vertretungsplan,
+                  scheduleData: snapshot.firstWhere(
+                          (e) => e is stundenplan_package.Stundenplan)
+                      as stundenplan_package.Stundenplan,
+                  vertretungsplan: snapshot.firstWhere(
+                          (e) => e is vertretungsplan_package.Vertretungsplan)
+                      as vertretungsplan_package.Vertretungsplan,
                   showOnlyUsersLessons: showOnlyUsersLessons,
                 );
               },
@@ -115,9 +108,6 @@ class StundenplanWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    DateTime now = DateTime.now().toLocal();
-    DateTime today = DateTime(now.year, now.month, now.day);
-
     return SfCalendar(
       controller: calendarController,
       onViewChanged: (details) {
@@ -131,15 +121,15 @@ class StundenplanWidget extends StatelessWidget {
       dataSource: StundenplanDataSource(
           showOnlyUsersLessons
               ? scheduleData.data
-                  .where((element) => UserData.isCourseEnabled(element.uf))
+                  .where((element) => UserData.isCourseEnabled(element.uf) != false)
                   .toList()
               : scheduleData.data,
-          vertretungsplan.data,
-          showOnlyUsersLessons),
+          vertretungsplan.data),
       view: lastCalendarView,
       allowedViews: const [
         CalendarView.day,
         CalendarView.schedule,
+        CalendarView.week,
       ],
       showNavigationArrow: true,
       showDatePickerButton: true,
@@ -150,7 +140,6 @@ class StundenplanWidget extends StatelessWidget {
         endHour: 18.0 + 15.0 / 60.0,
         nonWorkingDays: [DateTime.saturday, DateTime.sunday],
       ),
-      minDate: today.subtract(Duration(days: today.weekday - 1)),
     );
   }
 }
@@ -158,13 +147,8 @@ class StundenplanWidget extends StatelessWidget {
 class StundenplanDataSource extends CalendarDataSource {
   final List<stundenplan_package.Datum> stunden;
   final List<vertretungsplan_package.Datum> vertretungen;
-  final bool onlyUsersLessons;
 
-  StundenplanDataSource(
-    this.stunden,
-    this.vertretungen,
-    this.onlyUsersLessons,
-  ) {
+  StundenplanDataSource(this.stunden, this.vertretungen) {
     appointments = stunden;
   }
 
@@ -193,25 +177,18 @@ class StundenplanDataSource extends CalendarDataSource {
     return "FREQ=WEEKLY;INTERVAL=1;BYDAY=$byDay";
   }
 
+  // The only thing that matters is that the weekdays are correct
   @override
-  DateTime getStartTime(int index) {
-    DateTime now = DateTime.now().toLocal();
-
-    return Tools.hourStartToDateTime(
+  DateTime getStartTime(int index) => Tools.hourStartToDateTime(
       stunden[index].hour,
-      DateTime(now.year, now.month, stunden[index].day),
+      DateTime(2018, 1, stunden[index].day + 1),
     );
-  }
 
   @override
-  DateTime getEndTime(int index) {
-    DateTime now = DateTime.now().toLocal();
-
-    return Tools.hourEndToDateTime(
+  DateTime getEndTime(int index) => Tools.hourEndToDateTime(
       stunden[index].hour,
-      DateTime(now.year, now.month, stunden[index].day),
+      DateTime(2018, 1, stunden[index].day + 1),
     );
-  }
 
   vertretungsplan_package.Datum? findVertretung(
       stundenplan_package.Datum stunde) {

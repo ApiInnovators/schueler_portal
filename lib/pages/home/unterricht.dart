@@ -42,12 +42,12 @@ class _UnterrichtWidgetState extends State<UnterrichtWidget> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: SizedBox(
                   height: MediaQuery.of(context).size.height,
-                  child: CachingFutureBuilder(
+                  child: CachingFutureBuilder<List<Unterricht>>(
                       future: DataLoader.getUnterricht(userRequestedDate),
                       cacheGetter: () =>
-                          DataLoader.cache.unterricht[userRequestedDate],
+                          DataLoader.cache.unterricht[userRequestedDate]?.data,
                       builder: (context, data) {
-                        List<Unterricht> unterricht = data.data!;
+                        List<Unterricht> unterricht = data;
 
                         if (unterricht.isEmpty) {
                           return const Center(

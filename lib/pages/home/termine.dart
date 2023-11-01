@@ -21,16 +21,14 @@ class _TermineWidgetState extends State<TermineWidget> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          DataLoader.cache.termine = null;
-          DataLoader.cacheData();
-          await DataLoader.getTermine();
+          await DataLoader.cache.termine.fetchData();
           setState(() {});
         },
         child: CachingFutureBuilder(
           future: DataLoader.getTermine(),
-          cacheGetter: () => DataLoader.cache.termine,
+          cacheGetter: DataLoader.cache.termine.getCached,
           builder: (context, snapshot) {
-            Termine termine = snapshot.data!;
+            Termine termine = snapshot;
 
             return SfCalendar(
               view: CalendarView.schedule,

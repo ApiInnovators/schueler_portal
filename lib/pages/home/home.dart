@@ -9,23 +9,16 @@ import 'package:schueler_portal/pages/home/unterricht.dart';
 import '../../api/response_models/api/news.dart';
 import '../../data_loader.dart';
 
-class HomeWidget extends StatefulWidget {
+class HomeWidget extends StatelessWidget {
   final MyAppState myAppState;
 
   const HomeWidget({super.key, required this.myAppState});
 
   @override
-  State<StatefulWidget> createState() => _HomeWidget();
-}
-
-class _HomeWidget extends State<HomeWidget> {
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Home",
-        ),
+        title: const Text("Home"),
         centerTitle: true,
         actions: [
           IconButton(
@@ -33,7 +26,7 @@ class _HomeWidget extends State<HomeWidget> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => SettingsPage(
-                        myAppState: widget.myAppState,
+                        myAppState: myAppState,
                       ),
                     ),
                   ),
@@ -60,16 +53,10 @@ class _HomeWidget extends State<HomeWidget> {
                     ),
                     Expanded(
                       child: RefreshableCachingFutureBuilder(
-                        future: DataLoader.getNews(),
-                        cacheGetter: () => DataLoader.cache.news,
-                        onRefresh: () {
-                          DataLoader.cache.news = null;
-                          DataLoader.cacheData();
-                          return DataLoader.getNews();
-                        },
-                        builder: (context, snapshot) =>
-                            NewsWidget(news: snapshot.data!),
-                      ),
+                          dataLoaderFuture: DataLoader.getNews,
+                          cache: DataLoader.cache.news,
+                          builder: (context, news) =>
+                              NewsWidget(news: news)),
                     ),
                   ],
                 ),

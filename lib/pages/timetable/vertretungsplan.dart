@@ -21,16 +21,15 @@ class VertretungsplanWidget extends StatelessWidget {
       dataLoaderFuture: DataLoader.getVertretungsplan,
       cache: DataLoader.cache.vertretungsplan,
       builder: (context, snapshot) {
-
         bool onlyUsersVertretungen = true;
 
         return StatefulBuilder(
           builder: (context, setState) {
-
             List<Datum> datums = snapshot.data;
             if (onlyUsersVertretungen) {
               datums = datums
-                  .where((element) => UserData.isCourseEnabled(element.uf) != false)
+                  .where((element) =>
+                      UserData.isCourseEnabled(element.uf) != false)
                   .toList();
             }
 
@@ -137,28 +136,33 @@ class VertretungDatumWidget extends StatelessWidget {
           Row(
             children: [
               AlignedText(
-                "${datum.hour}. ",
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              AlignedText(
-                "${datum.uf} ",
-                style: TextStyle(
-                  color: ColorUtils.stringToColor(datum.uf),
-                  fontWeight: FontWeight.bold,
+                text: Text(
+                  "${datum.hour}. ",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
-              AlignedText(datum.absTeacher),
-              if (datum.reason != "-") AlignedText(": ${datum.reason}"),
+              AlignedText(
+                text: Text(
+                  "${datum.uf} ",
+                  style: TextStyle(
+                    color: ColorUtils.stringToColor(datum.uf),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              AlignedText.fromString(datum.absTeacher),
+              if (datum.reason != "-")
+                AlignedText.fromString(": ${datum.reason}"),
             ],
           ),
           Padding(
             padding: const EdgeInsets.only(left: 20),
             child: Column(
               children: [
-                AlignedText("Raum: ${datum.room}"),
+                AlignedText.fromString("Raum: ${datum.room}"),
                 if (datum.vertrTeacher.isNotEmpty)
-                  AlignedText("Vertretung: ${datum.vertrTeacher}"),
-                if (datum.text.isNotEmpty) AlignedText(datum.text),
+                  AlignedText.fromString("Vertretung: ${datum.vertrTeacher}"),
+                if (datum.text.isNotEmpty) AlignedText.fromString(datum.text),
               ],
             ),
           ),

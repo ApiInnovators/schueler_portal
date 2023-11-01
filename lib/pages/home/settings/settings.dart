@@ -179,11 +179,11 @@ class CourseSwitch extends StatefulWidget {
 }
 
 class _CourseSwitchState extends State<CourseSwitch> {
-  late bool? enabled = UserData.isCourseEnabled(widget.course);
+  late bool enabled = UserData.isCourseEnabled(widget.course);
 
   @override
   Widget build(BuildContext context) => Switch(
-      value: enabled == true,
+      value: enabled,
       onChanged: (value)  {
         UserData.setCourseIsEnabled(
           widget.course,

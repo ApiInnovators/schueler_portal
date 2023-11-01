@@ -143,7 +143,7 @@ class UnterrichtDetailsWidget extends StatelessWidget {
       title: Text(unterricht.subject.long),
       content: Column(
         children: [
-          AlignedText(unterricht.content.text.trim()),
+          AlignedText.fromString(unterricht.content.text.trim()),
           if (unterricht.content.files.isNotEmpty) ...[
             const Divider(),
             for (FileElement file in unterricht.content.files)
@@ -151,12 +151,18 @@ class UnterrichtDetailsWidget extends StatelessWidget {
           ],
           if (unterricht.homework != null) ...[
             const Divider(),
-            const AlignedText("Hausaufgabe",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            AlignedText(unterricht.homework!.homework.trim()),
+            const AlignedText(
+              text: Text(
+                "Hausaufgabe",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+            AlignedText.fromString(unterricht.homework!.homework.trim()),
             AlignedText(
-              "Zu erledigen bis: ${DateFormat("dd.MM.yyyy").format(unterricht.homework!.dueAt)}",
-              style: const TextStyle(fontSize: 10),
+              text: Text(
+                "Zu erledigen bis: ${DateFormat("dd.MM.yyyy").format(unterricht.homework!.dueAt)}",
+                style: const TextStyle(fontSize: 10),
+              ),
             ),
             for (FileElement file in unterricht.homework!.files)
               FileDownloadButton(file: file),

@@ -244,7 +244,7 @@ class LocallyCachedApiData<T> {
       return parsed;
     }
 
-    return _data!;
+    return _data;
   }
 
   static Future<void> init() async =>

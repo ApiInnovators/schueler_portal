@@ -164,7 +164,7 @@ class _ChatsNavigationDestinationState
   );
 
   int _countUnreadChats(ApiResponse<List<Chat>> chatResp) {
-    if (chatResp.statusCode != 200) return -1;
+    if (chatResp.statusCode != 200 || chatResp.data == null) return -1;
     return chatResp.data!
         .where((element) => element.unreadMessagesCount > 0)
         .length;

@@ -1,46 +1,22 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
-class AlignedText extends Text {
+class AlignedText extends StatelessWidget {
+  final Text text;
   final AlignmentGeometry alignment;
 
-  const AlignedText(
-    super.data, {
+  const AlignedText({
     super.key,
+    required this.text,
     this.alignment = Alignment.centerLeft,
-    super.style,
-    super.strutStyle,
-    super.textAlign,
-    super.textDirection,
-    super.locale,
-    super.softWrap,
-    super.overflow,
-    super.textScaleFactor,
-    super.maxLines,
-    super.semanticsLabel,
-    super.textWidthBasis,
-    super.textHeightBehavior,
-    super.selectionColor,
   });
 
+  AlignedText.fromString(
+    String string, {
+    super.key,
+    this.alignment = Alignment.centerLeft,
+  }) : text = Text(string);
+
   @override
-  Align build(BuildContext context) => Align(
-        alignment: alignment,
-        child: Text(
-          data!,
-          textAlign: textAlign,
-          style: style,
-          key: key,
-          overflow: overflow,
-          softWrap: softWrap,
-          locale: locale,
-          maxLines: maxLines,
-          selectionColor: selectionColor,
-          semanticsLabel: semanticsLabel,
-          strutStyle: strutStyle,
-          textDirection: textDirection,
-          textHeightBehavior: textHeightBehavior,
-          textScaleFactor: textScaleFactor,
-          textWidthBasis: textWidthBasis,
-        ),
-      );
+  Widget build(BuildContext context) =>
+      Align(alignment: alignment, child: text);
 }

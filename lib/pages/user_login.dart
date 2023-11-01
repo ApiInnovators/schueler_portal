@@ -107,7 +107,8 @@ class UserLoginWidget extends StatelessWidget {
                 ApiResponse<bool> validationResp =
                     await ApiClient.validateLogin(req);
 
-                if (validationResp.statusCode == 200) {
+                if (validationResp.statusCode == 200 &&
+                    validationResp.data != null) {
                   if (validationResp.data!) {
                     myAppState.setLogin(true);
                     UserLogin.updateLogin(req);

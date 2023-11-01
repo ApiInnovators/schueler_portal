@@ -20,7 +20,7 @@ class UserData {
     return Color(int.parse(res.split('(0x')[1].split(')')[0], radix: 16));
   }
 
-  static bool? isCourseEnabled(String course) => _prefs.getBool(course);
+  static bool isCourseEnabled(String course) => _prefs.getBool(course) ?? true;
 
   static Future<void> setCourseIsEnabled(String course, bool value) =>
       _prefs.setBool(course, value);

@@ -163,19 +163,14 @@ class _ChatsNavigationDestinationState
     label: 'Chats',
   );
 
-  int _countUnreadChats(ApiResponse<List<Chat>> chatResp) {
-    if (chatResp.statusCode != 200 || chatResp.data == null) return -1;
-    return chatResp.data!
-        .where((element) => element.unreadMessagesCount > 0)
-        .length;
-  }
+  int _countUnreadChats(List<Chat> chats) =>
+      chats.where((element) => element.unreadMessagesCount > 0).length;
 
   @override
   Widget build(BuildContext context) {
-    return MyFutureBuilder(
+    return ApiFutureBuilder(
       future: DataLoader.getChats(),
       errorWidget: defaultNavDest,
-      dataNotAvailableWidget: defaultNavDest,
       failedRequestWidget: defaultNavDest,
       loadingIndicator: NavigationDestination(
         selectedIcon: Badge(
@@ -201,8 +196,8 @@ class _ChatsNavigationDestinationState
         ),
         label: 'Chats',
       ),
-      customBuilder: (context, snapshot) {
-        _unreadChats ??= _countUnreadChats(snapshot);
+      builder: (context, data) {
+        _unreadChats ??= _countUnreadChats(data);
 
         if (_unreadChats! < 1) return defaultNavDest;
 

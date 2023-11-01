@@ -25,9 +25,9 @@ class CachingFutureBuilder<T> extends StatelessWidget {
     T? cached = cacheGetter();
 
     if (cached == null) {
-      return MyFutureBuilder(
+      return ApiFutureBuilder(
         future: future,
-        customBuilder: (context, apiResp) => builder(context, apiResp.data as T),
+        builder: builder,
         loadingIndicator: loadingIndicator,
         errorWidget: errorWidget,
       );
@@ -69,10 +69,9 @@ class _RefreshableCachingFutureBuilderState<T>
     Widget res;
 
     if (cached == null) {
-      res = MyFutureBuilder(
+      res = ApiFutureBuilder(
         future: widget.cache.fetchData(),
-        customBuilder: (context, apiResp) =>
-            widget.builder(context, apiResp.data as T),
+        builder: widget.builder,
         loadingIndicator: widget.loadingIndicator,
         errorWidget: widget.errorWidget,
       );

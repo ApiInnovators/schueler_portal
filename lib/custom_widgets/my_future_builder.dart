@@ -28,15 +28,6 @@ class MyFutureBuilder<T> extends FutureBuilder<T> {
 
             if (!snapshot.hasData) return dataNotAvailableWidget;
 
-            if (snapshot.data is ApiResponse?) {
-              ApiResponse apiResp = snapshot.data as ApiResponse;
-
-              if (apiResp.data == null || apiResp.statusCode != 200) {
-                return failedRequestWidget ??
-                    FailedRequestWidget(apiResponse: apiResp);
-              }
-            }
-
             if (snapshot.connectionState == ConnectionState.done &&
                 snapshot.hasData) {
               return customBuilder(context, snapshot.data as T);
@@ -45,4 +36,70 @@ class MyFutureBuilder<T> extends FutureBuilder<T> {
             return errorWidget;
           },
         );
+}
+
+class ApiFutureBuilder<T> extends StatefulWidget {
+  final Widget Function(BuildContext, T) builder;
+  final Future<ApiResponse<T>> future;
+
+  final Widget loadingIndicator;
+  final Widget errorWidget;
+  final Widget? failedRequestWidget;
+
+  const ApiFutureBuilder({
+    super.key,
+    required this.builder,
+    required this.future,
+    this.loadingIndicator = const Center(child: CircularProgressIndicator()),
+    this.errorWidget = const Text('An error occurred'),
+    this.failedRequestWidget,
+  });
+
+  @override
+  State<ApiFutureBuilder<T>> createState() => _ApiFutureBuilderState<T>();
+}
+
+class _ApiFutureBuilderState<T> extends State<ApiFutureBuilder<T>> {
+  FutureState dataState = FutureState.running;
+  late ApiResponse<T> apiResponse;
+
+  @override
+  Widget build(BuildContext context) {
+    widget.future.onError<Exception>((error, stackTrace) {
+      setState(() {
+        if (mounted) dataState = FutureState.error;
+      });
+      throw error;
+    });
+
+    widget.future.then((value) {
+      setState(() {
+        apiResponse = value;
+        if (mounted) dataState = FutureState.done;
+      });
+    });
+
+    switch (dataState) {
+      case FutureState.done:
+
+        T? respData = apiResponse.data;
+
+        if (respData == null) {
+          return widget.failedRequestWidget ??
+              FailedRequestWidget(apiResponse: apiResponse);
+        }
+
+        return widget.builder(context, respData);
+      case FutureState.error:
+        return widget.errorWidget;
+      case FutureState.running:
+        return widget.loadingIndicator;
+    }
+  }
+}
+
+enum FutureState {
+  error,
+  running,
+  done,
 }

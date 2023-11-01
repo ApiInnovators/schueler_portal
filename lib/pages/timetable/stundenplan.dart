@@ -121,7 +121,7 @@ class StundenplanWidget extends StatelessWidget {
       dataSource: StundenplanDataSource(
           showOnlyUsersLessons
               ? scheduleData.data
-                  .where((element) => UserData.isCourseEnabled(element.uf) != false)
+                  .where((element) => UserData.isCourseEnabled(element.uf))
                   .toList()
               : scheduleData.data,
           vertretungsplan.data),

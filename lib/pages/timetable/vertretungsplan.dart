@@ -29,7 +29,7 @@ class VertretungsplanWidget extends StatelessWidget {
             if (onlyUsersVertretungen) {
               datums = datums
                   .where((element) =>
-                      UserData.isCourseEnabled(element.uf) != false)
+                      UserData.isCourseEnabled(element.uf))
                   .toList();
             }
 

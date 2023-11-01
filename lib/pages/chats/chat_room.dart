@@ -22,14 +22,12 @@ class ChatRoom extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(chat.name), centerTitle: true),
-      body: MyFutureBuilder(
+      body: ApiFutureBuilder(
         future: ApiClient.putAndParse("chat--${chat.id}", chatDetailsFromJson),
-        customBuilder: (context, snapshot) {
+        builder: (context, chatDetails) {
           if (UserLogin.user == null) {
             return const Center(child: Text("Failed to get user"));
           }
-
-          ChatDetails chatDetails = snapshot.data!;
 
           Map<DateTime, List<Message>> groupedMessagesByDate = groupBy(
               chatDetails.messages,

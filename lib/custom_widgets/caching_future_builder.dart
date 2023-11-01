@@ -80,7 +80,7 @@ class _RefreshableCachingFutureBuilderState<T>
       if (displayedData == null) {
         displayedData = cached;
         widget.dataLoaderFuture().then((value) {
-          if (mounted) setState(() => displayedData = value.data as T);
+          if (mounted) setState(() => displayedData = value.data);
         });
       }
       res = widget.builder(context, displayedData as T);
@@ -129,8 +129,14 @@ class MultiCachingFutureBuilder extends StatelessWidget {
     if (cached.any((e) => e == null)) {
       return MyFutureBuilder(
         future: Future.wait(futures),
-        customBuilder: (context, apiResps) =>
-            builder(context, apiResps.map((e) => e.data!)),
+        customBuilder: (context, apiResps) {
+
+          if (apiResps.any((e) => e.data == null)) {
+            return const Center(child: Text("Failed to fetch some data"));
+          }
+
+          return builder(context, apiResps.map((e) => e.data!));
+        },
         loadingIndicator: loadingIndicator,
         errorWidget: errorWidget,
       );

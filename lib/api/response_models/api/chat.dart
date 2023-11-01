@@ -81,11 +81,13 @@ class LatestMessage {
         file: json["file"],
       );
 
-  Map<String, dynamic> toJson() => {
-        "timestamp": (timestamp.millisecondsSinceEpoch / 1000) as int,
+  Map<String, dynamic> toJson() {
+    return {
+        "timestamp": timestamp.millisecondsSinceEpoch ~/ 1000,
         "text": text,
         "file": file,
       };
+  }
 }
 
 class Member {

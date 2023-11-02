@@ -119,13 +119,8 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
   Widget build(BuildContext context) {
     return SizedBox(
       height: 100,
-      child: OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            padding: const EdgeInsets.all(0),
-          ),
-          onPressed: () {
+      child: GestureDetector(
+          onTap: () {
             showDialog(
               context: context,
               builder: (context) {
@@ -180,60 +175,70 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
               },
             );
           },
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    widget.hausaufgabe.subject.long,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
-                  Text(
-                      "${DateFormat(" (dd.MM.yy)").format(widget.hausaufgabe.date)} → ${DateFormat("dd.MM.yy").format(widget.hausaufgabe.dueAt)}"),
-                ],
+          child: Card(
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                ),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
               ),
-              const Divider(height: 1),
-              Expanded(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: FadingEdgeScrollView.fromSingleChildScrollView(
-                        gradientFractionOnEnd: 0.8,
-                        child: SingleChildScrollView(
-                          controller: scrollControler,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 10),
-                            child: Text(
-                              widget.hausaufgabe.homework,
-                              overflow: TextOverflow.fade,
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        widget.hausaufgabe.subject.long,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                      Text(
+                          "${DateFormat(" (dd.MM.yy)").format(widget.hausaufgabe.date)} → ${DateFormat("dd.MM.yy").format(widget.hausaufgabe.dueAt)}"),
+                    ],
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: FadingEdgeScrollView.fromSingleChildScrollView(
+                            gradientFractionOnEnd: 0.8,
+                            child: SingleChildScrollView(
+                              controller: scrollControler,
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 10),
+                                child: Text(
+                                  widget.hausaufgabe.homework,
+                                  overflow: TextOverflow.fade,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                        if (widget.hausaufgabe.files.isNotEmpty)
+                          Row(
+                            children: [
+                              const VerticalDivider(),
+                              const Icon(Icons.attachment),
+                              Text("${widget.hausaufgabe.files.length}"),
+                            ],
+                          ),
+                        const VerticalDivider(),
+                        Checkbox(
+                            value: hausaufgabeErledigt,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                hausaufgabeErledigt = value == true;
+                              });
+                            }),
+                        const SizedBox(width: 7)
+                      ],
                     ),
-                    if (widget.hausaufgabe.files.isNotEmpty)
-                      Row(
-                        children: [
-                          const VerticalDivider(),
-                          const Icon(Icons.attachment),
-                          Text("${widget.hausaufgabe.files.length}"),
-                        ],
-                      ),
-                    const VerticalDivider(),
-                    Checkbox(
-                        value: hausaufgabeErledigt,
-                        onChanged: (bool? value) {
-                          setState(() {
-                            hausaufgabeErledigt = value == true;
-                          });
-                        }),
-                    const SizedBox(width: 7)
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           )),
     );
   }

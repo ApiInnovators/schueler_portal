@@ -34,36 +34,31 @@ class ChatRoom extends StatelessWidget {
               (obj) => DateUtils.dateOnly(
                   DateTime.fromMillisecondsSinceEpoch(obj.createdAt * 1000)));
 
-          return Column(
+          return Stack(
             children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  reverse: true,
-                  child: Column(
-                    children: [
-                      Text(
-                          "Erstellt am ${DateFormat("dd.MM.yyyy").format(DateTime.fromMillisecondsSinceEpoch(chat.createdAt * 1000))}"),
-                      for (MapEntry<DateTime, List<Message>> entry
-                          in groupedMessagesByDate.entries) ...[
-                        ChatDaySection(
-                          dateTime: entry.key,
-                          messages: entry.value,
-                          chatRoom: this,
-                          userId: UserLogin.user!.id,
-                        ),
-                      ]
+              SingleChildScrollView(
+                reverse: true,
+                child: Column(
+                  children: [
+                    Text(
+                        "Erstellt am ${DateFormat("dd.MM.yyyy").format(DateTime.fromMillisecondsSinceEpoch(chat.createdAt * 1000))}"),
+                    for (MapEntry<DateTime, List<Message>> entry
+                        in groupedMessagesByDate.entries) ...[
+                      ChatDaySection(
+                        dateTime: entry.key,
+                        messages: entry.value,
+                        chatRoom: this,
+                        userId: UserLogin.user!.id,
+                      ),
                     ],
-                  ),
+                    const SizedBox(height: 70),
+                  ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(10),
-                child: Container(
-                  decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.secondary,
-                      ),
-                      borderRadius: BorderRadius.circular(10)),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Card(
+                  margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
                   child: Row(
                     children: [
                       IconButton(

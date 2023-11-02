@@ -33,66 +33,55 @@ class HomeWidget extends StatelessWidget {
               icon: const Icon(Icons.settings))
         ],
       ),
-      body: Container(
-        margin: const EdgeInsets.all(10),
-        child: Column(
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                      width: 2, color: Theme.of(context).colorScheme.secondary),
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                ),
-                child: Column(
-                  children: [
-                    const Text(
-                      "News",
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
-                    ),
-                    Expanded(
-                      child: RefreshableCachingFutureBuilder(
-                          dataLoaderFuture: DataLoader.getNews,
-                          cache: DataLoader.cache.news,
-                          builder: (context, news) =>
-                              NewsWidget(news: news)),
-                    ),
-                  ],
-                ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Card(
+              elevation: 3,
+              child: Column(
+                children: [
+                  const Text(
+                    "News",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+                  ),
+                  Expanded(
+                    child: RefreshableCachingFutureBuilder(
+                        dataLoaderFuture: DataLoader.getNews,
+                        cache: DataLoader.cache.news,
+                        builder: (context, news) => NewsWidget(news: news)),
+                  ),
+                ],
               ),
             ),
-            ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const UnterrichtWidget(),
-                    ),
-                  );
-                },
-                child: const Center(
-                  child: Text("Unterricht"),
-                )),
-            ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const TermineWidget(),
-                    ),
-                  );
-                },
-                child: const Center(
-                  child: Text("Termine"),
-                )),
-            ElevatedButton(
-                onPressed: () {},
-                child: const Center(
-                  child: Text("Kontaktanfrage"),
-                ))
-          ],
-        ),
+          ),
+          const Divider(),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const UnterrichtWidget(),
+                ),
+              );
+            },
+            child: const Center(child: Text("Unterricht")),
+          ),
+          ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TermineWidget(),
+                  ),
+                );
+              },
+              child: const Center(child: Text("Termine"))),
+          ElevatedButton(
+            onPressed: () {},
+            child: const Center(child: Text("Kontaktanfrage")),
+          ),
+          const SizedBox(height: 7),
+        ],
       ),
     );
   }

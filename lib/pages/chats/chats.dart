@@ -19,17 +19,7 @@ class ChatsWidget extends StatelessWidget {
       body: RefreshableCachingFutureBuilder<List<Chat>>(
         dataLoaderFuture: DataLoader.getChats,
         cache: DataLoader.cache.chats,
-        builder: (context, snapshot) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Column(
-              children: [
-                  ChatsListWidget(data: snapshot),
-
-              ],
-            ),
-          );
-        },
+        builder: (context, snapshot) => ChatsListWidget(data: snapshot),
       ),
     );
   }
@@ -75,7 +65,6 @@ class ChatsListWidget extends StatelessWidget {
       children: [
         for (int i = 0; i < data.length; ++i) ...[
           SingleChatWidget(chat: data[i]),
-          const SizedBox(height: 5),
         ],
       ],
     );
@@ -106,14 +95,9 @@ class SingleChatWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 100,
-      child: OutlinedButton(
-        style: OutlinedButton.styleFrom(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          padding: const EdgeInsets.only(left: 5, right: 5, bottom: 5),
-        ),
-        onPressed: () {
+      height: 120,
+      child: GestureDetector(
+        onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -121,87 +105,95 @@ class SingleChatWidget extends StatelessWidget {
             ),
           );
         },
-        child: Column(
-          children: [
-            Row(
+        child: Card(
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              ),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
+            ),
+            padding: const EdgeInsets.only(left: 10, right: 10, bottom: 2),
+            child: Column(
               children: [
-                Badge(
-                  backgroundColor: Theme.of(context).colorScheme.secondary,
-                  label: Text(
-                    chat.unreadMessagesCount.toString(),
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSecondary),
-                  ),
-                  isLabelVisible: chat.unreadMessagesCount > 0,
-                  child: Icon(chat.members.length > 1 ||
-                          chat.members.any((element) =>
-                              element.type ==
-                              ChatMemberType.APP_MODELS_USER_GROUP)
-                      ? Icons.groups
-                      : Icons.chat),
+                Row(
+                  children: [
+                    Badge(
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                      label: Text(
+                        chat.unreadMessagesCount.toString(),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSecondary),
+                      ),
+                      isLabelVisible: chat.unreadMessagesCount > 0,
+                      child: Icon(chat.members.length > 1 ||
+                              chat.members.any((element) =>
+                                  element.type ==
+                                  ChatMemberType.APP_MODELS_USER_GROUP)
+                          ? Icons.groups
+                          : Icons.chat),
+                    ),
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: Text(
+                        chat.name,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(
+                          chat.pinned ? Icons.push_pin : Icons.push_pin_outlined),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 15),
                 Expanded(
-                  child: Text(
-                    chat.name,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  child: Row(
+                    children: [
+                      if (chat.latestMessage != null) ...[
+                        Expanded(
+                          child: Column(
+                            children: [
+                              if (chat.latestMessage!.text != null) ...[
+                                Flexible(
+                                  child: Container(
+                                    alignment: Alignment.topLeft,
+                                    child: Text(
+                                      chat.latestMessage!.text!,
+                                      overflow: TextOverflow.fade,
+                                    ),
+                                  ),
+                                ),
+                              ] else ...[
+                                const Text(
+                                  "Nachricht gelöscht",
+                                  style: TextStyle(fontStyle: FontStyle.italic),
+                                )
+                              ],
+                              Container(
+                                alignment: Alignment.bottomLeft,
+                                child: Text(
+                                  timeDifferenceAsString(
+                                      chat.latestMessage!.timestamp),
+                                  style: const TextStyle(fontSize: 10),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ] else ...[
+                        const Text(
+                          "Noch keine Nachrichten",
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                        )
+                      ],
+                    ],
                   ),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                      chat.pinned ? Icons.push_pin : Icons.push_pin_outlined),
                 ),
               ],
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Row(
-                  children: [
-                    if (chat.latestMessage != null) ...[
-                      Expanded(
-                        child: Column(
-                          children: [
-                            if (chat.latestMessage!.text != null) ...[
-                              Flexible(
-                                child: Container(
-                                  alignment: Alignment.topLeft,
-                                  child: Text(
-                                    chat.latestMessage!.text!,
-                                    overflow: TextOverflow.fade,
-                                  ),
-                                ),
-                              ),
-                            ] else ...[
-                              const Text(
-                                "Nachricht gelöscht",
-                                style: TextStyle(fontStyle: FontStyle.italic),
-                              )
-                            ],
-                            Container(
-                              alignment: Alignment.bottomLeft,
-                              child: Text(
-                                timeDifferenceAsString(
-                                    chat.latestMessage!.timestamp),
-                                style: const TextStyle(fontSize: 10),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ] else ...[
-                      const Text(
-                        "Noch keine Nachrichten",
-                        style: TextStyle(fontStyle: FontStyle.italic),
-                      )
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

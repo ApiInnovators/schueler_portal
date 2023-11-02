@@ -64,7 +64,9 @@ class _ApiFutureBuilderState<T> extends State<ApiFutureBuilder<T>> {
   late ApiResponse<T> apiResponse;
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+
     widget.future.onError<Exception>((error, stackTrace) {
       setState(() {
         if (mounted) dataState = FutureState.error;
@@ -78,7 +80,10 @@ class _ApiFutureBuilderState<T> extends State<ApiFutureBuilder<T>> {
         if (mounted) dataState = FutureState.done;
       });
     });
+  }
 
+  @override
+  Widget build(BuildContext context) {
     switch (dataState) {
       case FutureState.done:
 

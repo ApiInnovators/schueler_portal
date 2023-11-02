@@ -139,32 +139,46 @@ class CoursesSelectorPage extends StatelessWidget {
 
             return SingleChildScrollView(
               child: Column(children: [
-                for (MapEntry<String, List<String>> entry
-                    in grouped.entries) ...[
-                  Column(
-                    children: [
-                      Row(children: <Widget>[
-                        const Expanded(child: Divider(endIndent: 15)),
-                        Text(entry.key),
-                        const Expanded(child: Divider(indent: 15)),
-                      ]),
-                      for (String course in entry.value) ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(course),
-                            CourseSwitch(course: course),
-                          ],
-                        )
-                      ]
-                    ],
-                  )
-                ]
+                for (MapEntry<String, List<String>> entry in grouped.entries)
+                  CourseGroup(groupTitle: entry.key, courses: entry.value),
               ]),
             );
           },
         ),
       ),
+    );
+  }
+}
+
+class CourseGroup extends StatelessWidget {
+  final String groupTitle;
+  final List<String> courses;
+
+  const CourseGroup({
+    super.key,
+    required this.groupTitle,
+    required this.courses,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(children: <Widget>[
+          const Expanded(child: Divider(endIndent: 15)),
+          Text(groupTitle),
+          const Expanded(child: Divider(indent: 15)),
+        ]),
+        for (String course in courses) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(course),
+              CourseSwitch(course: course),
+            ],
+          )
+        ]
+      ],
     );
   }
 }
@@ -184,7 +198,7 @@ class _CourseSwitchState extends State<CourseSwitch> {
   @override
   Widget build(BuildContext context) => Switch(
       value: enabled,
-      onChanged: (value)  {
+      onChanged: (value) {
         UserData.setCourseIsEnabled(
           widget.course,
           value,

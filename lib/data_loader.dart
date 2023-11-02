@@ -32,7 +32,7 @@ class DataLoader {
       Completer<ApiResponse<List<Hausaufgabe>>>();
   static var termineCompleter = Completer<ApiResponse<Termine>>();
 
-  static Future<void> cacheData() async {
+  static Future<List<ApiResponse>> cacheData({bool showProgress = true}) {
     chatCompleter = Completer<ApiResponse<List<Chat>>>();
     newsCompleter = Completer<ApiResponse<List<News>>>();
     userCompleter = Completer<ApiResponse<User>>();
@@ -65,27 +65,57 @@ class DataLoader {
 
     _futures = _completers.map((completer) => completer.future).toList();
 
+    if (showProgress) _showProgressOfCaching();
+
+    return Future.wait(_futures);
+  }
+
+  static Future<void> _showProgressOfCaching() async {
+
     while (snackbarKey.currentState == null) {
       await Future.delayed(const Duration(milliseconds: 10));
     }
 
-    Future<List<ApiResponse>> future = Future.wait(_futures);
-
+    int completedFunctions = 0;
     snackbarKey.currentState!.showMaterialBanner(
       MaterialBanner(
         elevation: 1,
         content: StatefulBuilder(
           builder: (context, setState) {
             return MyFutureBuilder(
-              future: future,
-              loadingIndicator: const Row(
+              future: progressWait(_futures, (completed, total) {
+                if (completed <= completedFunctions) return;
+                setState(() {
+                  completedFunctions = completed;
+                });
+              }),
+              loadingIndicator: Row(
                 children: [
-                  Text("Lade neue Daten"),
-                  SizedBox(width: 10),
-                  Expanded(child: LinearProgressIndicator()),
+                  const Text("Lade neue Daten"),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: LinearProgressIndicator(
+                        value: completedFunctions / _futures.length),
+                  ),
                 ],
               ),
-              customBuilder: (context, data) => const Text("Fertig"),
+              customBuilder: (context, data) {
+                if (data.every((element) => element.statusCode == 200)) {
+                  return const Text("Fertig");
+                }
+
+                if (data.every((element) => element.statusCode == 499)) {
+                  return const Row(
+                    children: [
+                      Icon(Icons.cloud_off),
+                      SizedBox(width: 10),
+                      Text("Offline"),
+                    ],
+                  );
+                }
+
+                return const Text("Fehler beim laden neuer Daten");
+              },
             );
           },
         ),
@@ -98,9 +128,26 @@ class DataLoader {
       ),
     );
 
-    await future;
-    await Future.delayed(const Duration(milliseconds: 1000));
-    snackbarKey.currentState!.clearMaterialBanners();
+    Future.wait(_futures).then((value) async {
+      await Future.delayed(const Duration(milliseconds: 3000));
+      snackbarKey.currentState!.clearMaterialBanners();
+    });
+  }
+
+  static Future<List<T>> progressWait<T>(
+    List<Future<T>> futures,
+    void Function(int completed, int total) progress,
+  ) {
+    int total = futures.length;
+    int completed = 0;
+
+    void complete() {
+      completed++;
+      progress(completed, total);
+    }
+
+    return Future.wait<T>(
+        [for (Future<T> future in futures) future.whenComplete(complete)]);
   }
 
   // Function to cancel and reset the operations

@@ -108,27 +108,28 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (int index) {
-          setState(() {
-            currentPageIndex = index;
-          });
-        },
-        selectedIndex: currentPageIndex,
-        destinations: const <Widget>[
-          NavigationDestination(
-            selectedIcon: Icon(Icons.home),
+      bottomNavigationBar: BottomNavigationBar(
+        useLegacyColorScheme: false,
+        onTap: (int index) => setState(() => currentPageIndex = index),
+        currentIndex: currentPageIndex,
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            activeIcon: Icon(Icons.home),
             icon: Icon(Icons.home_outlined),
             label: 'Home',
           ),
-          NavigationDestination(
-            selectedIcon: Icon(Icons.edit),
+          BottomNavigationBarItem(
+            activeIcon: Icon(Icons.edit),
             icon: Icon(Icons.edit_outlined),
             label: 'Hausaufgaben',
           ),
-          ChatsNavigationDestination(),
-          NavigationDestination(
-            selectedIcon: Icon(Icons.table_chart),
+          BottomNavigationBarItem(
+            activeIcon: Icon(Icons.chat_bubble),
+            icon: Icon(Icons.chat_bubble_outline),
+            label: 'Chats',
+          ),
+          BottomNavigationBarItem(
+            activeIcon: Icon(Icons.table_chart),
             icon: Icon(Icons.table_chart_outlined),
             label: 'Stundenplan',
           ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
+import 'package:schueler_portal/api/response_models/api/hausaufgaben/past/vergangene_hausaufgaben.dart';
 import 'package:schueler_portal/api/response_models/api/stundenplan.dart';
 import 'package:schueler_portal/api/response_models/api/unterricht.dart';
 import 'package:schueler_portal/api/response_models/api/vertretungsplan.dart';
@@ -183,6 +184,19 @@ class DataLoader {
 
     return cache.unterricht[day]!;
   }
+
+  static Future<ApiResponse<VergangeneHausaufgaben>> getPastHomework(int page) async {
+    if (!cache.pastHomework.containsKey(page)) {
+      ApiResponse<VergangeneHausaufgaben> ha = await ApiClient.putAndParse(
+        "/hausaufgaben--past--sorted--$page",
+        vergangeneHausaufgabenFromJson,
+      );
+
+      cache.pastHomework[page] = ha;
+    }
+
+    return cache.pastHomework[page]!;
+  }
 }
 
 class ApiCache {
@@ -238,6 +252,7 @@ class ApiCache {
   );
 
   final Map<DateTime, ApiResponse<List<Unterricht>>> unterricht = {};
+  final Map<int, ApiResponse<VergangeneHausaufgaben>> pastHomework = {};
 }
 
 class LocallyCachedApiData<T> {

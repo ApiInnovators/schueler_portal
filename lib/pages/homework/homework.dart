@@ -1,12 +1,9 @@
 import 'package:fading_edge_scrollview/fading_edge_scrollview.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
-import 'package:schueler_portal/api/response_models/api/hausaufgaben/past/vergangene_hausaufgaben.dart';
 import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
-import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
 import 'package:schueler_portal/data_loader.dart';
 
 class HomeworkWidget extends StatelessWidget {
@@ -93,14 +90,13 @@ class HomeworkListWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          for (Hausaufgabe ha in hausaufgaben) ...[
-            SingleHomeworkWidget(hausaufgabe: ha),
-          ],
+    return ListView(
+      shrinkWrap: true,
+      children: [
+        for (Hausaufgabe ha in hausaufgaben) ...[
+          SingleHomeworkWidget(hausaufgabe: ha),
         ],
-      ),
+      ],
     );
   }
 }
@@ -269,9 +265,9 @@ class _PastHomeworksWidgetState extends State<PastHomeworksWidget>
 
   @override
   Widget build(BuildContext context) {
-    return ApiFutureBuilder(
-      future: ApiClient.putAndParse(
-          "/hausaufgaben--past--sorted--1", vergangeneHausaufgabenFromJson),
+    return CachingFutureBuilder(
+      future: DataLoader.getPastHomework(1),
+      cacheGetter: () => DataLoader.cache.pastHomework.values.firstOrNull?.data,
       builder: (context, data) {
         int pages = data.pagination.lastPage;
         tabController ??= TabController(length: pages, vsync: this);
@@ -289,13 +285,19 @@ class _PastHomeworksWidgetState extends State<PastHomeworksWidget>
             children: [
               HomeworkListWidget(hausaufgaben: data.data),
               for (int i = 1; i < pages; ++i)
-                ApiFutureBuilder(
-                  future: ApiClient.putAndParse(
-                    "/hausaufgaben--past--sorted--$i",
-                    vergangeneHausaufgabenFromJson,
+                RefreshIndicator(
+                  onRefresh: () async {
+                    DataLoader.cache.pastHomework.clear();
+                    await DataLoader.getPastHomework(i + 1);
+                    setState(() {});
+                  },
+                  child: CachingFutureBuilder(
+                    cacheGetter: () =>
+                        DataLoader.cache.pastHomework[i + 1]?.data,
+                    future: DataLoader.getPastHomework(i + 1),
+                    builder: (context, data) =>
+                        HomeworkListWidget(hausaufgaben: data.data),
                   ),
-                  builder: (context, data) =>
-                      HomeworkListWidget(hausaufgaben: data.data),
                 ),
             ],
           ),

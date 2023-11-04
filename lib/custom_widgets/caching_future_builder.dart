@@ -88,18 +88,20 @@ class _RefreshableCachingFutureBuilderState<T>
     return LayoutBuilder(
       builder: (context, constraints) {
         return RefreshIndicator(
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: constraints.maxHeight,
-                  ),
-                  child: res),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight,
+              ),
+              child: res,
             ),
-            onRefresh: () async {
-              ApiResponse resp = await widget.cache.fetchData();
-              setState(() => displayedData = resp.data);
-            });
+          ),
+          onRefresh: () async {
+            ApiResponse resp = await widget.cache.fetchData();
+            setState(() => displayedData = resp.data);
+          },
+        );
       },
     );
   }
@@ -129,7 +131,6 @@ class MultiCachingFutureBuilder extends StatelessWidget {
       return MyFutureBuilder(
         future: Future.wait(futures),
         customBuilder: (context, apiResps) {
-
           if (apiResps.any((e) => e.data == null)) {
             return const Center(child: Text("Failed to fetch some data"));
           }

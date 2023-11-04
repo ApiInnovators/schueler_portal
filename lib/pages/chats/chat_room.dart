@@ -6,9 +6,11 @@ import 'package:open_file/open_file.dart';
 import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/api/response_models/api/chat/id.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
+import 'package:schueler_portal/api/response_models/api/user.dart';
+import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
 import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
-import 'package:schueler_portal/pages/user_login.dart';
+import 'package:schueler_portal/data_loader.dart';
 import 'package:string_to_color/string_to_color.dart';
 
 import '../../api/response_models/api/chat.dart';
@@ -22,69 +24,75 @@ class ChatRoom extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(chat.name), centerTitle: true),
-      body: ApiFutureBuilder(
-        future: ApiClient.putAndParse("chat--${chat.id}", chatDetailsFromJson),
-        builder: (context, chatDetails) {
-          if (UserLogin.user == null) {
-            return const Center(child: Text("Failed to get user"));
-          }
+      body: CachingFutureBuilder<User>(
+        future: DataLoader.getUser(),
+        cacheGetter: DataLoader.cache.user.getCached,
+        builder: (context, userData) {
+          return ApiFutureBuilder(
+            future:
+                ApiClient.putAndParse("chat--${chat.id}", chatDetailsFromJson),
+            builder: (context, chatDetails) {
+              Map<DateTime, List<Message>> groupedMessagesByDate = groupBy(
+                  chatDetails.messages,
+                  (obj) => DateUtils.dateOnly(
+                      DateTime.fromMillisecondsSinceEpoch(
+                          obj.createdAt * 1000)));
 
-          Map<DateTime, List<Message>> groupedMessagesByDate = groupBy(
-              chatDetails.messages,
-              (obj) => DateUtils.dateOnly(
-                  DateTime.fromMillisecondsSinceEpoch(obj.createdAt * 1000)));
-
-          return Stack(
-            children: [
-              SingleChildScrollView(
-                reverse: true,
-                child: Column(
-                  children: [
-                    Text(
-                        "Erstellt am ${DateFormat("dd.MM.yyyy").format(DateTime.fromMillisecondsSinceEpoch(chat.createdAt * 1000))}"),
-                    for (MapEntry<DateTime, List<Message>> entry
-                        in groupedMessagesByDate.entries) ...[
-                      ChatDaySection(
-                        dateTime: entry.key,
-                        messages: entry.value,
-                        chatRoom: this,
-                        userId: UserLogin.user!.id,
-                      ),
-                    ],
-                    const SizedBox(height: 70),
-                  ],
-                ),
-              ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Card(
-                  margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.attachment),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: TextFormField(
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              hintText: "Nachricht eingeben",
+              return Stack(
+                children: [
+                  SingleChildScrollView(
+                    reverse: true,
+                    child: Column(
+                      children: [
+                        Text(
+                            "Erstellt am ${DateFormat("dd.MM.yyyy").format(DateTime.fromMillisecondsSinceEpoch(chat.createdAt * 1000))}"),
+                        for (MapEntry<DateTime, List<Message>> entry
+                            in groupedMessagesByDate.entries) ...[
+                          ChatDaySection(
+                            dateTime: entry.key,
+                            messages: entry.value,
+                            chatRoom: this,
+                            userId: userData.id,
+                          ),
+                        ],
+                        const SizedBox(height: 70),
+                      ],
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Card(
+                      margin: const EdgeInsets.only(
+                          left: 10, right: 10, bottom: 10),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: () {},
+                            icon: const Icon(Icons.attachment),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 10),
+                              child: TextFormField(
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: "Nachricht eingeben",
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          IconButton(
+                            icon: const Icon(Icons.send),
+                            onPressed: () {},
+                          )
+                        ],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.send),
-                        onPressed: () {},
-                      )
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           );
         },
       ),

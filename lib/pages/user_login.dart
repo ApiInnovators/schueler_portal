@@ -6,12 +6,10 @@ import 'package:schueler_portal/api/request_models/base_request.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/main.dart';
 
-import '../api/response_models/api/user.dart';
 
 class UserLogin {
   static Map<String, String> _userData = {};
   static const _secureStorage = FlutterSecureStorage();
-  static User? user;
 
   static Future<void> updateLogin(BaseRequest req) async {
     _userData["email"] = req.email;
@@ -21,7 +19,6 @@ class UserLogin {
     DataLoader.cancelAndReset();
     DataLoader.cacheData();
     await save();
-    user = (await DataLoader.getUser()).data;
   }
 
   static Future<void> save() async {

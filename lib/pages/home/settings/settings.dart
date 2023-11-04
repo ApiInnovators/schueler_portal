@@ -34,25 +34,23 @@ class SettingsPage extends StatelessWidget {
               icon: const Icon(Icons.info_outline)),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            SettingsColorPicker(myAppState: myAppState),
-            const Divider(),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(40),
-              ),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CoursesSelectorPage(),
-                ),
-              ),
-              child: const Text("Kurse auswählen"),
+      body: ListView(
+        children: [
+          SettingsColorPicker(myAppState: myAppState),
+          const Divider(),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size.fromHeight(40),
             ),
-          ],
-        ),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CoursesSelectorPage(),
+              ),
+            ),
+            child: const Text("Kurse auswählen"),
+          ),
+        ],
       ),
     );
   }
@@ -84,11 +82,9 @@ class _SettingsColorPickerState extends State<SettingsColorPicker> {
             context: context,
             builder: (BuildContext context) => AlertDialog(
               title: const Text('Wähle eine Farbe'),
-              content: SingleChildScrollView(
-                child: MaterialPicker(
-                  pickerColor: pickerColor,
-                  onColorChanged: changeColor,
-                ),
+              content: MaterialPicker(
+                pickerColor: pickerColor,
+                onColorChanged: changeColor,
               ),
               actions: <Widget>[
                 ElevatedButton(
@@ -126,9 +122,9 @@ class CoursesSelectorPage extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: CachingFutureBuilder(
-          future: DataLoader.getStundenplan(),
-          cacheGetter: DataLoader.cache.stundenplan.getCached,
+        child: RefreshableCachingFutureBuilder(
+          dataLoaderFuture: DataLoader.getStundenplan,
+          cache: DataLoader.cache.stundenplan,
           builder: (context, snapshot) {
             final allCourses = Tools.getStundenplanCourses(
               snapshot.data,
@@ -137,12 +133,10 @@ class CoursesSelectorPage extends StatelessWidget {
             final grouped = SplayTreeMap<String, List<String>>.from(
                 groupBy(allCourses, (element) => element.split("_")[0]));
 
-            return SingleChildScrollView(
-              child: Column(children: [
-                for (MapEntry<String, List<String>> entry in grouped.entries)
-                  CourseGroup(groupTitle: entry.key, courses: entry.value),
-              ]),
-            );
+            return Column(children: [
+              for (MapEntry<String, List<String>> entry in grouped.entries)
+                CourseGroup(groupTitle: entry.key, courses: entry.value),
+            ]);
           },
         ),
       ),

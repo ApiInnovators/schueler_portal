@@ -16,21 +16,19 @@ class InformationPage extends StatelessWidget {
         title: const Text("App Informationen"),
         centerTitle: true,
       ),
-      body: const SingleChildScrollView(
-        child: Center(
-          child: Column(
-            children: [
-              Hyperlink(url: appRepoUrl, text: "App Repo"),
-              Hyperlink(url: backendRepoUrl, text: "Backend Repo"),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text("Entwickelt von "),
-                  Hyperlink(url: finnsProfileUrl, text: "Finn Drünert")
-                ],
-              ),
-            ],
-          ),
+      body: const Center(
+        child: Column(
+          children: [
+            Hyperlink(url: appRepoUrl, text: "App Repo"),
+            Hyperlink(url: backendRepoUrl, text: "Backend Repo"),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("Entwickelt von "),
+                Hyperlink(url: finnsProfileUrl, text: "Finn Drünert")
+              ],
+            ),
+          ],
         ),
       ),
     );

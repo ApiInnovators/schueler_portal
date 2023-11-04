@@ -41,33 +41,25 @@ class DataLoader {
     hausaufgabenCompleter = Completer<ApiResponse<List<Hausaufgabe>>>();
     termineCompleter = Completer<ApiResponse<Termine>>();
 
-    _completers.addAll([
-      chatCompleter,
-      newsCompleter,
-      userCompleter,
-      stundenplanCompleter,
-      vertretungsplanCompleter,
-      hausaufgabenCompleter,
-      termineCompleter,
-    ]);
-
-    cache.chats.fetchData().then((_) => chatCompleter.complete(_));
-    cache.news.fetchData().then((_) => newsCompleter.complete(_));
-    cache.user.fetchData().then((_) => userCompleter.complete(_));
-    cache.stundenplan.fetchData().then((_) => stundenplanCompleter.complete(_));
-    cache.vertretungsplan
-        .fetchData()
-        .then((_) => vertretungsplanCompleter.complete(_));
-    cache.hausaufgaben
-        .fetchData()
-        .then((_) => hausaufgabenCompleter.complete(_));
-    cache.termine.fetchData().then((_) => termineCompleter.complete(_));
+    _addCompleter(chatCompleter, cache.chats.fetchData());
+    _addCompleter(newsCompleter, cache.news.fetchData());
+    _addCompleter(userCompleter, cache.user.fetchData());
+    _addCompleter(stundenplanCompleter, cache.stundenplan.fetchData());
+    _addCompleter(vertretungsplanCompleter, cache.vertretungsplan.fetchData());
+    _addCompleter(hausaufgabenCompleter, cache.hausaufgaben.fetchData());
+    _addCompleter(termineCompleter, cache.termine.fetchData());
 
     _futures = _completers.map((completer) => completer.future).toList();
 
     if (showProgress) _showProgressOfCaching();
 
     return Future.wait(_futures);
+  }
+
+  static void _addCompleter(Completer<ApiResponse> completer, functionToFetchData) {
+    completer = Completer<ApiResponse>();
+    _completers.add(completer);
+    functionToFetchData.then((_) => completer.complete(_));
   }
 
   static Future<void> _showProgressOfCaching() async {

@@ -68,17 +68,21 @@ class _ApiFutureBuilderState<T> extends State<ApiFutureBuilder<T>> {
     super.initState();
 
     widget.future.onError<Exception>((error, stackTrace) {
-      setState(() {
-        if (mounted) dataState = FutureState.error;
-      });
+      if (mounted) {
+        setState(() {
+          dataState = FutureState.error;
+        });
+      }
       throw error;
     });
 
     widget.future.then((value) {
-      setState(() {
-        apiResponse = value;
-        if (mounted) dataState = FutureState.done;
-      });
+      if (mounted) {
+        setState(() {
+          apiResponse = value;
+          dataState = FutureState.done;
+        });
+      }
     });
   }
 
@@ -86,7 +90,6 @@ class _ApiFutureBuilderState<T> extends State<ApiFutureBuilder<T>> {
   Widget build(BuildContext context) {
     switch (dataState) {
       case FutureState.done:
-
         T? respData = apiResponse.data;
 
         if (respData == null) {

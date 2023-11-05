@@ -57,14 +57,13 @@ class DataLoader {
     return Future.wait(_futures);
   }
 
-  static void _addCompleter(Completer<ApiResponse> completer, functionToFetchData) {
-    completer = Completer<ApiResponse>();
+  static void _addCompleter(
+      Completer<ApiResponse> completer, Future fetchDataFuture) {
     _completers.add(completer);
-    functionToFetchData.then((_) => completer.complete(_));
+    fetchDataFuture.then((_) => completer.complete(_));
   }
 
   static Future<void> _showProgressOfCaching() async {
-
     while (snackbarKey.currentState == null) {
       await Future.delayed(const Duration(milliseconds: 10));
     }
@@ -185,7 +184,8 @@ class DataLoader {
     return cache.unterricht[day]!;
   }
 
-  static Future<ApiResponse<VergangeneHausaufgaben>> getPastHomework(int page) async {
+  static Future<ApiResponse<VergangeneHausaufgaben>> getPastHomework(
+      int page) async {
     if (!cache.pastHomework.containsKey(page)) {
       ApiResponse<VergangeneHausaufgaben> ha = await ApiClient.putAndParse(
         "/hausaufgaben--past--sorted--$page",
@@ -278,7 +278,7 @@ class LocallyCachedApiData<T> {
 
   Future<ApiResponse<T>> fetchData() async {
     ApiResponse<T> res = await dataInitializer();
-    if (res.data != null) setData(res.data as T);
+    if (res.data != null) await setData(res.data as T);
     return res;
   }
 

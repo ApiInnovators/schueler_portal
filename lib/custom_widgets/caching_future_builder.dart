@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
 import 'package:schueler_portal/data_loader.dart';
@@ -61,6 +63,26 @@ class RefreshableCachingFutureBuilder<T> extends StatefulWidget {
 class _RefreshableCachingFutureBuilderState<T>
     extends State<RefreshableCachingFutureBuilder<T>> {
   T? displayedData;
+  static bool loadedNewDataForTheFirstTime = false;
+
+  @override
+  void initState() {
+    super.initState();
+    T? cached = widget.cache.getCached();
+
+    if (cached == null ||
+        displayedData != null ||
+        loadedNewDataForTheFirstTime) {
+      return;
+    }
+    loadedNewDataForTheFirstTime = true;
+    // The data is displayed for the first time
+
+    displayedData = cached;
+    widget.dataLoaderFuture().then((value) {
+      if (mounted) setState(() => displayedData = value.data);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +91,7 @@ class _RefreshableCachingFutureBuilderState<T>
     Widget res;
 
     if (cached == null) {
+      // Data was not present in memory nor in the device storage
       res = ApiFutureBuilder(
         future: widget.cache.fetchData(),
         builder: widget.builder,
@@ -76,12 +99,7 @@ class _RefreshableCachingFutureBuilderState<T>
         errorWidget: widget.errorWidget,
       );
     } else {
-      if (displayedData == null) {
-        displayedData = cached;
-        widget.dataLoaderFuture().then((value) {
-          if (mounted) setState(() => displayedData = value.data);
-        });
-      }
+      displayedData ??= cached;
       res = widget.builder(context, displayedData as T);
     }
 
@@ -98,7 +116,7 @@ class _RefreshableCachingFutureBuilderState<T>
             ),
           ),
           onRefresh: () async {
-            ApiResponse resp = await widget.cache.fetchData();
+            ApiResponse<T> resp = await widget.cache.fetchData();
             setState(() => displayedData = resp.data);
           },
         );

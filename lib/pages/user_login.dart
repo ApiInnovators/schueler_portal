@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/api/request_models/base_request.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/main.dart';
 
+import '../tools.dart';
 
 class UserLogin {
   static Map<String, String> _userData = {};
@@ -110,11 +110,11 @@ class UserLoginWidget extends StatelessWidget {
                     myAppState.setLogin(true);
                     UserLogin.updateLogin(req);
                   } else {
-                    Fluttertoast.showToast(msg: "Invalid login data");
+                    Tools.quickSnackbar("Invalid login data");
                   }
                 } else {
-                  Fluttertoast.showToast(
-                      msg: "Failed to login: ${validationResp.statusCode}");
+                  Tools.quickSnackbar(
+                      "Failed to login: ${validationResp.statusCode}");
                 }
               },
               child: const Text("Login"),

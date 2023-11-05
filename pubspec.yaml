@@ -16,7 +16,6 @@ dependencies:
   fading_edge_scrollview: ^3.0.0
   path_provider: ^2.1.1
   permission_handler: ^11.0.1
-  fluttertoast: ^8.2.2
   open_file: ^3.3.2
   flutter_secure_storage: ^9.0.0
   string_to_color: ^2.0.0

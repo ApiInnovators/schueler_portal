@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:schueler_portal/api/response_models/api/stundenplan.dart';
+import 'package:schueler_portal/globals.dart';
 
 class Tools {
   static DateTime hourStartToDateTime(int hour, DateTime day) {
@@ -67,6 +69,9 @@ class Tools {
 
   static Set<String> getStundenplanCourses(List<Datum> stundenplanData) =>
       stundenplanData.map((datum) => datum.uf).toSet();
+
+  static void quickSnackbar(String text) =>
+      snackbarKey.currentState?.showSnackBar(SnackBar(content: Text(text)));
 }
 
 extension DateUtils on DateTime {

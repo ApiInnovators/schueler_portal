@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart';
 import 'package:http/io_client.dart';
 import 'package:path_provider/path_provider.dart';
@@ -9,6 +8,8 @@ import 'package:schueler_portal/api/request_models/base_request.dart'
     as base_request;
 import 'package:schueler_portal/api/request_models/download_file.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
+
+import '../tools.dart';
 
 class ApiClient {
   static IOClient client = IOClient();
@@ -109,12 +110,12 @@ class ApiClient {
     if (response.statusCode == 200) {
       File file = File(filePath);
       await file.writeAsBytes(response.bodyBytes);
-      if (showToast) Fluttertoast.showToast(msg: "Download completed");
+      if (showToast) Tools.quickSnackbar("Download completed");
       return file;
     }
 
     if (showToast) {
-      Fluttertoast.showToast(msg: "Download failed: ${response.reasonPhrase}");
+      Tools.quickSnackbar("Download failed: ${response.reasonPhrase}");
     }
 
     return null;

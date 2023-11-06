@@ -125,9 +125,9 @@ class CoursesSelectorPage extends StatelessWidget {
         child: RefreshableCachingFutureBuilder(
           dataLoaderFuture: DataLoader.getStundenplan,
           cache: DataLoader.cache.stundenplan,
-          builder: (context, snapshot) {
+          builder: (context, stundenplan) {
             final allCourses = Tools.getStundenplanCourses(
-              snapshot.data,
+              stundenplan.data,
             ).toList();
 
             final grouped = SplayTreeMap<String, List<String>>.from(
@@ -135,7 +135,10 @@ class CoursesSelectorPage extends StatelessWidget {
 
             return Column(children: [
               for (MapEntry<String, List<String>> entry in grouped.entries)
-                CourseGroup(groupTitle: entry.key, courses: entry.value),
+                CourseGroup(
+                  groupTitle: entry.key,
+                  courses: entry.value..sort(),
+                ),
             ]);
           },
         ),

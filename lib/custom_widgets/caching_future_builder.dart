@@ -63,7 +63,7 @@ class RefreshableCachingFutureBuilder<T> extends StatefulWidget {
 class _RefreshableCachingFutureBuilderState<T>
     extends State<RefreshableCachingFutureBuilder<T>> {
   T? displayedData;
-  static bool loadedNewDataForTheFirstTime = false;
+  static final Set _loadedTypes = {};
 
   @override
   void initState() {
@@ -72,10 +72,10 @@ class _RefreshableCachingFutureBuilderState<T>
 
     if (cached == null ||
         displayedData != null ||
-        loadedNewDataForTheFirstTime) {
+        _loadedTypes.contains(T)) {
       return;
     }
-    loadedNewDataForTheFirstTime = true;
+    _loadedTypes.add(T);
     // The data is displayed for the first time
 
     displayedData = cached;

@@ -91,16 +91,24 @@ class ApiClient {
     return (resp, parsed);
   }
 
+  static Future<String> makeFilePath(FileElement file) async {
+    final downloadsDirectory = await getDownloadsDirectory();
+    return '${downloadsDirectory!.path}/${file.id}-${file.name}';
+  }
+
+  static Future<(bool exists, File file)> checkIfFileIsStored(FileElement file) async {
+    final filePath = await makeFilePath(file);
+    final f = File(filePath);
+    return (await f.exists(), f);
+  }
+
   static Future<File?> downloadFile(FileElement file,
       {bool checkIfCached = true, bool showToast = true}) async {
-    final downloadsDirectory = await getDownloadsDirectory();
-    final filePath = '${downloadsDirectory!.path}/${file.id}-${file.name}';
 
+    String filePath = await makeFilePath(file);
     if (checkIfCached) {
-      final f = File(filePath);
-      if (await f.exists()) {
-        return f;
-      }
+      (bool, File) f = await checkIfFileIsStored(file);
+      if (f.$1) return f.$2;
     }
 
     final request = Request("POST", Uri.parse("$baseUrl/download-file"));

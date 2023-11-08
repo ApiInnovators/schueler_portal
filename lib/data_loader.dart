@@ -173,8 +173,8 @@ class DataLoader {
   static Future<ApiResponse<List<Unterricht>>> getUnterricht(
       DateTime day) async {
     if (!cache.unterricht.containsKey(day)) {
-      ApiResponse<List<Unterricht>> unterricht = await ApiClient.putAndParse(
-        "/unterricht--${DateFormat("yyyy-MM-dd").format(day)}",
+      ApiResponse<List<Unterricht>> unterricht = await ApiClient.getAndParse(
+        "/unterricht/${DateFormat("yyyy-MM-dd").format(day)}",
         unterrichtFromJson,
       );
 
@@ -187,8 +187,8 @@ class DataLoader {
   static Future<ApiResponse<VergangeneHausaufgaben>> getPastHomework(
       int page) async {
     if (!cache.pastHomework.containsKey(page)) {
-      ApiResponse<VergangeneHausaufgaben> ha = await ApiClient.putAndParse(
-        "/hausaufgaben--past--sorted--$page",
+      ApiResponse<VergangeneHausaufgaben> ha = await ApiClient.getAndParse(
+        "/hausaufgaben/past/sorted/$page",
         vergangeneHausaufgabenFromJson,
       );
 
@@ -204,7 +204,7 @@ class ApiCache {
     "/user",
     (p0) => userFromJson(p0),
     (p0) => userToJson(p0),
-    () => ApiClient.putAndParse("/user", userFromJson),
+    () => ApiClient.getAndParse("/user", userFromJson),
   );
 
   final LocallyCachedApiData<Vertretungsplan> vertretungsplan =
@@ -212,28 +212,28 @@ class ApiCache {
     "/vertretungsplan",
     (p0) => vertretungsplanFromJson(p0),
     (p0) => vertretungsplanToJson(p0),
-    () => ApiClient.putAndParse("vertretungsplan", vertretungsplanFromJson),
+    () => ApiClient.getAndParse("vertretungsplan", vertretungsplanFromJson),
   );
 
   final LocallyCachedApiData<Stundenplan> stundenplan = LocallyCachedApiData(
     "/stundenplan",
     (p0) => stundenplanFromJson(p0),
     (p0) => stundenplanToJson(p0),
-    () => ApiClient.putAndParse("/stundenplan", stundenplanFromJson),
+    () => ApiClient.getAndParse("/stundenplan", stundenplanFromJson),
   );
 
   final LocallyCachedApiData<List<News>> news = LocallyCachedApiData(
     "/news",
     (p0) => newsFromJson(p0),
     (p0) => newsToJson(p0),
-    () => ApiClient.putAndParse("/news", newsFromJson),
+    () => ApiClient.getAndParse("/news", newsFromJson),
   );
 
   final LocallyCachedApiData<List<Chat>> chats = LocallyCachedApiData(
     "/chat",
     (p0) => chatFromJson(p0),
     (p0) => chatToJson(p0),
-    () => ApiClient.putAndParse("/chat", chatFromJson),
+    () => ApiClient.getAndParse("/chat", chatFromJson),
   );
 
   final LocallyCachedApiData<List<Hausaufgabe>> hausaufgaben =
@@ -241,14 +241,14 @@ class ApiCache {
     "/hausaufgaben",
     (p0) => hausaufgabeFromJson(p0),
     (p0) => hausaufgabeToJson(p0),
-    () => ApiClient.putAndParse("/hausaufgaben", hausaufgabeFromJson),
+    () => ApiClient.getAndParse("/hausaufgaben", hausaufgabeFromJson),
   );
 
   final LocallyCachedApiData<Termine> termine = LocallyCachedApiData(
     "/termine",
     (p0) => termineFromJson(p0),
     (p0) => termineToJson(p0),
-    () => ApiClient.putAndParse("/termine", termineFromJson),
+    () => ApiClient.getAndParse("/termine", termineFromJson),
   );
 
   final Map<DateTime, ApiResponse<List<Unterricht>>> unterricht = {};

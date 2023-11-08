@@ -1,50 +1,68 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:schueler_portal/api/api_client.dart';
-import 'package:schueler_portal/api/request_models/base_request.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/main.dart';
 
 import '../tools.dart';
 
 class UserLogin {
-  static Map<String, String> _userData = {};
   static const _secureStorage = FlutterSecureStorage();
 
-  static Future<void> updateLogin(BaseRequest req) async {
-    _userData["email"] = req.email;
-    _userData["password"] = req.password;
-    _userData["institution"] = req.schulkuerzel;
-    ApiClient.updateCredentials(req);
+  static String? accessToken;
+  static LoginData? login;
+
+  static Future<void> updateLogin(LoginData newLogin, String newAccessToken) {
+    login = newLogin;
+    accessToken = newAccessToken;
+
     DataLoader.cancelAndReset();
     DataLoader.cacheData();
-    await save();
+    return save();
   }
 
   static Future<void> save() async {
-    for (String key in _userData.keys) {
-      await _secureStorage.write(key: key, value: _userData[key]);
+    if (accessToken != null) {
+      await _secureStorage.write(key: "access_token", value: accessToken);
+    }
+    if (login != null) {
+      await _secureStorage.write(key: "email", value: login!.email);
+      await _secureStorage.write(key: "password", value: login!.password);
+      await _secureStorage.write(
+          key: "institution", value: login!.schulkuerzel);
     }
   }
 
-  static Future<BaseRequest?> load() async {
-    // Returns null if data is missing
-    // Should only be called once on app start
+  static Future<bool> load() async {
+    // Returns true if data was loaded successfully
+    final read = await _secureStorage.readAll();
 
-    _userData = await _secureStorage.readAll();
+    accessToken = read["access_token"];
 
-    if (!_userData.containsKey("email") ||
-        !_userData.containsKey("password") ||
-        !_userData.containsKey("institution")) {
-      return null;
+    if (["email", "password", "institution"].any((e) => !read.containsKey(e))) {
+      return false;
     }
 
-    return BaseRequest(
-      email: _userData["email"]!,
-      password: _userData["password"]!,
-      schulkuerzel: _userData["institution"]!,
-    );
+    login = LoginData(
+        email: read["email"]!,
+        password: read["password"]!,
+        schulkuerzel: read["institution"]!);
+
+    return accessToken != null;
   }
+}
+
+class LoginData {
+  final String email;
+  final String password;
+  final String schulkuerzel;
+
+  LoginData(
+      {required this.email,
+      required this.password,
+      required this.schulkuerzel});
 }
 
 class UserLoginWidget extends StatelessWidget {
@@ -95,26 +113,23 @@ class UserLoginWidget extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () async {
-                BaseRequest req = BaseRequest(
+                LoginData login = LoginData(
                   email: emailController.text.trim(),
                   password: passwordController.text.trim(),
                   schulkuerzel: institutionController.text.trim(),
                 );
 
-                ApiResponse<bool> validationResp =
-                    await ApiClient.validateLogin(req);
+                final authenticationResp = await ApiClient.authenticate(login);
 
-                if (validationResp.statusCode == 200 &&
-                    validationResp.data != null) {
-                  if (validationResp.data!) {
-                    myAppState.setLogin(true);
-                    UserLogin.updateLogin(req);
-                  } else {
-                    Tools.quickSnackbar("Invalid login data");
-                  }
+                if (authenticationResp.$1.statusCode == 200) {
+                  myAppState.setLogin(true);
+                  UserLogin.updateLogin(
+                    login,
+                    authenticationResp.$2["access_token"],
+                  );
                 } else {
                   Tools.quickSnackbar(
-                      "Failed to login: ${validationResp.statusCode}");
+                      "Failed to login: ${authenticationResp.$1.reasonPhrase}");
                 }
               },
               child: const Text("Login"),

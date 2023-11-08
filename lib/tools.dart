@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:schueler_portal/api/response_models/api/stundenplan.dart';
 import 'package:schueler_portal/globals.dart';
 
@@ -72,6 +73,32 @@ class Tools {
 
   static void quickSnackbar(String text) =>
       snackbarKey.currentState?.showSnackBar(SnackBar(content: Text(text)));
+
+  static BaseRequest? copyRequest(BaseRequest request) {
+    BaseRequest requestCopy;
+
+    if (request is Request) {
+      requestCopy = Request(request.method, request.url)
+        ..encoding = request.encoding
+        ..bodyBytes = request.bodyBytes;
+    }
+    else if (request is MultipartRequest) {
+      requestCopy = MultipartRequest(request.method, request.url)
+        ..fields.addAll(request.fields)
+        ..files.addAll(request.files);
+    }
+    else {
+      return null;
+    }
+
+    requestCopy
+      ..persistentConnection = request.persistentConnection
+      ..followRedirects = request.followRedirects
+      ..maxRedirects = request.maxRedirects
+      ..headers.addAll(request.headers);
+
+    return requestCopy;
+  }
 }
 
 extension DateUtils on DateTime {

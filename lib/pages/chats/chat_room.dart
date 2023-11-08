@@ -30,7 +30,7 @@ class ChatRoom extends StatelessWidget {
         builder: (context, userData) {
           return ApiFutureBuilder(
             future:
-                ApiClient.putAndParse("chat--${chat.id}", chatDetailsFromJson),
+                ApiClient.getAndParse("chat/${chat.id}", chatDetailsFromJson),
             builder: (context, chatDetails) {
               Map<DateTime, List<Message>> groupedMessagesByDate = groupBy(
                   chatDetails.messages,

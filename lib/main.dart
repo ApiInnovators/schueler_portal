@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:schueler_portal/api/api_client.dart';
-import 'package:schueler_portal/api/request_models/base_request.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/globals.dart';
 import 'package:schueler_portal/pages/chats/chats.dart';
@@ -16,18 +15,39 @@ import 'custom_widgets/my_future_builder.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Future.wait([UserData.init(), LocallyCachedApiData.init()]);
-  BaseRequest? loadedLogin = await UserLogin.load();
+  await Future.wait([
+    UserData.init(),
+    LocallyCachedApiData.init(),
+    UserLogin.load(),
+  ]);
 
-  if (loadedLogin == null) {
+  if (UserLogin.login == null) {
     runApp(const MyApp(openLoginPage: true));
     return;
   }
 
-  ApiClient.updateCredentials(loadedLogin);
-  DataLoader.cacheData();
+  bool needsToLogin = false;
 
-  runApp(const MyApp(openLoginPage: false));
+  if (UserLogin.accessToken != null) {
+    ApiClient.accessToken = UserLogin.accessToken;
+
+    if (await ApiClient.hasValidToken()) {
+      DataLoader.cacheData();
+    } else {
+      final authenticationResp = await ApiClient.authenticate(UserLogin.login!);
+
+      if (authenticationResp.$1.statusCode == 200) {
+        await UserLogin.updateLogin(
+          UserLogin.login!,
+          authenticationResp.$2["access_token"],
+        );
+      }
+
+      if (authenticationResp.$1.statusCode == 401) needsToLogin = true;
+    }
+  }
+
+  runApp(MyApp(openLoginPage: needsToLogin));
 }
 
 class MyApp extends StatefulWidget {
@@ -47,22 +67,11 @@ class MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _loginSuccessful = !widget.openLoginPage;
-    if (!widget.openLoginPage) _initLogin();
   }
 
   setLogin(bool success) => setState(() => _loginSuccessful = success);
 
   setAccentColor(Color color) => setState(() => accentColor = color);
-
-  Future<void> _initLogin() async {
-    var loginReq = ApiClient.baseRequest;
-
-    final result = await ApiClient.validateLogin(loginReq);
-
-    if (result.statusCode == 401 || result.data == false) {
-      setLogin(false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

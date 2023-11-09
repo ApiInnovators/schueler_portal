@@ -44,8 +44,10 @@ class ChatRoom extends StatelessWidget {
                     reverse: true,
                     child: Column(
                       children: [
-                        Text(
-                            "Erstellt am ${DateFormat("dd.MM.yyyy").format(DateTime.fromMillisecondsSinceEpoch(chat.createdAt * 1000))}"),
+                        Center(
+                          child: Text(
+                              "Erstellt am ${DateFormat("dd.MM.yyyy").format(DateTime.fromMillisecondsSinceEpoch(chat.createdAt * 1000))}"),
+                        ),
                         for (MapEntry<DateTime, List<Message>> entry
                             in groupedMessagesByDate.entries) ...[
                           ChatDaySection(

@@ -47,6 +47,7 @@ class HomeworkWidget extends StatelessWidget {
                       data.where((element) => !element.completed).toList();
 
                   return Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(height: 10),
                       const Text(
@@ -260,7 +261,7 @@ class _PastHomeworksWidgetState extends State<PastHomeworksWidget>
   @override
   void dispose() {
     super.dispose();
-    tabController!.dispose();
+    tabController?.dispose();
   }
 
   @override

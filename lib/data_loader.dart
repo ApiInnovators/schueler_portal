@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben/past/vergangene_hausaufgaben.dart';
+import 'package:schueler_portal/api/response_models/api/kontaktanfrage.dart';
 import 'package:schueler_portal/api/response_models/api/stundenplan.dart';
 import 'package:schueler_portal/api/response_models/api/unterricht.dart';
 import 'package:schueler_portal/api/response_models/api/vertretungsplan.dart';
@@ -32,6 +33,8 @@ class DataLoader {
   static var hausaufgabenCompleter =
       Completer<ApiResponse<List<Hausaufgabe>>>();
   static var termineCompleter = Completer<ApiResponse<Termine>>();
+  static var chatRequestTargetsCompleter =
+      Completer<ApiResponse<List<KontaktanfrageLehrer>>>();
 
   static Future<List<ApiResponse>> cacheData({bool showProgress = true}) {
     chatCompleter = Completer<ApiResponse<List<Chat>>>();
@@ -41,6 +44,8 @@ class DataLoader {
     vertretungsplanCompleter = Completer<ApiResponse<Vertretungsplan>>();
     hausaufgabenCompleter = Completer<ApiResponse<List<Hausaufgabe>>>();
     termineCompleter = Completer<ApiResponse<Termine>>();
+    chatRequestTargetsCompleter =
+        Completer<ApiResponse<List<KontaktanfrageLehrer>>>();
 
     _addCompleter(chatCompleter, cache.chats.fetchData());
     _addCompleter(newsCompleter, cache.news.fetchData());
@@ -49,6 +54,8 @@ class DataLoader {
     _addCompleter(vertretungsplanCompleter, cache.vertretungsplan.fetchData());
     _addCompleter(hausaufgabenCompleter, cache.hausaufgaben.fetchData());
     _addCompleter(termineCompleter, cache.termine.fetchData());
+    _addCompleter(
+        chatRequestTargetsCompleter, cache.chatRequestTargets.fetchData());
 
     _futures = _completers.map((completer) => completer.future).toList();
 
@@ -170,6 +177,9 @@ class DataLoader {
 
   static Future<ApiResponse<Termine>> getTermine() => termineCompleter.future;
 
+  static Future<ApiResponse<List<KontaktanfrageLehrer>>>
+      getChatRequestTargets() => chatRequestTargetsCompleter.future;
+
   static Future<ApiResponse<List<Unterricht>>> getUnterricht(
       DateTime day) async {
     if (!cache.unterricht.containsKey(day)) {
@@ -249,6 +259,17 @@ class ApiCache {
     (p0) => termineFromJson(p0),
     (p0) => termineToJson(p0),
     () => ApiClient.getAndParse("/termine", termineFromJson),
+  );
+
+  final LocallyCachedApiData<List<KontaktanfrageLehrer>> chatRequestTargets =
+      LocallyCachedApiData(
+    "/chat-request/targets",
+    (p0) => kontaktanfrageLehrerFromJson(p0),
+    (p0) => kontaktanfrageLehrerToJson(p0),
+    () => ApiClient.getAndParse(
+      "/chat-request/targets",
+      kontaktanfrageLehrerFromJson,
+    ),
   );
 
   final Map<DateTime, ApiResponse<List<Unterricht>>> unterricht = {};

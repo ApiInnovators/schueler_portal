@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
 import 'package:schueler_portal/main.dart';
+import 'package:schueler_portal/pages/home/kontaktanfrage.dart';
 import 'package:schueler_portal/pages/home/settings/settings.dart';
 import 'package:schueler_portal/pages/home/termine.dart';
 import 'package:schueler_portal/pages/home/unterricht.dart';
@@ -77,7 +78,14 @@ class HomeWidget extends StatelessWidget {
               },
               child: const Center(child: Text("Termine"))),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const KontaktanfrageWidget(),
+                ),
+              );
+            },
             child: const Center(child: Text("Kontaktanfrage")),
           ),
           const SizedBox(height: 7),

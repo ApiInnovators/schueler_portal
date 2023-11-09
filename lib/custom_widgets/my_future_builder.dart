@@ -41,6 +41,7 @@ class MyFutureBuilder<T> extends FutureBuilder<T> {
 class ApiFutureBuilder<T> extends StatefulWidget {
   final Widget Function(BuildContext, T) builder;
   final Future<ApiResponse<T>> future;
+  final List<Future> additionalFutures;
 
   final Widget loadingIndicator;
   final Widget errorWidget;
@@ -53,6 +54,7 @@ class ApiFutureBuilder<T> extends StatefulWidget {
     this.loadingIndicator = const Center(child: CircularProgressIndicator()),
     this.errorWidget = const Text('An error occurred'),
     this.failedRequestWidget,
+    this.additionalFutures = const [],
   });
 
   @override
@@ -76,7 +78,8 @@ class _ApiFutureBuilderState<T> extends State<ApiFutureBuilder<T>> {
       throw error;
     });
 
-    widget.future.then((value) {
+    widget.future.then((value) async {
+      await Future.wait(widget.additionalFutures);
       if (mounted) {
         setState(() {
           apiResponse = value;

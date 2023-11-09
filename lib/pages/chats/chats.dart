@@ -143,7 +143,10 @@ class _SingleChatWidgetState extends State<SingleChatWidget> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ChatRoom(chat: widget.chat),
+              builder: (context) => ChatRoom(
+                chat: widget.chat,
+                markAsRead: widget.resort,
+              ),
             ),
           );
         },

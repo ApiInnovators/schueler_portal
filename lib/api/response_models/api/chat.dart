@@ -19,7 +19,7 @@ class Chat {
   final int createdAt;
   final Owner owner;
   final List<Member> members;
-  final int unreadMessagesCount;
+  int unreadMessagesCount;
   final LatestMessage? latestMessage;
   bool pinned;
 

@@ -17,8 +17,9 @@ import '../../api/response_models/api/chat.dart';
 
 class ChatRoom extends StatelessWidget {
   final Chat chat;
+  final void Function() markAsRead;
 
-  const ChatRoom({super.key, required this.chat});
+  const ChatRoom({super.key, required this.chat, required this.markAsRead});
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +32,19 @@ class ChatRoom extends StatelessWidget {
           return ApiFutureBuilder(
             future:
                 ApiClient.getAndParse("chat/${chat.id}", chatDetailsFromJson),
+            additionalFutures: [
+              ApiClient.postAndParse("chat/${chat.id}/read", (p0) => ())
+                  .then((resp) {
+                if (resp.statusCode != 204) return;
+                if (DataLoader.cache.chats.data != null) {
+                  DataLoader.cache.chats.data!
+                      .firstWhere((e) => e.id == chat.id)
+                      .unreadMessagesCount = 0;
+                  // No need to set the read variable in the messages
+                }
+                markAsRead();
+              }),
+            ],
             builder: (context, chatDetails) {
               Map<DateTime, List<Message>> groupedMessagesByDate = groupBy(
                   chatDetails.messages,

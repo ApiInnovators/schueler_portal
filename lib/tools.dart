@@ -99,6 +99,27 @@ class Tools {
 
     return requestCopy;
   }
+
+  static String? dateDeltaString(DateTime b, DateTime a) {
+    a = a.dayOnly();
+    b = b.dayOnly();
+    final Duration diff = a.difference(b);
+
+    switch (diff.inDays) {
+      case -1:
+        return "Gestern";
+      case -2:
+        return "Vorgestern";
+      case 0:
+        return "Heute";
+      case 1:
+        return "Morgen";
+      case 2:
+        return "Übermorgen";
+    }
+
+    return null;
+  }
 }
 
 extension DateUtils on DateTime {

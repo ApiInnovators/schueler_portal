@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:fading_edge_scrollview/fading_edge_scrollview.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +8,7 @@ import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
 import 'package:schueler_portal/data_loader.dart';
+import 'package:schueler_portal/tools.dart';
 
 import '../../api/api_client.dart';
 
@@ -70,6 +72,7 @@ class _HomeworkWidgetState extends State<HomeworkWidget> {
                         HomeworkListWidget(
                           hausaufgaben: nichtErledigteHausaufgaben,
                           resort: () => setState(() {}),
+                          pastHomeworkPage: -1,
                         )
                       ],
                       const SizedBox(height: 10),
@@ -84,6 +87,7 @@ class _HomeworkWidgetState extends State<HomeworkWidget> {
                         HomeworkListWidget(
                           hausaufgaben: erledigteHausaufgaben,
                           resort: () => setState(() {}),
+                          pastHomeworkPage: -1,
                         ),
                       ],
                     ],
@@ -100,17 +104,26 @@ class _HomeworkWidgetState extends State<HomeworkWidget> {
 
 class HomeworkListWidget extends StatelessWidget {
   final List<Hausaufgabe> hausaufgaben;
-  final Function()? resort;
+  final Function() resort;
+  final int pastHomeworkPage;
 
-  const HomeworkListWidget(
-      {super.key, required this.hausaufgaben, this.resort});
+  const HomeworkListWidget({
+    super.key,
+    required this.hausaufgaben,
+    required this.resort,
+    required this.pastHomeworkPage,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ListView(
       shrinkWrap: true,
       children: hausaufgaben
-          .map((e) => SingleHomeworkWidget(hausaufgabe: e, resort: resort))
+          .map((e) => SingleHomeworkWidget(
+                hausaufgabe: e,
+                resort: resort,
+                pastHomeworkPage: pastHomeworkPage,
+              ))
           .toList(),
     );
   }
@@ -119,9 +132,14 @@ class HomeworkListWidget extends StatelessWidget {
 class SingleHomeworkWidget extends StatefulWidget {
   final Hausaufgabe hausaufgabe;
   final void Function()? resort;
+  final int pastHomeworkPage;
 
-  const SingleHomeworkWidget(
-      {super.key, required this.hausaufgabe, this.resort});
+  const SingleHomeworkWidget({
+    super.key,
+    required this.hausaufgabe,
+    this.resort,
+    required this.pastHomeworkPage,
+  });
 
   @override
   State<StatefulWidget> createState() => _SingleHomeworkWidget();
@@ -147,8 +165,14 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
     setState(() => hausaufgabeErledigt = resp.data!["completed"] == true);
     if (widget.resort != null) widget.resort!();
 
-    if (DataLoader.cache.hausaufgaben.data != null) {
-      DataLoader.cache.hausaufgaben.data!
+    if (widget.pastHomeworkPage == -1) {
+      if (DataLoader.cache.hausaufgaben.data != null) {
+        DataLoader.cache.hausaufgaben.data!
+            .firstWhere((e) => e.id == widget.hausaufgabe.id)
+            .completed = hausaufgabeErledigt;
+      }
+    } else {
+      DataLoader.cache.pastHomework[widget.pastHomeworkPage]!.data!.data
           .firstWhere((e) => e.id == widget.hausaufgabe.id)
           .completed = hausaufgabeErledigt;
     }
@@ -159,6 +183,19 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
   @override
   Widget build(BuildContext context) {
     hausaufgabeErledigt = widget.hausaufgabe.completed;
+
+    final zuErledigenBis =
+        Tools.dateDeltaString(DateTime.now(), widget.hausaufgabe.dueAt);
+
+    final zuErledigenBisText = Text(
+      zuErledigenBis ?? DateFormat("dd.MM.yy").format(widget.hausaufgabe.dueAt),
+      style: TextStyle(
+        fontWeight: zuErledigenBis == "Heute" || zuErledigenBis == "Morgen"
+            ? FontWeight.bold
+            : FontWeight.normal,
+      ),
+    );
+
     return SizedBox(
       height: 100,
       child: GestureDetector(
@@ -171,6 +208,7 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
                 scrollable: true,
                 title: Text(widget.hausaufgabe.subject.long),
                 content: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(widget.hausaufgabe.homework),
                     if (widget.hausaufgabe.files.isNotEmpty) const Divider(),
@@ -183,9 +221,14 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
                     Text("aufgegeben von ${widget.hausaufgabe.teacher}"),
                     Text(
                         "am ${DateFormat("dd.MM.yyyy").format(widget.hausaufgabe.date)}"),
-                    Text(
-                      "Abgabe am ${DateFormat("dd.MM.yyyy").format(widget.hausaufgabe.dueAt)}",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    Row(
+                      children: [
+                        const Text(
+                          "Abgabe: ",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        zuErledigenBisText,
+                      ],
                     ),
                   ],
                 ),
@@ -217,8 +260,8 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
                       style: const TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 15),
                     ),
-                    Text(
-                        "${DateFormat(" (dd.MM.yy)").format(widget.hausaufgabe.date)} → ${DateFormat("dd.MM.yy").format(widget.hausaufgabe.dueAt)}"),
+                    const Text(" erledigen bis "),
+                    zuErledigenBisText,
                   ],
                 ),
                 const Divider(height: 1),
@@ -311,7 +354,11 @@ class _PastHomeworksWidgetState extends State<PastHomeworksWidget>
           body: TabBarView(
             controller: tabController,
             children: [
-              HomeworkListWidget(hausaufgaben: data.data),
+              HomeworkListWidget(
+                hausaufgaben: data.data,
+                resort: () => setState(() {}),
+                pastHomeworkPage: 1,
+              ),
               for (int i = 1; i < pages; ++i)
                 RefreshIndicator(
                   onRefresh: () async {
@@ -323,8 +370,11 @@ class _PastHomeworksWidgetState extends State<PastHomeworksWidget>
                     cacheGetter: () =>
                         DataLoader.cache.pastHomework[i + 1]?.data,
                     future: DataLoader.getPastHomework(i + 1),
-                    builder: (context, data) =>
-                        HomeworkListWidget(hausaufgaben: data.data),
+                    builder: (context, data) => HomeworkListWidget(
+                      hausaufgaben: data.data,
+                      resort: () => setState(() {}),
+                      pastHomeworkPage: i + 1,
+                    ),
                   ),
                 ),
             ],

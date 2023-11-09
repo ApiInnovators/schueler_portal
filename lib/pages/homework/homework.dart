@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:fading_edge_scrollview/fading_edge_scrollview.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -6,9 +8,16 @@ import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
 import 'package:schueler_portal/data_loader.dart';
 
-class HomeworkWidget extends StatelessWidget {
+import '../../api/api_client.dart';
+
+class HomeworkWidget extends StatefulWidget {
   const HomeworkWidget({super.key});
 
+  @override
+  State<HomeworkWidget> createState() => _HomeworkWidgetState();
+}
+
+class _HomeworkWidgetState extends State<HomeworkWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,7 +68,9 @@ class HomeworkWidget extends StatelessWidget {
                         const Text("Keine unerledigten Hausaufgaben"),
                       ] else ...[
                         HomeworkListWidget(
-                            hausaufgaben: nichtErledigteHausaufgaben)
+                          hausaufgaben: nichtErledigteHausaufgaben,
+                          resort: () => setState(() {}),
+                        )
                       ],
                       const SizedBox(height: 10),
                       const Text(
@@ -70,7 +81,10 @@ class HomeworkWidget extends StatelessWidget {
                       if (erledigteHausaufgaben.isEmpty) ...[
                         const Text("Noch nichts erledigt"),
                       ] else ...[
-                        HomeworkListWidget(hausaufgaben: erledigteHausaufgaben),
+                        HomeworkListWidget(
+                          hausaufgaben: erledigteHausaufgaben,
+                          resort: () => setState(() {}),
+                        ),
                       ],
                     ],
                   );
@@ -86,43 +100,65 @@ class HomeworkWidget extends StatelessWidget {
 
 class HomeworkListWidget extends StatelessWidget {
   final List<Hausaufgabe> hausaufgaben;
+  final Function()? resort;
 
-  const HomeworkListWidget({super.key, required this.hausaufgaben});
+  const HomeworkListWidget(
+      {super.key, required this.hausaufgaben, this.resort});
 
   @override
   Widget build(BuildContext context) {
     return ListView(
       shrinkWrap: true,
-      children: [
-        for (Hausaufgabe ha in hausaufgaben) ...[
-          SingleHomeworkWidget(hausaufgabe: ha),
-        ],
-      ],
+      children: hausaufgaben
+          .map((e) => SingleHomeworkWidget(hausaufgabe: e, resort: resort))
+          .toList(),
     );
   }
 }
 
 class SingleHomeworkWidget extends StatefulWidget {
   final Hausaufgabe hausaufgabe;
+  final void Function()? resort;
 
-  const SingleHomeworkWidget({super.key, required this.hausaufgabe});
+  const SingleHomeworkWidget(
+      {super.key, required this.hausaufgabe, this.resort});
 
   @override
   State<StatefulWidget> createState() => _SingleHomeworkWidget();
 }
 
 class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
+  bool isLoading = false;
   late bool hausaufgabeErledigt;
   final scrollControler = ScrollController();
 
-  @override
-  initState() {
-    super.initState();
-    hausaufgabeErledigt = widget.hausaufgabe.completed;
+  Future<void> toggleDone() async {
+    setState(() => isLoading = true);
+
+    final resp = await ApiClient.postAndParse<Map<String, dynamic>>(
+        "/hausaufgaben/${widget.hausaufgabe.id}/toggle-completed",
+        (p0) => jsonDecode(p0));
+
+    if (resp.statusCode != 200) {
+      setState(() => isLoading = false);
+      return;
+    }
+
+    setState(() => hausaufgabeErledigt = resp.data!["completed"] == true);
+    if (widget.resort != null) widget.resort!();
+
+    if (DataLoader.cache.hausaufgaben.data != null) {
+      DataLoader.cache.hausaufgaben.data!
+          .firstWhere((e) => e.id == widget.hausaufgabe.id)
+          .completed = hausaufgabeErledigt;
+    }
+
+    setState(() => isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
+    hausaufgabeErledigt = widget.hausaufgabe.completed;
     return SizedBox(
       height: 100,
       child: GestureDetector(
@@ -130,49 +166,36 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
           showDialog(
             context: context,
             builder: (context) {
-              return StatefulBuilder(builder: (context, setLocalState) {
-                return AlertDialog(
-                  insetPadding: const EdgeInsets.all(10),
-                  scrollable: true,
-                  title: Text(widget.hausaufgabe.subject.long),
-                  content: Column(
-                    children: [
-                      Text(widget.hausaufgabe.homework),
-                      if (widget.hausaufgabe.files.isNotEmpty) const Divider(),
-                      Column(
-                        children: widget.hausaufgabe.files
-                            .map((e) => FileDownloadButton(file: e))
-                            .toList(),
-                      ),
-                      const Divider(),
-                      Text("aufgegeben von ${widget.hausaufgabe.teacher}"),
-                      Text(
-                          "am ${DateFormat("dd.MM.yyyy").format(widget.hausaufgabe.date)}"),
-                      Text(
-                        "Abgabe am ${DateFormat("dd.MM.yyyy").format(widget.hausaufgabe.dueAt)}",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          setLocalState(() {
-                            setState(() {
-                              hausaufgabeErledigt = !hausaufgabeErledigt;
-                            });
-                          });
-                        },
-                        child: Text(
-                            "Als ${hausaufgabeErledigt ? "nicht " : ""}erledigt markieren"),
-                      ),
-                    ],
-                  ),
-                  actions: <Widget>[
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Ok'),
+              return AlertDialog(
+                insetPadding: const EdgeInsets.all(10),
+                scrollable: true,
+                title: Text(widget.hausaufgabe.subject.long),
+                content: Column(
+                  children: [
+                    Text(widget.hausaufgabe.homework),
+                    if (widget.hausaufgabe.files.isNotEmpty) const Divider(),
+                    Column(
+                      children: widget.hausaufgabe.files
+                          .map((e) => FileDownloadButton(file: e))
+                          .toList(),
+                    ),
+                    const Divider(),
+                    Text("aufgegeben von ${widget.hausaufgabe.teacher}"),
+                    Text(
+                        "am ${DateFormat("dd.MM.yyyy").format(widget.hausaufgabe.date)}"),
+                    Text(
+                      "Abgabe am ${DateFormat("dd.MM.yyyy").format(widget.hausaufgabe.dueAt)}",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
-                );
-              });
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Ok'),
+                  ),
+                ],
+              );
             },
           );
         },
@@ -226,13 +249,17 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
                           ],
                         ),
                       const VerticalDivider(),
-                      Checkbox(
+                      if (isLoading) ...[
+                        const Padding(
+                          padding: EdgeInsets.all(6),
+                          child: CircularProgressIndicator(),
+                        )
+                      ] else ...[
+                        Checkbox(
                           value: hausaufgabeErledigt,
-                          onChanged: (bool? value) {
-                            setState(() {
-                              hausaufgabeErledigt = value == true;
-                            });
-                          }),
+                          onChanged: (_) => toggleDone(),
+                        ),
+                      ],
                       const SizedBox(width: 7)
                     ],
                   ),

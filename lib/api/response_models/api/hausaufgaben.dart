@@ -21,7 +21,7 @@ class Hausaufgabe {
   final bool substitute;
   final Subject subject;
   final List<dynamic> submissions;
-  final bool completed;
+  bool completed;
 
   Hausaufgabe({
     required this.id,

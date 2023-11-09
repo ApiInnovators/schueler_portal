@@ -100,10 +100,10 @@ class Tools {
     return requestCopy;
   }
 
-  static String? dateDeltaString(DateTime b, DateTime a) {
+  static String? dateDeltaString(DateTime a, DateTime b) {
     a = a.dayOnly();
     b = b.dayOnly();
-    final Duration diff = a.difference(b);
+    final Duration diff = b.difference(a);
 
     switch (diff.inDays) {
       case -1:

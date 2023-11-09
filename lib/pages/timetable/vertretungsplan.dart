@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:schueler_portal/custom_widgets/aligned_text.dart';
 import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/data_loader.dart';
-import 'package:schueler_portal/pages/timetable/stundenplan.dart';
+import 'package:schueler_portal/tools.dart';
 import 'package:schueler_portal/user_data.dart';
 import 'package:string_to_color/string_to_color.dart';
 
@@ -28,8 +28,7 @@ class VertretungsplanWidget extends StatelessWidget {
             List<Datum> datums = snapshot.data;
             if (onlyUsersVertretungen) {
               datums = datums
-                  .where((element) =>
-                      UserData.isCourseEnabled(element.uf))
+                  .where((element) => UserData.isCourseEnabled(element.uf))
                   .toList();
             }
 
@@ -79,14 +78,8 @@ class VertretungDayWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String dayHeaderText = DateFormat("dd.MM.yyyy").format(day);
-
-    var today = DateTime.now();
-    if (day.isSameDate(today)) {
-      dayHeaderText = "Heute";
-    } else if (day.isSameDate(today.add(const Duration(days: 1)))) {
-      dayHeaderText = "Morgen";
-    }
+    String dayHeaderText = Tools.dateDeltaString(DateTime.now(), day) ??
+        DateFormat("dd.MM.yyyy").format(day);
 
     return Column(
       children: [

@@ -10,9 +10,14 @@ import '../../custom_widgets/aligned_text.dart';
 import '../../data_loader.dart';
 import 'chat_room.dart';
 
-class ChatsWidget extends StatelessWidget {
+class ChatsWidget extends StatefulWidget {
   const ChatsWidget({super.key});
 
+  @override
+  State<ChatsWidget> createState() => _ChatsWidgetState();
+}
+
+class _ChatsWidgetState extends State<ChatsWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,7 +28,8 @@ class ChatsWidget extends StatelessWidget {
       body: RefreshableCachingFutureBuilder<List<Chat>>(
         dataLoaderFuture: DataLoader.getChats,
         cache: DataLoader.cache.chats,
-        builder: (context, snapshot) => ChatsListWidget(data: snapshot),
+        builder: (context, snapshot) =>
+            ChatsListWidget(data: snapshot, resort: () => setState(() {})),
       ),
     );
   }
@@ -31,10 +37,12 @@ class ChatsWidget extends StatelessWidget {
 
 class ChatsListWidget extends StatelessWidget {
   final List<Chat> data;
+  final void Function() resort;
 
   const ChatsListWidget({
     super.key,
     required this.data,
+    required this.resort,
   });
 
   @override
@@ -66,15 +74,17 @@ class ChatsListWidget extends StatelessWidget {
     });
 
     return Column(
-      children: data.map((e) => SingleChatWidget(chat: e)).toList(),
+      children:
+          data.map((e) => SingleChatWidget(chat: e, resort: resort)).toList(),
     );
   }
 }
 
 class SingleChatWidget extends StatefulWidget {
   final Chat chat;
+  final void Function() resort;
 
-  const SingleChatWidget({super.key, required this.chat});
+  const SingleChatWidget({super.key, required this.chat, required this.resort});
 
   static String timeDifferenceAsString(DateTime dateTime) {
     final DateTime now = DateTime.now();
@@ -112,6 +122,7 @@ class _SingleChatWidgetState extends State<SingleChatWidget> {
     }
 
     setState(() => isPinned = resp.data!["pinned"] == true);
+    widget.resort();
 
     if (DataLoader.cache.chats.data != null) {
       DataLoader.cache.chats.data!

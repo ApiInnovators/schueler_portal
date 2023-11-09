@@ -131,13 +131,13 @@ class HomeworkListWidget extends StatelessWidget {
 
 class SingleHomeworkWidget extends StatefulWidget {
   final Hausaufgabe hausaufgabe;
-  final void Function()? resort;
+  final void Function() resort;
   final int pastHomeworkPage;
 
   const SingleHomeworkWidget({
     super.key,
     required this.hausaufgabe,
-    this.resort,
+    required this.resort,
     required this.pastHomeworkPage,
   });
 
@@ -163,7 +163,7 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
     }
 
     setState(() => hausaufgabeErledigt = resp.data!["completed"] == true);
-    if (widget.resort != null) widget.resort!();
+     widget.resort();
 
     if (widget.pastHomeworkPage == -1) {
       if (DataLoader.cache.hausaufgaben.data != null) {

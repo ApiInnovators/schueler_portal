@@ -73,6 +73,22 @@ class ApiClient {
     return sendAndParse(Request("GET", Uri.parse("$baseUrl$path")), parser);
   }
 
+  static Future<ApiResponse<T>> postAndParse<T>(String path, T Function(String) parser,
+      {String? body, String? contentType}) {
+    if (!path.startsWith("/")) path = "/$path";
+    Request req = Request("POST", Uri.parse("$baseUrl$path"));
+
+    if (body != null) {
+      req.body = body;
+      if (contentType == null) {
+        throw Exception("A content type should be specified");
+      }
+      req.headers["Content-Type"] = contentType;
+    }
+
+    return sendAndParse(req, parser);
+  }
+
   static Future<(Response, dynamic)> authenticate(LoginData login) async {
     final request =
         Request("POST", Uri.parse("$baseUrl/${login.schulkuerzel}/token"));
@@ -96,7 +112,8 @@ class ApiClient {
     return '${downloadsDirectory!.path}/${file.id}-${file.name}';
   }
 
-  static Future<(bool exists, File file)> checkIfFileIsStored(FileElement file) async {
+  static Future<(bool exists, File file)> checkIfFileIsStored(
+      FileElement file) async {
     final filePath = await makeFilePath(file);
     final f = File(filePath);
     return (await f.exists(), f);
@@ -104,7 +121,6 @@ class ApiClient {
 
   static Future<File?> downloadFile(FileElement file,
       {bool checkIfCached = true, bool showToast = true}) async {
-
     String filePath = await makeFilePath(file);
     if (checkIfCached) {
       (bool, File) f = await checkIfFileIsStored(file);

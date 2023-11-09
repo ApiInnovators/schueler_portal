@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 
 import '../../api/response_models/api/chat.dart';
+import '../../custom_widgets/aligned_text.dart';
 import '../../data_loader.dart';
 import 'chat_room.dart';
 
@@ -62,16 +66,12 @@ class ChatsListWidget extends StatelessWidget {
     });
 
     return Column(
-      children: [
-        for (int i = 0; i < data.length; ++i) ...[
-          SingleChatWidget(chat: data[i]),
-        ],
-      ],
+      children: data.map((e) => SingleChatWidget(chat: e)).toList(),
     );
   }
 }
 
-class SingleChatWidget extends StatelessWidget {
+class SingleChatWidget extends StatefulWidget {
   final Chat chat;
 
   const SingleChatWidget({super.key, required this.chat});
@@ -93,7 +93,38 @@ class SingleChatWidget extends StatelessWidget {
   }
 
   @override
+  State<SingleChatWidget> createState() => _SingleChatWidgetState();
+}
+
+class _SingleChatWidgetState extends State<SingleChatWidget> {
+  late bool isPinned;
+  bool isLoading = false;
+
+  Future<void> pinPressed() async {
+    setState(() => isLoading = true);
+
+    final resp = await ApiClient.postAndParse<Map<String, dynamic>>(
+        "/chat/${widget.chat.id}/toggle-pin", (p0) => jsonDecode(p0));
+
+    if (resp.statusCode != 200) {
+      setState(() => isLoading = false);
+      return;
+    }
+
+    setState(() => isPinned = resp.data!["pinned"] == true);
+
+    if (DataLoader.cache.chats.data != null) {
+      DataLoader.cache.chats.data!
+          .firstWhere((e) => e.id == widget.chat.id)
+          .pinned = isPinned;
+    }
+
+    setState(() => isLoading = false);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    isPinned = widget.chat.pinned;
     return SizedBox(
       height: 120,
       child: GestureDetector(
@@ -101,7 +132,7 @@ class SingleChatWidget extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ChatRoom(chat: chat),
+              builder: (context) => ChatRoom(chat: widget.chat),
             ),
           );
         },
@@ -121,13 +152,13 @@ class SingleChatWidget extends StatelessWidget {
                     Badge(
                       backgroundColor: Theme.of(context).colorScheme.secondary,
                       label: Text(
-                        chat.unreadMessagesCount.toString(),
+                        widget.chat.unreadMessagesCount.toString(),
                         style: TextStyle(
                             color: Theme.of(context).colorScheme.onSecondary),
                       ),
-                      isLabelVisible: chat.unreadMessagesCount > 0,
-                      child: Icon(chat.members.length > 1 ||
-                              chat.members.any((element) =>
+                      isLabelVisible: widget.chat.unreadMessagesCount > 0,
+                      child: Icon(widget.chat.members.length > 1 ||
+                              widget.chat.members.any((element) =>
                                   element.type ==
                                   ChatMemberType.APP_MODELS_USER_GROUP)
                           ? Icons.groups
@@ -136,61 +167,75 @@ class SingleChatWidget extends StatelessWidget {
                     const SizedBox(width: 15),
                     Expanded(
                       child: Text(
-                        chat.name,
+                        widget.chat.name,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                     IconButton(
-                      onPressed: () {},
-                      icon: Icon(
-                          chat.pinned ? Icons.push_pin : Icons.push_pin_outlined),
+                      onPressed: isLoading ? null : pinPressed,
+                      icon: isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator())
+                          : Icon(
+                              isPinned
+                                  ? Icons.push_pin
+                                  : Icons.push_pin_outlined,
+                            ),
                     ),
                   ],
                 ),
                 Expanded(
-                  child: Row(
-                    children: [
-                      if (chat.latestMessage != null) ...[
-                        Expanded(
-                          child: Column(
-                            children: [
-                              if (chat.latestMessage!.text != null) ...[
-                                Flexible(
-                                  child: Container(
-                                    alignment: Alignment.topLeft,
-                                    child: Text(
-                                      chat.latestMessage!.text!,
-                                      overflow: TextOverflow.fade,
-                                    ),
-                                  ),
-                                ),
-                              ] else ...[
-                                const Text(
-                                  "Nachricht gelöscht",
-                                  style: TextStyle(fontStyle: FontStyle.italic),
-                                )
-                              ],
-                              Container(
-                                alignment: Alignment.bottomLeft,
-                                child: Text(
-                                  timeDifferenceAsString(
-                                      chat.latestMessage!.timestamp),
-                                  style: const TextStyle(fontSize: 10),
-                                ),
-                              ),
-                            ],
+                    child: (() {
+                  if (widget.chat.latestMessage == null) {
+                    return const Text(
+                      "Noch keine Nachrichten",
+                      style: TextStyle(fontStyle: FontStyle.italic),
+                    );
+                  }
+
+                  if (widget.chat.latestMessage!.text != null) {
+                    return AlignedText(
+                      text: Text(
+                        widget.chat.latestMessage!.text!,
+                        overflow: TextOverflow.fade,
+                      ),
+                    );
+                  }
+
+                  if (widget.chat.latestMessage!.file != null) {
+                    return Row(
+                      children: [
+                        const Icon(Icons.attach_file),
+                        Flexible(
+                          child: AlignedText(
+                            text: Text(
+                              widget.chat.latestMessage!.file!,
+                              overflow: TextOverflow.fade,
+                            ),
                           ),
                         ),
-                      ] else ...[
-                        const Text(
-                          "Noch keine Nachrichten",
-                          style: TextStyle(fontStyle: FontStyle.italic),
-                        )
                       ],
-                    ],
+                    );
+                  }
+
+                  return const AlignedText(
+                    text: Text(
+                      "Nachricht gelöscht",
+                      style: TextStyle(fontStyle: FontStyle.italic),
+                    ),
+                  );
+                }())),
+                if (widget.chat.latestMessage != null)
+                  AlignedText(
+                    text: Text(
+                      SingleChatWidget.timeDifferenceAsString(
+                          widget.chat.latestMessage!.timestamp),
+                      style: const TextStyle(fontSize: 10),
+                    ),
                   ),
-                ),
               ],
             ),
           ),

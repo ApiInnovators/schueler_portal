@@ -21,7 +21,7 @@ class Chat {
   final List<Member> members;
   final int unreadMessagesCount;
   final LatestMessage? latestMessage;
-  final bool pinned;
+  bool pinned;
 
   Chat({
     required this.id,

@@ -69,7 +69,7 @@ class DataLoader {
     }
 
     int completedFunctions = 0;
-    snackbarKey.currentState!.showMaterialBanner(
+    snackbarKey.currentState?.showMaterialBanner(
       MaterialBanner(
         elevation: 1,
         content: StatefulBuilder(
@@ -258,6 +258,18 @@ class ApiCache {
 class LocallyCachedApiData<T> {
   T? _data;
 
+  T? get data => _data;
+
+  set data(T? value) {
+    _data = value;
+
+    if (value != null) {
+      prefs.setString(identifier, toStringParser(value));
+    } else {
+      prefs.remove(identifier);
+    }
+  }
+
   static late final SharedPreferences prefs;
   final T Function(String) toObjectParser;
   final String Function(T) toStringParser;
@@ -271,9 +283,8 @@ class LocallyCachedApiData<T> {
     this.dataInitializer,
   );
 
-  Future<void> setData(T data) async {
-    _data = data;
-    await prefs.setString(identifier, toStringParser(data));
+  Future<void> setData(T newData) async {
+    data = newData;
   }
 
   Future<ApiResponse<T>> fetchData() async {
@@ -283,7 +294,7 @@ class LocallyCachedApiData<T> {
   }
 
   T? getCached() {
-    if (_data == null) {
+    if (data == null) {
       // Data has not been stored in memory
 
       String? loadedString = prefs.getString(identifier);
@@ -298,7 +309,7 @@ class LocallyCachedApiData<T> {
       return parsed;
     }
 
-    return _data;
+    return data;
   }
 
   static Future<void> init() async =>

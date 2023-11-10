@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:http/io_client.dart';
 import 'package:path_provider/path_provider.dart';
@@ -24,8 +26,10 @@ class ApiClient {
       log("Response: ${response.statusCode}");
       return response;
     } on SocketException {
+      Tools.quickSnackbar("Offline", icon: const Icon(Icons.cloud_off));
       return Response("Internetverbindung überprüfen.", 499);
     } catch (e) {
+      Tools.quickSnackbar("Unbekannter Fehler");
       return Response("Unbekannter Fehler.", 498);
     }
   }
@@ -163,12 +167,12 @@ class ApiClient {
     if (response.statusCode == 200) {
       File file = File(filePath);
       await file.writeAsBytes(response.bodyBytes);
-      if (showToast) Tools.quickSnackbar("Download completed");
+      if (showToast) Tools.quickSnackbar("Download abgeschlossen");
       return file;
     }
 
     if (showToast) {
-      Tools.quickSnackbar("Download failed: ${response.reasonPhrase}");
+      Tools.quickSnackbar("Download fehlgeschlagen: ${response.reasonPhrase}");
     }
 
     return null;

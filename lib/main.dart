@@ -9,10 +9,10 @@ import 'package:schueler_portal/pages/home/home.dart';
 import 'package:schueler_portal/pages/homework/homework.dart';
 import 'package:schueler_portal/pages/timetable/stundenplan_page.dart';
 import 'package:schueler_portal/pages/user_login.dart';
+import 'package:schueler_portal/tools.dart';
 import 'package:schueler_portal/user_data.dart';
 
 import 'api/response_models/api/chat.dart';
-import 'custom_widgets/message_queue.dart';
 import 'custom_widgets/my_future_builder.dart';
 
 Future<void> main() async {
@@ -59,20 +59,7 @@ Future<void> main() async {
     errorMessage = "Offline";
   }
 
-  MessageQueuer.addMessageToQueue(
-    errorMessage,
-    SnackBar(
-      backgroundColor: Colors.redAccent,
-      behavior: SnackBarBehavior.floating,
-      content: Row(
-        children: [
-          const Icon(Icons.error_outline),
-          const SizedBox(width: 10),
-          Text(errorMessage, style: const TextStyle(color: Colors.black)),
-        ],
-      ),
-    ),
-  );
+  Tools.quickSnackbar(errorMessage);
 }
 
 class MyApp extends StatefulWidget {

@@ -71,8 +71,21 @@ class Tools {
   static Set<String> getStundenplanCourses(List<Datum> stundenplanData) =>
       stundenplanData.map((datum) => datum.uf).toSet();
 
-  static void quickSnackbar(String text) =>
-      snackbarKey.currentState?.showSnackBar(SnackBar(content: Text(text)));
+  static void quickSnackbar(String text, {Icon? icon}) =>
+      snackbarKey.currentState?.showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Row(
+            children: [
+              if (icon != null) ...[
+                icon,
+                const SizedBox(width: 10),
+              ],
+              Text(text),
+            ],
+          ),
+        ),
+      );
 
   static BaseRequest? copyRequest(BaseRequest request) {
     BaseRequest requestCopy;
@@ -81,13 +94,11 @@ class Tools {
       requestCopy = Request(request.method, request.url)
         ..encoding = request.encoding
         ..bodyBytes = request.bodyBytes;
-    }
-    else if (request is MultipartRequest) {
+    } else if (request is MultipartRequest) {
       requestCopy = MultipartRequest(request.method, request.url)
         ..fields.addAll(request.fields)
         ..files.addAll(request.files);
-    }
-    else {
+    } else {
       return null;
     }
 

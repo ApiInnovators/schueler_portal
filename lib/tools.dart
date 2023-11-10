@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:schueler_portal/api/response_models/api/stundenplan.dart';
@@ -71,21 +73,28 @@ class Tools {
   static Set<String> getStundenplanCourses(List<Datum> stundenplanData) =>
       stundenplanData.map((datum) => datum.uf).toSet();
 
-  static void quickSnackbar(String text, {Icon? icon}) =>
-      snackbarKey.currentState?.showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          content: Row(
-            children: [
-              if (icon != null) ...[
-                icon,
-                const SizedBox(width: 10),
-              ],
-              Text(text),
+  static void quickSnackbar(String text, {Icon? icon}) async {
+    await Future.doWhile(() async {
+      await Future.delayed(const Duration(milliseconds: 30));
+      return snackbarKey.currentState == null;
+    }).timeout(const Duration(seconds: 6));
+    log("Showing snackbar: $text");
+
+    snackbarKey.currentState?.showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        content: Row(
+          children: [
+            if (icon != null) ...[
+              icon,
+              const SizedBox(width: 10),
             ],
-          ),
+            Text(text),
+          ],
         ),
-      );
+      ),
+    );
+  }
 
   static BaseRequest? copyRequest(BaseRequest request) {
     BaseRequest requestCopy;

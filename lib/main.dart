@@ -9,7 +9,6 @@ import 'package:schueler_portal/pages/home/home.dart';
 import 'package:schueler_portal/pages/homework/homework.dart';
 import 'package:schueler_portal/pages/timetable/stundenplan_page.dart';
 import 'package:schueler_portal/pages/user_login.dart';
-import 'package:schueler_portal/tools.dart';
 import 'package:schueler_portal/user_data.dart';
 
 import 'api/response_models/api/chat.dart';
@@ -50,16 +49,6 @@ Future<void> main() async {
 
     return;
   }
-
-  String errorMessage = "Unbekannter Fehler";
-
-  if (validationResp.statusCode == 408) {
-    errorMessage = "Zeitüberschreitung";
-  } else if (validationResp.statusCode == 499) {
-    errorMessage = "Offline";
-  }
-
-  Tools.quickSnackbar(errorMessage);
 }
 
 class MyApp extends StatefulWidget {

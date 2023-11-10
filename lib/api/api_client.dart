@@ -26,9 +26,11 @@ class ApiClient {
       log("Response: ${response.statusCode}");
       return response;
     } on SocketException {
+      log("Error while sending request: Socket Exception (Offline?)");
       Tools.quickSnackbar("Offline", icon: const Icon(Icons.cloud_off));
       return Response("Internetverbindung überprüfen.", 499);
     } catch (e) {
+      log("Error while sending request: $e");
       Tools.quickSnackbar("Unbekannter Fehler");
       return Response("Unbekannter Fehler.", 498);
     }

@@ -71,7 +71,9 @@ class DataLoader {
   static void _addCompleter(
       Completer<ApiResponse> completer, Future fetchDataFuture) {
     _completers.add(completer);
-    fetchDataFuture.then((_) => completer.complete(_));
+    fetchDataFuture.then((_) {
+      if (!completer.isCompleted) completer.complete(_);
+    });
   }
 
   static Future<void> _showProgressOfCaching() async {

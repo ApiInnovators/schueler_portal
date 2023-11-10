@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:http/io_client.dart';
@@ -59,24 +58,30 @@ class ApiClient {
 
       if (UserLogin.login == null) return response;
 
-      _alreadyTriesToReauthenticate = true;
-      log("Trying to reauthenticate user with ${UserLogin.login!.email} ${UserLogin.login!.password}");
-      final authResp = await authenticate(UserLogin.login!);
+      final authResp = await _reauthenticate();
 
-      if (authResp.statusCode == 200) {
-        UserLogin.updateToken(authResp.data!);
-        _alreadyTriesToReauthenticate = false;
-        if (requestCopy != null) {
-          requestCopy.headers["Authorization"] =
-              "Bearer ${UserLogin.accessToken}";
-          return await _handledRequest(requestCopy);
-        }
-      } else if (authResp.statusCode == 422) {
-        forceLogin();
+      if (authResp.statusCode == 200 && requestCopy != null) {
+        requestCopy.headers["Authorization"] =
+            "Bearer ${UserLogin.accessToken}";
+        return await _handledRequest(requestCopy);
       }
     }
 
     return response;
+  }
+
+  static Future<Response> _reauthenticate() async {
+    _alreadyTriesToReauthenticate = true;
+    log("Trying to reauthenticate user");
+    final authResp = await authenticate(UserLogin.login!);
+
+    if (authResp.statusCode == 422) {
+      forceLogin();
+    }
+
+    _alreadyTriesToReauthenticate = false;
+
+    return authResp;
   }
 
   static Future<ApiResponse<T>> sendAndParse<T>(
@@ -94,11 +99,17 @@ class ApiClient {
     final result =
         await send(Request("POST", Uri.parse("$baseUrl/token/is-valid")));
 
-    if (result.statusCode == 200) {
-      return ApiResponse(result, data: result.body == "true");
+    if (result.statusCode != 200) return ApiResponse(result);
+
+    if (result.body == "true") return ApiResponse(result, data: true);
+
+    final authResp = await _reauthenticate();
+
+    if (authResp.statusCode == 200) {
+      return ApiResponse(authResp, data: true);
     }
 
-    return ApiResponse(result);
+    return ApiResponse(authResp);
   }
 
   static Future<ApiResponse<T>> getAndParse<T>(

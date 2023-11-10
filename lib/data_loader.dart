@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -36,7 +37,8 @@ class DataLoader {
   static var chatRequestTargetsCompleter =
       Completer<ApiResponse<List<KontaktanfrageLehrer>>>();
 
-  static Future<List<ApiResponse>> cacheData({bool showProgress = true}) {
+  static Future<List<ApiResponse>> cacheData({bool showProgress = true}) async {
+    log("Caching data...");
     chatCompleter = Completer<ApiResponse<List<Chat>>>();
     newsCompleter = Completer<ApiResponse<List<News>>>();
     userCompleter = Completer<ApiResponse<User>>();
@@ -61,7 +63,9 @@ class DataLoader {
 
     if (showProgress) _showProgressOfCaching();
 
-    return Future.wait(_futures);
+    final result = await Future.wait(_futures);
+    log("Caching completed");
+    return result;
   }
 
   static void _addCompleter(
@@ -71,9 +75,10 @@ class DataLoader {
   }
 
   static Future<void> _showProgressOfCaching() async {
-    while (snackbarKey.currentState == null) {
+    await Future.doWhile(() async {
       await Future.delayed(const Duration(milliseconds: 10));
-    }
+      return snackbarKey.currentState == null;
+    }).timeout(const Duration(seconds: 1));
 
     int completedFunctions = 0;
     snackbarKey.currentState?.showMaterialBanner(
@@ -309,6 +314,7 @@ class LocallyCachedApiData<T> {
   }
 
   Future<ApiResponse<T>> fetchData() async {
+    log("$identifier: Fetching new data");
     ApiResponse<T> res = await dataInitializer();
     if (res.data != null) await setData(res.data as T);
     return res;
@@ -319,6 +325,7 @@ class LocallyCachedApiData<T> {
       // Data has not been stored in memory
 
       String? loadedString = prefs.getString(identifier);
+      log("$identifier: Loaded data from local storage${loadedString == null ? " : null" : ""}");
 
       if (loadedString == null) return null;
 
@@ -330,6 +337,7 @@ class LocallyCachedApiData<T> {
       return parsed;
     }
 
+    log("$identifier: Get data");
     return data;
   }
 

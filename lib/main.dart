@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/data_loader.dart';
@@ -10,6 +12,7 @@ import 'package:schueler_portal/pages/user_login.dart';
 import 'package:schueler_portal/user_data.dart';
 
 import 'api/response_models/api/chat.dart';
+import 'custom_widgets/message_queue.dart';
 import 'custom_widgets/my_future_builder.dart';
 
 Future<void> main() async {
@@ -22,32 +25,65 @@ Future<void> main() async {
   ]);
 
   if (UserLogin.login == null) {
+    log("No saved user login, opening login page...");
     runApp(const MyApp(openLoginPage: true));
     return;
   }
 
-  bool needsToLogin = false;
-
-  if (UserLogin.accessToken != null) {
-    ApiClient.accessToken = UserLogin.accessToken;
-
-    if (await ApiClient.hasValidToken()) {
-      DataLoader.cacheData();
-    } else {
-      final authenticationResp = await ApiClient.authenticate(UserLogin.login!);
-
-      if (authenticationResp.$1.statusCode == 200) {
-        await UserLogin.updateLogin(
-          UserLogin.login!,
-          authenticationResp.$2["access_token"],
-        );
-      }
-
-      if (authenticationResp.$1.statusCode == 401) needsToLogin = true;
-    }
+  if (UserLogin.accessToken == null) {
+    log("No saved api access token, data will be cached later");
+    runApp(const MyApp(openLoginPage: false));
+    return;
   }
 
-  runApp(MyApp(openLoginPage: needsToLogin));
+  runApp(const MyApp(openLoginPage: false));
+
+  ApiClient.accessToken = UserLogin.accessToken;
+  final validationResp = await ApiClient.hasValidToken();
+
+  if (validationResp.statusCode == 200) {
+    if (validationResp.data == true) {
+      log("Saved access token is still valid (best case scenario)");
+      DataLoader.cacheData();
+      return;
+    }
+
+    final authenticationResp = await ApiClient.authenticate(UserLogin.login!);
+
+    if (authenticationResp.$1.statusCode == 200) {
+      log("Saved access token was invalid but could get new one with saved login");
+      await UserLogin.updateLogin(
+        UserLogin.login!,
+        authenticationResp.$2["access_token"],
+      );
+    } else if (authenticationResp.$1.statusCode == 401) {
+      log("Saved access token was invalid and the saved login was also invalid");
+      return;
+    }
+  } else {
+    String errorMessage = "Unbekannter Fehler";
+
+    if (validationResp.statusCode == 408) {
+      errorMessage = "Zeitüberschreitung";
+    } else if (validationResp.statusCode == 499) {
+      errorMessage = "Offline";
+    }
+
+    MessageQueuer.addMessageToQueue(
+      errorMessage,
+      SnackBar(
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline),
+            const SizedBox(width: 10),
+            Text(errorMessage, style: const TextStyle(color: Colors.black)),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends StatefulWidget {

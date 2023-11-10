@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:http/http.dart';
@@ -10,14 +11,15 @@ import 'package:schueler_portal/pages/user_login.dart';
 import '../tools.dart';
 
 class ApiClient {
-  static IOClient client = IOClient();
-  static const String baseUrl = "https://apiinnovators.de/schueler_portal";
+  static IOClient client = IOClient(
+    HttpClient()..connectionTimeout = const Duration(seconds: 5),
+  );
+  static const String baseUrl = "http://192.168.178.42:8080/schueler_portal";
   static String? accessToken;
 
-  static Future<Response> _handledRequest(
-      Future<IOStreamedResponse> Function() reqFunc) async {
+  static Future<Response> _handledRequest(BaseRequest request) async {
     try {
-      return Response.fromStream(await reqFunc());
+      return Response.fromStream(await client.send(request));
     } on SocketException {
       return Response("Internetverbindung überprüfen.", 499);
     } catch (e) {
@@ -31,7 +33,12 @@ class ApiClient {
     }
 
     final requestCopy = Tools.copyRequest(request);
-    final response = await _handledRequest(() => client.send(request));
+
+    log("Making request: ${request.url.path}");
+
+    final response = await _handledRequest(request);
+
+    log("Response: ${response.statusCode}");
 
     if (response.statusCode == 401) {
       // Try to authenticate user
@@ -42,7 +49,7 @@ class ApiClient {
       if (authResp.$1.statusCode == 200 && requestCopy != null) {
         UserLogin.updateLogin(UserLogin.login!, authResp.$2["access_token"]);
         requestCopy.headers["Authorization"] = "Bearer $accessToken";
-        return await _handledRequest(() => client.send(requestCopy));
+        return await _handledRequest(requestCopy);
       }
     }
 
@@ -60,11 +67,15 @@ class ApiClient {
     return ApiResponse(resp);
   }
 
-  static Future<bool> hasValidToken() async {
-    if (accessToken == null) return false;
+  static Future<ApiResponse<bool>> hasValidToken() async {
     final result =
         await send(Request("POST", Uri.parse("$baseUrl/token/is-valid")));
-    return result.statusCode == 200 && result.body == "true";
+
+    if (result.statusCode == 200) {
+      return ApiResponse(result, data: result.body == "true");
+    }
+
+    return ApiResponse(result);
   }
 
   static Future<ApiResponse<T>> getAndParse<T>(
@@ -73,7 +84,8 @@ class ApiClient {
     return sendAndParse(Request("GET", Uri.parse("$baseUrl$path")), parser);
   }
 
-  static Future<ApiResponse<T>> postAndParse<T>(String path, T Function(String) parser,
+  static Future<ApiResponse<T>> postAndParse<T>(
+      String path, T Function(String) parser,
       {String? body, String? contentType}) {
     if (!path.startsWith("/")) path = "/$path";
     Request req = Request("POST", Uri.parse("$baseUrl$path"));
@@ -95,7 +107,7 @@ class ApiClient {
     request.headers['Content-Type'] = 'application/x-www-form-urlencoded';
     request.bodyFields = {'username': login.email, 'password': login.password};
 
-    Response resp = await _handledRequest(() => client.send(request));
+    Response resp = await _handledRequest(request);
 
     dynamic parsed;
 

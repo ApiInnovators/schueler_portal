@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -15,6 +16,7 @@ class UserLogin {
   static LoginData? login;
 
   static Future<void> updateLogin(LoginData newLogin, String newAccessToken) {
+    log("Updating login");
     login = newLogin;
     accessToken = newAccessToken;
 
@@ -24,6 +26,7 @@ class UserLogin {
   }
 
   static Future<void> save() async {
+    log("Saved Login");
     if (accessToken != null) {
       await _secureStorage.write(key: "access_token", value: accessToken);
     }

@@ -180,15 +180,15 @@ class StundenplanDataSource extends CalendarDataSource {
   // The only thing that matters is that the weekdays are correct
   @override
   DateTime getStartTime(int index) => Tools.hourStartToDateTime(
-      stunden[index].hour,
-      DateTime(2018, 1, stunden[index].day + 1),
-    );
+        stunden[index].hour,
+        DateTime(2018, 1, stunden[index].day + 1),
+      );
 
   @override
   DateTime getEndTime(int index) => Tools.hourEndToDateTime(
-      stunden[index].hour,
-      DateTime(2018, 1, stunden[index].day + 1),
-    );
+        stunden[index].hour,
+        DateTime(2018, 1, stunden[index].day + 1),
+      );
 
   vertretungsplan_package.Datum? findVertretung(
       stundenplan_package.Datum stunde) {
@@ -211,7 +211,15 @@ class StundenplanDataSource extends CalendarDataSource {
 
     vertretungsplan_package.Datum? vertretung = findVertretung(stunde);
 
-    if (vertretung != null) subject += " - ${vertretung.reason}";
+    if (vertretung != null) {
+      if (vertretung.reason != "-") {
+        subject += " - ${vertretung.reason}";
+      } else if (vertretung.room.isNotEmpty) {
+        subject += " - Vertretung in ${vertretung.room}";
+      } else {
+        subject += " - Vertretung";
+      }
+    }
 
     return subject;
   }

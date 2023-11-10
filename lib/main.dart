@@ -26,19 +26,19 @@ Future<void> main() async {
 
   if (UserLogin.login == null) {
     log("No saved user login, opening login page...");
-    runApp(const MyApp(openLoginPage: true));
+    runApp(const MyApp());
+    forceLogin();
     return;
   }
 
   if (UserLogin.accessToken == null) {
     log("No saved api access token, data will be cached later");
-    runApp(const MyApp(openLoginPage: false));
+    runApp(const MyApp());
     return;
   }
 
-  runApp(const MyApp(openLoginPage: false));
+  runApp(const MyApp());
 
-  ApiClient.accessToken = UserLogin.accessToken;
   final validationResp = await ApiClient.hasValidToken();
 
   if (validationResp.statusCode == 200) {
@@ -48,64 +48,43 @@ Future<void> main() async {
       return;
     }
 
-    final authenticationResp = await ApiClient.authenticate(UserLogin.login!);
-
-    if (authenticationResp.$1.statusCode == 200) {
-      log("Saved access token was invalid but could get new one with saved login");
-      await UserLogin.updateLogin(
-        UserLogin.login!,
-        authenticationResp.$2["access_token"],
-      );
-    } else if (authenticationResp.$1.statusCode == 401) {
-      log("Saved access token was invalid and the saved login was also invalid");
-      return;
-    }
-  } else {
-    String errorMessage = "Unbekannter Fehler";
-
-    if (validationResp.statusCode == 408) {
-      errorMessage = "Zeitüberschreitung";
-    } else if (validationResp.statusCode == 499) {
-      errorMessage = "Offline";
-    }
-
-    MessageQueuer.addMessageToQueue(
-      errorMessage,
-      SnackBar(
-        backgroundColor: Colors.redAccent,
-        behavior: SnackBarBehavior.floating,
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline),
-            const SizedBox(width: 10),
-            Text(errorMessage, style: const TextStyle(color: Colors.black)),
-          ],
-        ),
-      ),
-    );
+    return;
   }
+
+  String errorMessage = "Unbekannter Fehler";
+
+  if (validationResp.statusCode == 408) {
+    errorMessage = "Zeitüberschreitung";
+  } else if (validationResp.statusCode == 499) {
+    errorMessage = "Offline";
+  }
+
+  MessageQueuer.addMessageToQueue(
+    errorMessage,
+    SnackBar(
+      backgroundColor: Colors.redAccent,
+      behavior: SnackBarBehavior.floating,
+      content: Row(
+        children: [
+          const Icon(Icons.error_outline),
+          const SizedBox(width: 10),
+          Text(errorMessage, style: const TextStyle(color: Colors.black)),
+        ],
+      ),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
-  final bool openLoginPage;
 
-  const MyApp({super.key, required this.openLoginPage});
+  const MyApp({super.key});
 
   @override
   State<StatefulWidget> createState() => MyAppState();
 }
 
 class MyAppState extends State<MyApp> {
-  late bool _loginSuccessful;
   Color accentColor = UserData.getAccentColor();
-
-  @override
-  void initState() {
-    super.initState();
-    _loginSuccessful = !widget.openLoginPage;
-  }
-
-  setLogin(bool success) => setState(() => _loginSuccessful = success);
 
   setAccentColor(Color color) => setState(() => accentColor = color);
 
@@ -115,6 +94,7 @@ class MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       title: 'Schüler Portal',
       scaffoldMessengerKey: snackbarKey,
+      navigatorKey: navigatorKey,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: accentColor,
@@ -130,9 +110,7 @@ class MyAppState extends State<MyApp> {
         useMaterial3: true,
       ),
       themeMode: ThemeMode.system,
-      home: _loginSuccessful
-          ? MyHomePage(myAppState: this)
-          : UserLoginWidget(myAppState: this), // Placeholder widget
+      home: MyHomePage(myAppState: this),
     );
   }
 }

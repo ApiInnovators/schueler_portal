@@ -15,11 +15,14 @@ class ApiClient {
     HttpClient()..connectionTimeout = const Duration(seconds: 5),
   );
   static const String baseUrl = "http://192.168.178.42:8080/schueler_portal";
-  static String? accessToken;
+  static bool _alreadyTriesToReauthenticate = false;
 
   static Future<Response> _handledRequest(BaseRequest request) async {
     try {
-      return Response.fromStream(await client.send(request));
+      log("Making request: ${request.url.path}");
+      final response = await Response.fromStream(await client.send(request));
+      log("Response: ${response.statusCode}");
+      return response;
     } on SocketException {
       return Response("Internetverbindung überprüfen.", 499);
     } catch (e) {
@@ -29,27 +32,41 @@ class ApiClient {
 
   static Future<Response> send(BaseRequest request) async {
     if (!request.headers.containsKey("Authorization")) {
-      request.headers["Authorization"] = "Bearer $accessToken";
+      request.headers["Authorization"] = "Bearer ${UserLogin.accessToken}";
     }
 
     final requestCopy = Tools.copyRequest(request);
-
-    log("Making request: ${request.url.path}");
-
     final response = await _handledRequest(request);
-
-    log("Response: ${response.statusCode}");
 
     if (response.statusCode == 401) {
       // Try to authenticate user
 
+      if (_alreadyTriesToReauthenticate && requestCopy != null) {
+        await Future.doWhile(() async {
+          await Future.delayed(const Duration(milliseconds: 30));
+          return _alreadyTriesToReauthenticate;
+        }).timeout(const Duration(seconds: 6));
+        requestCopy.headers["Authorization"] =
+            "Bearer ${UserLogin.accessToken}";
+        return await _handledRequest(requestCopy);
+      }
+
       if (UserLogin.login == null) return response;
 
+      _alreadyTriesToReauthenticate = true;
+      log("Trying to reauthenticate user with ${UserLogin.login!.email} ${UserLogin.login!.password}");
       final authResp = await authenticate(UserLogin.login!);
-      if (authResp.$1.statusCode == 200 && requestCopy != null) {
-        UserLogin.updateLogin(UserLogin.login!, authResp.$2["access_token"]);
-        requestCopy.headers["Authorization"] = "Bearer $accessToken";
-        return await _handledRequest(requestCopy);
+
+      if (authResp.statusCode == 200) {
+        UserLogin.updateToken(authResp.data!);
+        _alreadyTriesToReauthenticate = false;
+        if (requestCopy != null) {
+          requestCopy.headers["Authorization"] =
+              "Bearer ${UserLogin.accessToken}";
+          return await _handledRequest(requestCopy);
+        }
+      } else if (authResp.statusCode == 422) {
+        forceLogin();
       }
     }
 
@@ -101,7 +118,7 @@ class ApiClient {
     return sendAndParse(req, parser);
   }
 
-  static Future<(Response, dynamic)> authenticate(LoginData login) async {
+  static Future<ApiResponse<String>> authenticate(LoginData login) async {
     final request =
         Request("POST", Uri.parse("$baseUrl/${login.schulkuerzel}/token"));
     request.headers['Content-Type'] = 'application/x-www-form-urlencoded';
@@ -109,14 +126,13 @@ class ApiClient {
 
     Response resp = await _handledRequest(request);
 
-    dynamic parsed;
-
     if (resp.statusCode == 200) {
-      parsed = jsonDecode(resp.body);
-      accessToken = parsed["access_token"];
+      final parsed = jsonDecode(resp.body);
+      UserLogin.updateToken(parsed["access_token"]);
+      return ApiResponse(resp, data: parsed["access_token"]);
     }
 
-    return (resp, parsed);
+    return ApiResponse(resp);
   }
 
   static Future<String> makeFilePath(FileElement file) async {

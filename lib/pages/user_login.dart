@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/data_loader.dart';
-import 'package:schueler_portal/main.dart';
+import 'package:schueler_portal/globals.dart';
 
 import '../tools.dart';
 
@@ -15,11 +15,25 @@ class UserLogin {
   static String? accessToken;
   static LoginData? login;
 
-  static Future<void> updateLogin(LoginData newLogin, String newAccessToken) {
-    log("Updating login");
+  static Future<void> update(LoginData newLogin, String newAccessToken) {
     login = newLogin;
     accessToken = newAccessToken;
+    DataLoader.cancelAndReset();
+    DataLoader.cacheData();
+    return save();
+  }
 
+  static Future<void> updateLogin(LoginData newLogin) {
+    log("Updating login");
+    login = newLogin;
+    DataLoader.cancelAndReset();
+    DataLoader.cacheData();
+    return save();
+  }
+
+  static Future<void> updateToken(String newAccessToken) {
+    log("Updating token");
+    accessToken = newAccessToken;
     DataLoader.cancelAndReset();
     DataLoader.cacheData();
     return save();
@@ -68,76 +82,92 @@ class LoginData {
       required this.schulkuerzel});
 }
 
+void forceLogin() async {
+  await Future.doWhile(() async {
+    await Future.delayed(const Duration(milliseconds: 30));
+    return navigatorKey.currentState == null;
+  }).timeout(const Duration(seconds: 1));
+
+  navigatorKey.currentState?.push(
+    MaterialPageRoute(
+      builder: (context) {
+        return UserLoginWidget();
+      },
+    ),
+  );
+}
+
 class UserLoginWidget extends StatelessWidget {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final institutionController = TextEditingController();
-  final MyAppState myAppState;
 
-  UserLoginWidget({super.key, required this.myAppState});
+  UserLoginWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Login"),
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-      ),
-      body: Center(
-        child: Column(
-          children: [
-            const Text("Email"),
-            TextField(
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: "Email",
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Login"),
+          centerTitle: true,
+          automaticallyImplyLeading: false,
+        ),
+        body: Center(
+          child: Column(
+            children: [
+              const Text("Email"),
+              TextField(
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: "Email",
+                ),
+                controller: emailController,
               ),
-              controller: emailController,
-            ),
-            const Text("Passwort"),
-            TextField(
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: "Passwort",
+              const Text("Passwort"),
+              TextField(
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: "Passwort",
+                ),
+                obscureText: true,
+                enableSuggestions: false,
+                autocorrect: false,
+                controller: passwordController,
               ),
-              obscureText: true,
-              enableSuggestions: false,
-              autocorrect: false,
-              controller: passwordController,
-            ),
-            const Text("Schulkürzel"),
-            TextField(
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: "Schulkürzel",
+              const Text("Schulkürzel"),
+              TextField(
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: "Schulkürzel",
+                ),
+                controller: institutionController,
               ),
-              controller: institutionController,
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                LoginData login = LoginData(
-                  email: emailController.text.trim(),
-                  password: passwordController.text.trim(),
-                  schulkuerzel: institutionController.text.trim(),
-                );
-
-                final authenticationResp = await ApiClient.authenticate(login);
-
-                if (authenticationResp.$1.statusCode == 200) {
-                  myAppState.setLogin(true);
-                  UserLogin.updateLogin(
-                    login,
-                    authenticationResp.$2["access_token"],
+              ElevatedButton(
+                onPressed: () async {
+                  LoginData login = LoginData(
+                    email: emailController.text.trim(),
+                    password: passwordController.text.trim(),
+                    schulkuerzel: institutionController.text.trim(),
                   );
-                } else {
-                  Tools.quickSnackbar(
-                      "Failed to login: ${authenticationResp.$1.reasonPhrase}");
-                }
-              },
-              child: const Text("Login"),
-            ),
-          ],
+
+                  final authenticationResp = await ApiClient.authenticate(login);
+
+                  if (authenticationResp.statusCode == 200) {
+                    navigatorKey.currentState?.pop();
+                    UserLogin.update(login, authenticationResp.data!);
+                  } else if (authenticationResp.statusCode == 422) {
+                    Tools.quickSnackbar("Eingabe fehlerhaft");
+                  } else {
+                    Tools.quickSnackbar(
+                        "Failed to login: ${authenticationResp.reasonPhrase}");
+                  }
+                },
+                child: const Text("Login"),
+              ),
+            ],
+          ),
         ),
       ),
     );

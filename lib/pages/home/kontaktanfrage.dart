@@ -46,7 +46,7 @@ class KontaktanfrageWidget extends StatelessWidget {
                     context: context,
                     builder: (context) {
                       return AlertDialog(
-                        title: Text("Kontaktanfrage"),
+                        title: const Text("Kontaktanfrage"),
                         content: Text(
                           "Kontaktanfrage an ${suggestion.name} schicken?",
                         ),

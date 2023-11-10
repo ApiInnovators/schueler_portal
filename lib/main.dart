@@ -40,14 +40,9 @@ Future<void> main() async {
 
   final validationResp = await ApiClient.hasValidToken();
 
-  if (validationResp.statusCode == 200) {
-    if (validationResp.data == true) {
-      log("Saved access token is still valid (best case scenario)");
-      DataLoader.cacheData();
-      return;
-    }
-
-    return;
+  if (validationResp.statusCode == 200 && validationResp.data == true) {
+    log("Saved access token is still valid (best case scenario)");
+    DataLoader.cacheData();
   }
 }
 

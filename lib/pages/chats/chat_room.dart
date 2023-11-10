@@ -123,12 +123,10 @@ class _ChatRoomState extends State<ChatRoom> {
                   ApiClient.postAndParse(
                       "chat/${widget.chat.id}/read", (p0) => ()).then((resp) {
                     if (resp.statusCode != 204) return;
-                    if (DataLoader.cache.chats.data != null) {
-                      DataLoader.cache.chats.data!
-                          .firstWhere((e) => e.id == widget.chat.id)
-                          .unreadMessagesCount = 0;
-                      // No need to set the read variable in the messages
-                    }
+                    DataLoader.cache.chats.data
+                        ?.firstWhere((e) => e.id == widget.chat.id)
+                        .unreadMessagesCount = 0;
+                    // No need to set the read variable in the messages
                     widget.markAsRead();
                   }),
               ],

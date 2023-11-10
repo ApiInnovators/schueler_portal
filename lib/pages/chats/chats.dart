@@ -29,7 +29,7 @@ class _ChatsWidgetState extends State<ChatsWidget> {
         dataLoaderFuture: DataLoader.getChats,
         cache: DataLoader.cache.chats,
         builder: (context, snapshot) =>
-            ChatsListWidget(data: snapshot, resort: () => setState(() {})),
+            ChatsListWidget(data: snapshot, rebuild: () => setState(() {})),
       ),
     );
   }
@@ -37,12 +37,12 @@ class _ChatsWidgetState extends State<ChatsWidget> {
 
 class ChatsListWidget extends StatelessWidget {
   final List<Chat> data;
-  final void Function() resort;
+  final void Function() rebuild;
 
   const ChatsListWidget({
     super.key,
     required this.data,
-    required this.resort,
+    required this.rebuild,
   });
 
   @override
@@ -75,16 +75,17 @@ class ChatsListWidget extends StatelessWidget {
 
     return Column(
       children:
-          data.map((e) => SingleChatWidget(chat: e, resort: resort)).toList(),
+          data.map((e) => SingleChatWidget(chat: e, rebuild: rebuild)).toList(),
     );
   }
 }
 
 class SingleChatWidget extends StatefulWidget {
   final Chat chat;
-  final void Function() resort;
+  final void Function() rebuild;
 
-  const SingleChatWidget({super.key, required this.chat, required this.resort});
+  const SingleChatWidget(
+      {super.key, required this.chat, required this.rebuild});
 
   static String timeDifferenceAsString(DateTime dateTime) {
     final DateTime now = DateTime.now();
@@ -121,16 +122,15 @@ class _SingleChatWidgetState extends State<SingleChatWidget> {
       return;
     }
 
-    setState(() => isPinned = resp.data!["pinned"] == true);
-    widget.resort();
+    isPinned = resp.data!["pinned"] == true;
 
-    if (DataLoader.cache.chats.data != null) {
-      DataLoader.cache.chats.data!
-          .firstWhere((e) => e.id == widget.chat.id)
-          .pinned = isPinned;
-    }
+    DataLoader.cache.chats.data
+        ?.firstWhere((e) => e.id == widget.chat.id)
+        .pinned = isPinned;
 
-    setState(() => isLoading = false);
+    isLoading = false;
+
+    widget.rebuild();
   }
 
   @override
@@ -145,7 +145,7 @@ class _SingleChatWidgetState extends State<SingleChatWidget> {
             MaterialPageRoute(
               builder: (context) => ChatRoom(
                 chat: widget.chat,
-                markAsRead: widget.resort,
+                markAsRead: widget.rebuild,
               ),
             ),
           );

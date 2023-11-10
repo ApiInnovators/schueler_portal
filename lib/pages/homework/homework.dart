@@ -71,7 +71,7 @@ class _HomeworkWidgetState extends State<HomeworkWidget> {
                       ] else ...[
                         HomeworkListWidget(
                           hausaufgaben: nichtErledigteHausaufgaben,
-                          resort: () => setState(() {}),
+                          rebuild: () => setState(() {}),
                           pastHomeworkPage: -1,
                         )
                       ],
@@ -86,7 +86,7 @@ class _HomeworkWidgetState extends State<HomeworkWidget> {
                       ] else ...[
                         HomeworkListWidget(
                           hausaufgaben: erledigteHausaufgaben,
-                          resort: () => setState(() {}),
+                          rebuild: () => setState(() {}),
                           pastHomeworkPage: -1,
                         ),
                       ],
@@ -104,13 +104,13 @@ class _HomeworkWidgetState extends State<HomeworkWidget> {
 
 class HomeworkListWidget extends StatelessWidget {
   final List<Hausaufgabe> hausaufgaben;
-  final Function() resort;
+  final Function() rebuild;
   final int pastHomeworkPage;
 
   const HomeworkListWidget({
     super.key,
     required this.hausaufgaben,
-    required this.resort,
+    required this.rebuild,
     required this.pastHomeworkPage,
   });
 
@@ -121,7 +121,7 @@ class HomeworkListWidget extends StatelessWidget {
       children: hausaufgaben
           .map((e) => SingleHomeworkWidget(
                 hausaufgabe: e,
-                resort: resort,
+                rebuild: rebuild,
                 pastHomeworkPage: pastHomeworkPage,
               ))
           .toList(),
@@ -131,13 +131,13 @@ class HomeworkListWidget extends StatelessWidget {
 
 class SingleHomeworkWidget extends StatefulWidget {
   final Hausaufgabe hausaufgabe;
-  final void Function() resort;
+  final void Function() rebuild;
   final int pastHomeworkPage;
 
   const SingleHomeworkWidget({
     super.key,
     required this.hausaufgabe,
-    required this.resort,
+    required this.rebuild,
     required this.pastHomeworkPage,
   });
 
@@ -162,22 +162,20 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
       return;
     }
 
-    setState(() => hausaufgabeErledigt = resp.data!["completed"] == true);
-     widget.resort();
+    hausaufgabeErledigt = resp.data!["completed"] == true;
 
     if (widget.pastHomeworkPage == -1) {
-      if (DataLoader.cache.hausaufgaben.data != null) {
-        DataLoader.cache.hausaufgaben.data!
-            .firstWhere((e) => e.id == widget.hausaufgabe.id)
-            .completed = hausaufgabeErledigt;
-      }
+      DataLoader.cache.hausaufgaben.data
+          ?.firstWhere((e) => e.id == widget.hausaufgabe.id)
+          .completed = hausaufgabeErledigt;
     } else {
       DataLoader.cache.pastHomework[widget.pastHomeworkPage]!.data!.data
           .firstWhere((e) => e.id == widget.hausaufgabe.id)
           .completed = hausaufgabeErledigt;
     }
 
-    setState(() => isLoading = false);
+    isLoading = false;
+    widget.rebuild();
   }
 
   @override
@@ -356,7 +354,7 @@ class _PastHomeworksWidgetState extends State<PastHomeworksWidget>
             children: [
               HomeworkListWidget(
                 hausaufgaben: data.data,
-                resort: () => setState(() {}),
+                rebuild: () => setState(() {}),
                 pastHomeworkPage: 1,
               ),
               for (int i = 1; i < pages; ++i)
@@ -372,7 +370,7 @@ class _PastHomeworksWidgetState extends State<PastHomeworksWidget>
                     future: DataLoader.getPastHomework(i + 1),
                     builder: (context, data) => HomeworkListWidget(
                       hausaufgaben: data.data,
-                      resort: () => setState(() {}),
+                      rebuild: () => setState(() {}),
                       pastHomeworkPage: i + 1,
                     ),
                   ),

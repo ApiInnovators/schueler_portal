@@ -4,8 +4,6 @@
 
 import 'dart:convert';
 
-import 'chat/id.dart';
-
 List<Chat> chatFromJson(String str) =>
     List<Chat>.from(json.decode(str).map((x) => Chat.fromJson(x)));
 
@@ -83,10 +81,10 @@ class LatestMessage {
 
   Map<String, dynamic> toJson() {
     return {
-        "timestamp": timestamp.millisecondsSinceEpoch ~/ 1000,
-        "text": text,
-        "file": file,
-      };
+      "timestamp": timestamp.millisecondsSinceEpoch ~/ 1000,
+      "text": text,
+      "file": file,
+    };
   }
 }
 
@@ -125,6 +123,8 @@ final typeValues = EnumValues({
   "App\\Models\\UserGroup": ChatMemberType.APP_MODELS_USER_GROUP
 });
 
+enum Role { IP_USER, STUDENT }
+
 class Owner {
   final int id;
   final String name;
@@ -153,7 +153,8 @@ class Owner {
       };
 }
 
-final roleValues = EnumValues({"ip-user": Role.IP_USER});
+final roleValues =
+    EnumValues({"ip-user": Role.IP_USER, "student": Role.STUDENT});
 
 class EnumValues<T> {
   Map<String, T> map;

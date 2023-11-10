@@ -11,104 +11,196 @@ import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
 import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
 import 'package:schueler_portal/data_loader.dart';
+import 'package:schueler_portal/tools.dart';
 import 'package:string_to_color/string_to_color.dart';
 
 import '../../api/response_models/api/chat.dart';
 
-class ChatRoom extends StatelessWidget {
+class ChatRoom extends StatefulWidget {
   final Chat chat;
   final void Function() markAsRead;
 
   const ChatRoom({super.key, required this.chat, required this.markAsRead});
 
   @override
+  State<ChatRoom> createState() => _ChatRoomState();
+}
+
+class _ChatRoomState extends State<ChatRoom> {
+  ChatDetails? chatDetails;
+
+  void showMitglieder() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Mitglieder"),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                Row(children: [
+                  const Icon(Icons.person_2),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      chatDetails!.owner.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ]),
+                for (Member mitglied in chatDetails!.members.sorted((a, b) {
+                  if (a.type == ChatMemberType.APP_MODELS_USER_GROUP &&
+                      b.type == ChatMemberType.APP_MODELS_USER) {
+                    return 1;
+                  }
+                  return -1;
+                })) ...[
+                  if (mitglied.type ==
+                      ChatMemberType.APP_MODELS_USER_GROUP) ...[
+                    Column(
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.groups),
+                            const SizedBox(width: 10),
+                            Flexible(child: Text(mitglied.name)),
+                          ],
+                        ),
+                        Text(
+                          mitglied.info!,
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  ] else ...[
+                    Row(
+                      children: [
+                        const Icon(Icons.person),
+                        const SizedBox(width: 10),
+                        Flexible(child: Text(mitglied.name)),
+                      ],
+                    ),
+                  ],
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              child: const Text('Schließen'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(chat.name), centerTitle: true),
+      appBar: AppBar(
+        title: Text(widget.chat.name),
+        centerTitle: true,
+        actions: [
+          if (chatDetails != null)
+            IconButton.filledTonal(
+              onPressed: showMitglieder,
+              icon: const Icon(Icons.groups),
+            ),
+        ],
+      ),
       body: CachingFutureBuilder<User>(
         future: DataLoader.getUser(),
         cacheGetter: DataLoader.cache.user.getCached,
         builder: (context, userData) {
-          return ApiFutureBuilder(
-            future:
-                ApiClient.getAndParse("chat/${chat.id}", chatDetailsFromJson),
-            additionalFutures: [
-              ApiClient.postAndParse("chat/${chat.id}/read", (p0) => ())
-                  .then((resp) {
-                if (resp.statusCode != 204) return;
-                if (DataLoader.cache.chats.data != null) {
-                  DataLoader.cache.chats.data!
-                      .firstWhere((e) => e.id == chat.id)
-                      .unreadMessagesCount = 0;
-                  // No need to set the read variable in the messages
-                }
-                markAsRead();
-              }),
-            ],
-            builder: (context, chatDetails) {
-              Map<DateTime, List<Message>> groupedMessagesByDate = groupBy(
-                  chatDetails.messages,
-                  (obj) => DateUtils.dateOnly(
-                      DateTime.fromMillisecondsSinceEpoch(
-                          obj.createdAt * 1000)));
+          if (chatDetails == null) {
+            return ApiFutureBuilder(
+              future: ApiClient.getAndParse(
+                  "chat/${widget.chat.id}", chatDetailsFromJson),
+              additionalFutures: [
+                if (widget.chat.unreadMessagesCount > 0)
+                  ApiClient.postAndParse(
+                      "chat/${widget.chat.id}/read", (p0) => ()).then((resp) {
+                    if (resp.statusCode != 204) return;
+                    if (DataLoader.cache.chats.data != null) {
+                      DataLoader.cache.chats.data!
+                          .firstWhere((e) => e.id == widget.chat.id)
+                          .unreadMessagesCount = 0;
+                      // No need to set the read variable in the messages
+                    }
+                    widget.markAsRead();
+                  }),
+              ],
+              builder: (p0, p1) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  setState(() => chatDetails = p1);
+                });
+                return const SizedBox.shrink();
+              },
+            );
+          }
 
-              return Stack(
-                children: [
-                  SingleChildScrollView(
-                    reverse: true,
-                    child: Column(
-                      children: [
-                        Center(
-                          child: Text(
-                              "Erstellt am ${DateFormat("dd.MM.yyyy").format(DateTime.fromMillisecondsSinceEpoch(chat.createdAt * 1000))}"),
-                        ),
-                        for (MapEntry<DateTime, List<Message>> entry
-                            in groupedMessagesByDate.entries) ...[
-                          ChatDaySection(
-                            dateTime: entry.key,
-                            messages: entry.value,
-                            chatRoom: this,
-                            userId: userData.id,
-                          ),
-                        ],
-                        const SizedBox(height: 70),
-                      ],
+          Map<DateTime, List<Message>> groupedMessagesByDate = groupBy(
+            chatDetails!.messages,
+            (obj) => DateTime.fromMillisecondsSinceEpoch(obj.createdAt * 1000)
+                .dayOnly(),
+          );
+
+          return Stack(
+            children: [
+              SingleChildScrollView(
+                reverse: true,
+                child: Column(
+                  children: [
+                    Center(
+                      child: Text(
+                          "Erstellt am ${DateFormat("dd.MM.yyyy").format(DateTime.fromMillisecondsSinceEpoch(widget.chat.createdAt * 1000))}"),
                     ),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Card(
-                      margin: const EdgeInsets.only(
-                          left: 10, right: 10, bottom: 10),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            onPressed: () {},
-                            icon: const Icon(Icons.attachment),
-                          ),
-                          Expanded(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 10),
-                              child: TextFormField(
-                                decoration: const InputDecoration(
-                                  border: InputBorder.none,
-                                  hintText: "Nachricht eingeben",
-                                ),
-                              ),
+                    for (MapEntry<DateTime, List<Message>> entry
+                        in groupedMessagesByDate.entries) ...[
+                      ChatDaySection(
+                        dateTime: entry.key,
+                        messages: entry.value,
+                        chatRoom: widget,
+                        userId: userData.id,
+                      ),
+                    ],
+                    const SizedBox(height: 70),
+                  ],
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Card(
+                  margin:
+                      const EdgeInsets.only(left: 10, right: 10, bottom: 10),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {},
+                        icon: const Icon(Icons.attachment),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: TextFormField(
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              hintText: "Nachricht eingeben",
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.send),
-                            onPressed: () {},
-                          )
-                        ],
+                        ),
                       ),
-                    ),
+                      IconButton(
+                        icon: const Icon(Icons.send),
+                        onPressed: () {},
+                      )
+                    ],
                   ),
-                ],
-              );
-            },
+                ),
+              ),
+            ],
           );
         },
       ),

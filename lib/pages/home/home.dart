@@ -73,6 +73,7 @@ class HomeWidget extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.list),
+                        SizedBox(width: 7),
                         Text("Unterricht"),
                       ],
                     ),
@@ -94,6 +95,7 @@ class HomeWidget extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.calendar_today),
+                        SizedBox(width: 7),
                         Text("Termine"),
                       ],
                     ),

@@ -120,6 +120,11 @@ class CoursesSelectorPage extends StatelessWidget {
         title: const Text("Kurse auswählen"),
         centerTitle: true,
       ),
+      floatingActionButton: ElevatedButton(
+        child: const Text("Fertig"),
+        onPressed: () => Navigator.of(context).pop(),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: RefreshableCachingFutureBuilder(
@@ -147,7 +152,7 @@ class CoursesSelectorPage extends StatelessWidget {
   }
 }
 
-class CourseGroup extends StatelessWidget {
+class CourseGroup extends StatefulWidget {
   final String groupTitle;
   final List<String> courses;
 
@@ -158,48 +163,49 @@ class CourseGroup extends StatelessWidget {
   });
 
   @override
+  State<CourseGroup> createState() => CourseGroupState();
+}
+
+class CourseGroupState extends State<CourseGroup> {
+  late List<bool> enabledChildren =
+      widget.courses.map((e) => UserData.isCourseEnabled(e)).toList();
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Row(children: <Widget>[
           const Expanded(child: Divider(endIndent: 15)),
-          Text(groupTitle),
-          const Expanded(child: Divider(indent: 15)),
+          Text(widget.groupTitle),
+          const Expanded(child: Divider(indent: 15, endIndent: 15)),
+          Switch(
+            value: enabledChildren.every((e) => e),
+            onChanged: (value) {
+              setState(() {
+                for (int i = 0; i < enabledChildren.length; ++i) {
+                  enabledChildren[i] = value;
+                  UserData.setCourseIsEnabled(widget.courses[i], value);
+                }
+              });
+            },
+          ),
         ]),
-        for (String course in courses) ...[
+        for (int i = 0; i < widget.courses.length; ++i) ...[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(course),
-              CourseSwitch(course: course),
+              Text(widget.courses[i]),
+              Switch(
+                value: enabledChildren[i],
+                onChanged: (value) {
+                  UserData.setCourseIsEnabled(widget.courses[i], value);
+                  setState(() => enabledChildren[i] = value);
+                },
+              ),
             ],
           )
-        ]
+        ],
       ],
     );
   }
-}
-
-class CourseSwitch extends StatefulWidget {
-  final String course;
-
-  const CourseSwitch({super.key, required this.course});
-
-  @override
-  State<CourseSwitch> createState() => _CourseSwitchState();
-}
-
-class _CourseSwitchState extends State<CourseSwitch> {
-  late bool enabled = UserData.isCourseEnabled(widget.course);
-
-  @override
-  Widget build(BuildContext context) => Switch(
-      value: enabled,
-      onChanged: (value) {
-        UserData.setCourseIsEnabled(
-          widget.course,
-          value,
-        );
-        setState(() => enabled = value);
-      });
 }

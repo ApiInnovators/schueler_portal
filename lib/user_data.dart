@@ -24,4 +24,6 @@ class UserData {
 
   static Future<void> setCourseIsEnabled(String course, bool value) =>
       _prefs.setBool(course, value);
+
+  static bool selectedAnyCourses() => _prefs.getKeys().isNotEmpty;
 }

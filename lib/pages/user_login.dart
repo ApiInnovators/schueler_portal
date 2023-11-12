@@ -7,6 +7,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/globals.dart';
+import 'package:schueler_portal/pages/home/settings/settings.dart';
+import 'package:schueler_portal/user_data.dart';
 
 import '../main.dart';
 import '../tools.dart';
@@ -175,6 +177,17 @@ class _UserLoginWidgetState extends State<UserLoginWidget> {
                               newLogin: login,
                               newAccessToken: authenticationResp.data!,
                             );
+
+                            if (!UserData.selectedAnyCourses() && mounted) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const CoursesSelectorPage(),
+                                ),
+                              );
+                            }
+
                             if (widget.appState == null) {
                               navigatorKey.currentState?.pop();
                             } else {

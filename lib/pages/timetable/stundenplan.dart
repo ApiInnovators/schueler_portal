@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:schueler_portal/api/response_models/api/vertretungsplan.dart'
     as vertretungsplan_package;
+import 'package:schueler_portal/custom_widgets/aligned_text.dart';
 import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/user_data.dart';
@@ -106,8 +107,75 @@ class StundenplanWidget extends StatelessWidget {
     calendarController.displayDate = lastDisplayedDate;
   }
 
+  Widget appointmentBuilder(
+      BuildContext context, CalendarAppointmentDetails details) {
+    final Appointment appointment = details.appointments.first;
+
+    int? hour = Tools.dateTimeToHour(appointment.startTime);
+    Color backgroundColor = appointment.color;
+    Color foregroundColor = (backgroundColor.red * 0.299 +
+                backgroundColor.green * 0.587 +
+                backgroundColor.blue * 0.114) >
+            200
+        ? Colors.black
+        : Colors.white;
+
+    return Container(
+      width: details.bounds.width,
+      height: details.bounds.height,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius:
+            BorderRadius.all(Radius.circular(showOnlyUsersLessons ? 5 : 2)),
+      ),
+      child: (() {
+        if (showOnlyUsersLessons && lastCalendarView != CalendarView.week) {
+          String subj = "$hour. ${appointment.subject}";
+          if (appointment.location != null) {
+            subj += " (${appointment.location})";
+          }
+
+          if (appointment.notes != null && appointment.notes!.isNotEmpty) {
+            if (appointment.notes!.contains("Grund: entfällt")) {
+              subj += " - entfällt";
+            } else {
+              subj += " - Vertretung";
+            }
+          }
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 5),
+            child: AlignedText(
+              text: Text(subj, style: TextStyle(color: foregroundColor)),
+            ),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 1),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              appointment.subject,
+              style: TextStyle(color: foregroundColor),
+            ),
+          ),
+        );
+      }()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    scheduleData.data.sort((a, b) {
+      int cmp1 = a.day - b.day;
+      if (cmp1 != 0) return cmp1;
+
+      int cmp2 = a.hour - b.hour;
+      if (cmp2 != 0) return cmp2;
+
+      return a.uf.compareTo(b.uf);
+    });
     return SfCalendar(
       controller: calendarController,
       onViewChanged: (details) {
@@ -135,10 +203,52 @@ class StundenplanWidget extends StatelessWidget {
       showDatePickerButton: true,
       allowViewNavigation: true,
       firstDayOfWeek: DateTime.monday,
+      appointmentBuilder: appointmentBuilder,
+      onTap: (calendarTapDetails) {
+        if (calendarTapDetails.appointments == null) return;
+        showDialog(
+          context: context,
+          builder: (context) {
+            final Appointment appointment =
+                calendarTapDetails.appointments!.first;
+            return AlertDialog(
+              title: Text(appointment.subject),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (appointment.location != null)
+                    Text("Raum: ${appointment.location!}"),
+                  if (appointment.notes != null &&
+                      appointment.notes!.isNotEmpty) ...[
+                    const Divider(),
+                    const Text(
+                      "Vertretung",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Text(appointment.notes!),
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text("Ok"),
+                ),
+              ],
+            );
+          },
+        );
+      },
       timeSlotViewSettings: const TimeSlotViewSettings(
         startHour: 7.0 + 55.0 / 60.0,
         endHour: 18.0 + 15.0 / 60.0,
         nonWorkingDays: [DateTime.saturday, DateTime.sunday],
+        timeFormat: "HH:mm",
+        timeIntervalHeight: -1,
       ),
     );
   }
@@ -203,25 +313,23 @@ class StundenplanDataSource extends CalendarDataSource {
   }
 
   @override
-  String getSubject(int index) {
-    stundenplan_package.Datum stunde = stunden[index];
-    String subject = stunde.uf;
+  String getSubject(int index) => stunden[index].uf;
 
-    if (stunde.room != null) subject += " (${stunde.room})";
+  @override
+  String? getLocation(int index) => stunden[index].room;
 
-    vertretungsplan_package.Datum? vertretung = findVertretung(stunde);
+  @override
+  String? getNotes(int index) {
+    vertretungsplan_package.Datum? vertretung = findVertretung(stunden[index]);
 
-    if (vertretung != null) {
-      if (vertretung.reason != "-") {
-        subject += " - ${vertretung.reason}";
-      } else if (vertretung.room.isNotEmpty) {
-        subject += " - Vertretung in ${vertretung.room}";
-      } else {
-        subject += " - Vertretung";
-      }
-    }
+    if (vertretung == null) return null;
 
-    return subject;
+    return """Betrifft: ${vertretung.absTeacher}
+Vertretung: ${vertretung.vertrTeacher}
+Vertretungs Fach: ${vertretung.vertrUf}
+Raum: ${vertretung.room}
+Grund: ${vertretung.reason}
+${vertretung.text}""";
   }
 
   @override

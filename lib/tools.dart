@@ -50,6 +50,18 @@ class Tools {
   static DateTime hourEndToDateTime(int hour, DateTime day) =>
       hourStartToDateTime(hour, day).add(const Duration(minutes: 45));
 
+  static int? dateTimeToHour(DateTime dateTime) {
+    for (int i = 1; i < 16; ++i) {
+      final start = hourStartToDateTime(i, dateTime);
+      if (DateTime(dateTime.year, dateTime.month, dateTime.day, dateTime.hour,
+              dateTime.minute)
+          .isAtSameMomentAs(start)) {
+        return i;
+      }
+    }
+    return null;
+  }
+
   static DateTime addDaysToDateTime(DateTime day, int days, bool skipWeekend) {
     if (skipWeekend) {
       if (days < 0) {

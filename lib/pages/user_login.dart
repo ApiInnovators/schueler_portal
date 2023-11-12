@@ -78,7 +78,7 @@ void forceLogin() async {
   navigatorKey.currentState?.push(
     MaterialPageRoute(
       builder: (context) {
-        return UserLoginWidget();
+        return const UserLoginWidget();
       },
     ),
   );
@@ -87,7 +87,7 @@ void forceLogin() async {
 class UserLoginWidget extends StatefulWidget {
   final MyAppState? appState;
 
-  UserLoginWidget({super.key, this.appState});
+  const UserLoginWidget({super.key, this.appState});
 
   @override
   State<UserLoginWidget> createState() => _UserLoginWidgetState();
@@ -128,7 +128,7 @@ class _UserLoginWidgetState extends State<UserLoginWidget> {
                 const Text("Passwort"),
                 TextField(
                   decoration: InputDecoration(
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                       hintText: "Passwort",
                       suffixIcon: IconButton(
                           onPressed: () =>

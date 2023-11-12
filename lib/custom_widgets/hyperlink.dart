@@ -9,12 +9,15 @@ class Hyperlink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color linkColor = Theme.of(context).colorScheme.primary;
     return InkWell(
       child: Text(
         text,
-        style: const TextStyle(
-            color: Color.fromARGB(255, 0, 0, 238),
-            decoration: TextDecoration.underline),
+        style: TextStyle(
+          color: linkColor,
+          decoration: TextDecoration.underline,
+          decorationColor: linkColor,
+        ),
       ),
       onTap: () => launchUrlString(url),
     );

@@ -242,10 +242,6 @@ class _SingleChatWidgetState extends State<SingleChatWidget> {
                       child: MarkdownText(
                         widget.chat.latestMessage!.text!,
                         overflow: TextOverflow.fade,
-                        defaultStyle: TextStyle(
-                          color:
-                              Theme.of(context).colorScheme.onPrimaryContainer,
-                        ),
                       ),
                     );
                   }

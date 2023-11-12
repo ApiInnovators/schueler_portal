@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
-import 'package:fading_edge_scrollview/fading_edge_scrollview.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
@@ -148,7 +147,6 @@ class SingleHomeworkWidget extends StatefulWidget {
 class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
   bool isLoading = false;
   late bool hausaufgabeErledigt;
-  final scrollControler = ScrollController();
 
   Future<void> toggleDone() async {
     setState(() => isLoading = true);
@@ -267,17 +265,11 @@ class _SingleHomeworkWidget extends State<SingleHomeworkWidget> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: FadingEdgeScrollView.fromSingleChildScrollView(
-                          gradientFractionOnEnd: 0.8,
-                          child: SingleChildScrollView(
-                            controller: scrollControler,
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 10),
-                              child: Text(
-                                widget.hausaufgabe.homework,
-                                overflow: TextOverflow.fade,
-                              ),
-                            ),
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: Text(
+                            widget.hausaufgabe.homework,
+                            overflow: TextOverflow.fade,
                           ),
                         ),
                       ),

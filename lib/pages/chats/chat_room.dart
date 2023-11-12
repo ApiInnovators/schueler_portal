@@ -122,7 +122,7 @@ class _ChatRoomState extends State<ChatRoom> {
     final sendResp = await sendMessage(text, filePickerResult);
     setState(() => _isSending = false);
 
-    if (sendResp.statusCode != 200) {
+    if (sendResp.statusCode != 201) {
       Tools.quickSnackbar("Senden fehlgeschlagen (${sendResp.statusCode})");
       return;
     }

@@ -140,9 +140,6 @@ class Tools {
 
     return null;
   }
-
-  static String markdownToSimple(String from) =>
-      from.replaceAll("**", "*").replaceAll("//", "/").replaceAll("__", "_");
 }
 
 extension DateUtils on DateTime {

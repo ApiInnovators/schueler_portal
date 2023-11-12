@@ -14,10 +14,10 @@ import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 import 'package:schueler_portal/api/response_models/api/user.dart';
 import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
+import 'package:schueler_portal/custom_widgets/md_text.dart';
 import 'package:schueler_portal/custom_widgets/my_future_builder.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/tools.dart';
-import 'package:simple_rich_text/simple_rich_text.dart';
 import 'package:string_to_color/string_to_color.dart';
 
 import '../../api/response_models/api/chat.dart';
@@ -179,7 +179,6 @@ class _ChatRoomState extends State<ChatRoom> {
         editableTextState.contextMenuButtonItems;
     final TextEditingValue value = editableTextState.textEditingValue;
 
-    print(value.selection.start);
     if (value.selection.start == value.selection.end) {
       return AdaptiveTextSelectionToolbar.buttonItems(
         anchors: editableTextState.contextMenuAnchors,
@@ -509,9 +508,9 @@ class MemberMessage extends ChatRoomMessageWidget {
                       ),
                     ),
                   if (message.text != null)
-                    SimpleRichText(
-                      Tools.markdownToSimple(message.text!),
-                      style: TextStyle(
+                    MarkdownText(
+                      message.text!,
+                      defaultStyle: TextStyle(
                           color: Theme.of(context)
                               .colorScheme
                               .onSecondaryContainer),
@@ -590,9 +589,9 @@ class UserMessage extends ChatRoomMessageWidget {
                   ),
                 ] else ...[
                   if (message.text != null)
-                    SimpleRichText(
-                      Tools.markdownToSimple(message.text!),
-                      style: TextStyle(
+                    MarkdownText(
+                      message.text!,
+                      defaultStyle: TextStyle(
                         color: Theme.of(context).colorScheme.onPrimaryContainer,
                       ),
                     ),

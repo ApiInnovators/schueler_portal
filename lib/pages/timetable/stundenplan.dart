@@ -204,45 +204,7 @@ class StundenplanWidget extends StatelessWidget {
       allowViewNavigation: true,
       firstDayOfWeek: DateTime.monday,
       appointmentBuilder: appointmentBuilder,
-      onTap: (calendarTapDetails) {
-        if (calendarTapDetails.appointments == null) return;
-        showDialog(
-          context: context,
-          builder: (context) {
-            final Appointment appointment =
-                calendarTapDetails.appointments!.first;
-            return AlertDialog(
-              title: Text(appointment.subject),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (appointment.location != null)
-                    Text("Raum: ${appointment.location!}"),
-                  if (appointment.notes != null &&
-                      appointment.notes!.isNotEmpty) ...[
-                    const Divider(),
-                    const Text(
-                      "Vertretung",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Text(appointment.notes!),
-                    ),
-                  ],
-                ],
-              ),
-              actions: [
-                ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text("Ok"),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      onTap: (calendarTapDetails) => calendarTaped(context, calendarTapDetails),
       timeSlotViewSettings: const TimeSlotViewSettings(
         startHour: 7.0 + 55.0 / 60.0,
         endHour: 18.0 + 15.0 / 60.0,
@@ -250,6 +212,46 @@ class StundenplanWidget extends StatelessWidget {
         timeFormat: "HH:mm",
         timeIntervalHeight: -1,
       ),
+    );
+  }
+
+  void calendarTaped(
+      BuildContext context, CalendarTapDetails calendarTapDetails) {
+    if (calendarTapDetails.appointments == null) return;
+    showDialog(
+      context: context,
+      builder: (context) {
+        final Appointment appointment = calendarTapDetails.appointments!.first;
+        return AlertDialog(
+          title: Text(appointment.subject),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (appointment.location != null)
+                Text("Raum: ${appointment.location!}"),
+              if (appointment.notes != null &&
+                  appointment.notes!.isNotEmpty) ...[
+                const Divider(),
+                const Text(
+                  "Vertretung",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: Text(appointment.notes!),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Ok"),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/custom_widgets/md_text.dart';
+import 'package:schueler_portal/pages/chats/kontaktanfrage.dart';
 
 import '../../api/response_models/api/chat.dart';
 import '../../custom_widgets/aligned_text.dart';
@@ -25,6 +26,30 @@ class _ChatsWidgetState extends State<ChatsWidget> {
       appBar: AppBar(
         centerTitle: true,
         title: const Text("Chats"),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: IconButton.filledTonal(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const KontaktanfrageWidget(),
+                ),
+              ),
+              icon: const SizedBox(
+                width: 100,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    children: [
+                      Icon(Icons.add),
+                      Text("Kontaktanfrage"),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: RefreshableCachingFutureBuilder<List<Chat>>(
         dataLoaderFuture: DataLoader.getChats,
@@ -215,10 +240,11 @@ class _SingleChatWidgetState extends State<SingleChatWidget> {
                     return Align(
                       alignment: Alignment.centerLeft,
                       child: MarkdownText(
-                            widget.chat.latestMessage!.text!,
+                        widget.chat.latestMessage!.text!,
                         overflow: TextOverflow.fade,
                         defaultStyle: TextStyle(
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
                         ),
                       ),
                     );

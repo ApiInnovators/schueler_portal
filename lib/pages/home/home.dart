@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
 import 'package:schueler_portal/main.dart';
-import 'package:schueler_portal/pages/home/kontaktanfrage.dart';
 import 'package:schueler_portal/pages/home/settings/settings.dart';
 import 'package:schueler_portal/pages/home/termine.dart';
 import 'package:schueler_portal/pages/home/unterricht.dart';
@@ -38,7 +37,6 @@ class HomeWidget extends StatelessWidget {
         children: [
           Expanded(
             child: Card(
-              elevation: 3,
               child: Column(
                 children: [
                   const Text(
@@ -47,48 +45,63 @@ class HomeWidget extends StatelessWidget {
                   ),
                   Expanded(
                     child: RefreshableCachingFutureBuilder(
-                        dataLoaderFuture: DataLoader.getNews,
-                        cache: DataLoader.cache.news,
-                        builder: (context, news) => NewsWidget(news: news)),
+                      dataLoaderFuture: DataLoader.getNews,
+                      cache: DataLoader.cache.news,
+                      builder: (context, news) => NewsWidget(news: news),
+                    ),
                   ),
                 ],
               ),
             ),
           ),
-          const Divider(),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const UnterrichtWidget(),
-                ),
-              );
-            },
-            child: const Center(child: Text("Unterricht")),
-          ),
-          ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const TermineWidget(),
+          Padding(
+            padding: const EdgeInsets.only(top: 4, right: 4, left: 4, bottom: 7),
+            child: Row(
+              children: [
+                Expanded(
+                  child: IconButton.filledTonal(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const UnterrichtWidget(),
+                        ),
+                      );
+                    },
+                    alignment: Alignment.center,
+                    icon: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.list),
+                        Text("Unterricht"),
+                      ],
+                    ),
                   ),
-                );
-              },
-              child: const Center(child: Text("Termine"))),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const KontaktanfrageWidget(),
                 ),
-              );
-            },
-            child: const Center(child: Text("Kontaktanfrage")),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: IconButton.filledTonal(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TermineWidget(),
+                        ),
+                      );
+                    },
+                    alignment: Alignment.center,
+                    icon: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.calendar_today),
+                        Text("Termine"),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 7),
         ],
       ),
     );

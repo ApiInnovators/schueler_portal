@@ -7,7 +7,6 @@ import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
 import 'package:schueler_portal/custom_widgets/file_download_button.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/tools.dart';
-import 'package:string_to_color/string_to_color.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class UnterrichtWidget extends StatefulWidget {
@@ -132,90 +131,83 @@ class _UnterrichtWidgetState extends State<UnterrichtWidget> {
       BuildContext context, CalendarAppointmentDetails details) {
     final Unterricht u = details.appointments.first;
 
-    final Color backgroundColor = ColorUtils.stringToColor(u.subject.short);
-    Color foregroundColor = (backgroundColor.red * 0.299 +
-                backgroundColor.green * 0.587 +
-                backgroundColor.blue * 0.114) >
-            200
-        ? Colors.black
-        : Colors.white;
-
     Color filesColor = Theme.of(context).colorScheme.onSecondaryContainer;
+    Color foregroundColor = Theme.of(context).colorScheme.onPrimaryContainer;
 
     return Container(
       width: details.bounds.width,
       height: details.bounds.height,
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: Theme.of(context).colorScheme.primaryContainer,
         borderRadius: const BorderRadius.all(Radius.circular(8)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(5),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
+      padding: const EdgeInsets.all(5),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(
                   "${u.subject.long} - ${u.teacher}",
                   style: TextStyle(
                     color: foregroundColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (u.content.files.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondaryContainer,
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(10)),
-                      ),
-                      height: 15,
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: FittedBox(
-                        child: Row(
-                          children: [
-                            Text(
-                              u.content.files.length.toString(),
-                              style: TextStyle(color: filesColor),
-                            ),
-                            Icon(Icons.attachment, color: filesColor),
-                          ],
-                        ),
+              ),
+              if (u.content.files.isNotEmpty)
+                Card(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondaryContainer,
+                      borderRadius:
+                          const BorderRadius.all(Radius.circular(10)),
+                    ),
+                    height: 17,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Flexible(
+                      child: Row(
+                        children: [
+                          Text(
+                            u.content.files.length.toString(),
+                            style: TextStyle(color: filesColor),
+                          ),
+                          Icon(Icons.attachment, color: filesColor),
+                        ],
                       ),
                     ),
                   ),
-              ],
+                ),
+            ],
+          ),
+          Flexible(
+            child: Text(
+              u.content.text.trim(),
+              style: TextStyle(color: foregroundColor),
+              overflow: TextOverflow.fade,
+            ),
+          ),
+          if (u.homework != null) ...[
+            const Divider(),
+            Text(
+              "Hausaufgabe bis zum ${DateFormat("dd.MM.yyyy").format(u.date)}:",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: foregroundColor,
+              ),
             ),
             Flexible(
               child: Text(
-                u.content.text.trim(),
+                u.homework!.homework.trim(),
                 style: TextStyle(color: foregroundColor),
                 overflow: TextOverflow.fade,
               ),
-            ),
-            if (u.homework != null) ...[
-              const Divider(),
-              Text(
-                "Hausaufgabe bis zum ${DateFormat("dd.MM.yyyy").format(u.date)}:",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: foregroundColor,
-                ),
-              ),
-              Flexible(
-                child: Text(
-                  u.homework!.homework.trim(),
-                  style: TextStyle(color: foregroundColor),
-                  overflow: TextOverflow.fade,
-                ),
-              )
-            ]
-          ],
-        ),
+            )
+          ]
+        ],
       ),
     );
   }
@@ -304,8 +296,4 @@ class UnterrichtDataSource extends CalendarDataSource {
     final u = unterricht[index];
     return '''${u.content.files.length};${u.homework != null}''';
   }
-
-  @override
-  Color getColor(int index) =>
-      ColorUtils.stringToColor(unterricht[index].subject.long);
 }

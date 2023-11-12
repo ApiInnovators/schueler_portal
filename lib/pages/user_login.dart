@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/data_loader.dart';
@@ -83,13 +84,23 @@ void forceLogin() async {
   );
 }
 
-class UserLoginWidget extends StatelessWidget {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-  final institutionController = TextEditingController();
+class UserLoginWidget extends StatefulWidget {
   final MyAppState? appState;
 
   UserLoginWidget({super.key, this.appState});
+
+  @override
+  State<UserLoginWidget> createState() => _UserLoginWidgetState();
+}
+
+class _UserLoginWidgetState extends State<UserLoginWidget> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final institutionController = TextEditingController(
+    text: UserLogin.login?.schulkuerzel,
+  );
+  bool showPassword = false;
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -116,11 +127,18 @@ class UserLoginWidget extends StatelessWidget {
                 ),
                 const Text("Passwort"),
                 TextField(
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: "Passwort",
-                  ),
-                  obscureText: true,
+                  decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: "Passwort",
+                      suffixIcon: IconButton(
+                          onPressed: () =>
+                              setState(() => showPassword = !showPassword),
+                          icon: Icon(
+                            showPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ))),
+                  obscureText: !showPassword,
                   enableSuggestions: false,
                   autocorrect: false,
                   controller: passwordController,
@@ -133,37 +151,49 @@ class UserLoginWidget extends StatelessWidget {
                     hintText: "Schulkürzel",
                   ),
                   controller: institutionController,
+                  autofillHints: const [AutofillHints.organizationName],
                 ),
                 ElevatedButton(
-                  onPressed: () async {
-                    LoginData login = LoginData(
-                      email: emailController.text.trim(),
-                      password: passwordController.text.trim(),
-                      schulkuerzel: institutionController.text.trim(),
-                    );
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          LoginData login = LoginData(
+                            email: emailController.text.trim(),
+                            password: passwordController.text.trim(),
+                            schulkuerzel: institutionController.text.trim(),
+                          );
 
-                    final authenticationResp =
-                        await ApiClient.authenticate(login, true);
+                          setState(() => isLoading = true);
+                          final authenticationResp =
+                              await ApiClient.authenticate(login, true);
+                          setState(() => isLoading = false);
 
-                    if (authenticationResp.statusCode == 200) {
-                      UserLogin.update(
-                        true,
-                        newLogin: login,
-                        newAccessToken: authenticationResp.data!,
-                      );
-                      if (appState == null) {
-                        navigatorKey.currentState?.pop();
-                      } else {
-                        appState!.setLogin(true);
-                      }
-                    } else if (authenticationResp.statusCode == 422) {
-                      Tools.quickSnackbar("Eingabe fehlerhaft");
-                    } else {
-                      Tools.quickSnackbar(
-                          "Failed to login: ${authenticationResp.reasonPhrase}");
-                    }
-                  },
-                  child: const Text("Login"),
+                          if (authenticationResp.statusCode == 200) {
+                            TextInput.finishAutofillContext();
+                            UserLogin.update(
+                              true,
+                              newLogin: login,
+                              newAccessToken: authenticationResp.data!,
+                            );
+                            if (widget.appState == null) {
+                              navigatorKey.currentState?.pop();
+                            } else {
+                              widget.appState!.setLogin(true);
+                            }
+                          } else if (authenticationResp.statusCode == 422) {
+                            Tools.quickSnackbar("Eingabe fehlerhaft");
+                          } else {
+                            Tools.quickSnackbar(
+                                "Failed to login: ${authenticationResp.reasonPhrase}");
+                          }
+                        },
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(),
+                        )
+                      : const Text("Login"),
                 ),
               ],
             ),

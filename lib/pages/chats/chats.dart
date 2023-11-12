@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/custom_widgets/caching_future_builder.dart';
+import 'package:schueler_portal/tools.dart';
+import 'package:simple_rich_text/simple_rich_text.dart';
 
 import '../../api/response_models/api/chat.dart';
 import '../../custom_widgets/aligned_text.dart';
@@ -211,10 +213,15 @@ class _SingleChatWidgetState extends State<SingleChatWidget> {
                   }
 
                   if (widget.chat.latestMessage!.text != null) {
-                    return AlignedText(
-                      text: Text(
-                        widget.chat.latestMessage!.text!,
-                        overflow: TextOverflow.fade,
+                    return Align(
+                      alignment: Alignment.centerLeft,
+                      child: SimpleRichText(
+                        Tools.markdownToSimple(
+                            widget.chat.latestMessage!.text!),
+                        textOverflow: TextOverflow.fade,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
                       ),
                     );
                   }

@@ -18,7 +18,7 @@ class Chat {
   final Owner owner;
   final List<Member> members;
   int unreadMessagesCount;
-  final LatestMessage? latestMessage;
+  LatestMessage? latestMessage;
   bool pinned;
 
   Chat({

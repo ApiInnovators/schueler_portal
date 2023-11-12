@@ -1,10 +1,8 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:mime/mime.dart';
 import 'package:open_file/open_file.dart';
@@ -34,9 +32,6 @@ class ChatRoom extends StatefulWidget {
 
 class _ChatRoomState extends State<ChatRoom> {
   ChatDetails? chatDetails;
-  final messageTextController = TextEditingController();
-  File? filePickerResult;
-  bool _isSending = false;
 
   void showMitglieder() {
     showDialog(
@@ -105,116 +100,8 @@ class _ChatRoomState extends State<ChatRoom> {
     );
   }
 
-  void sendPressed() async {
-    String? text = messageTextController.text.trim().isEmpty
-        ? null
-        : messageTextController.text;
-
-    if (text == null && filePickerResult == null) {
-      Tools.quickSnackbar(
-        "Nachricht ist leer",
-        icon: const Icon(Icons.error_outline),
-      );
-      return;
-    }
-
-    setState(() => _isSending = true);
-    final sendResp = await sendMessage(text, filePickerResult);
-    setState(() => _isSending = false);
-
-    if (sendResp.statusCode != 201) {
-      Tools.quickSnackbar("Senden fehlgeschlagen (${sendResp.statusCode})");
-      return;
-    }
-
-    final msg = sendResp.data!;
-
-    addMessage(msg);
-
-    setState(() => filePickerResult = null);
-
-    DataLoader.cache.chats.data
-        ?.firstWhere((e) => e.id == widget.chat.id)
-        .latestMessage = LatestMessage(
-      timestamp: DateTime.fromMillisecondsSinceEpoch(msg.createdAt * 1000),
-      text: msg.text,
-      file: msg.file?.name,
-    );
-
-    widget.markAsRead();
-  }
-
-  Future<ApiResponse<Message>> sendMessage(String? text, File? file) async {
-    final request = MultipartRequest(
-      "POST",
-      Uri.parse("${ApiClient.baseUrl}/chat/${chatDetails!.id}/message"),
-    );
-
-    if (text != null) {
-      request.fields["text"] = text;
-    }
-
-    if (file != null) {
-      request.files.add(
-        await MultipartFile.fromPath(
-          'file',
-          file.path,
-        ),
-      );
-    }
-
-    return ApiClient.sendAndParse<Message>(
-      request,
-      (p0) => Message.fromJson(jsonDecode(p0)),
-    );
-  }
-
   void addMessage(Message msg) {
     setState(() => chatDetails?.messages.add(msg));
-  }
-
-  Widget contextMenu(
-      BuildContext context, EditableTextState editableTextState) {
-    final List<ContextMenuButtonItem> buttonItems =
-        editableTextState.contextMenuButtonItems;
-    final TextEditingValue value = editableTextState.textEditingValue;
-
-    if (value.selection.start == value.selection.end) {
-      return AdaptiveTextSelectionToolbar.buttonItems(
-        anchors: editableTextState.contextMenuAnchors,
-        buttonItems: buttonItems,
-      );
-    }
-
-    const Map<String, String> map = {
-      "Unterstrichen": "__",
-      "Kursiv": "//",
-      "Fett": "**"
-    };
-
-    String text = messageTextController.text;
-    for (var e in map.entries) {
-      buttonItems.insert(
-        0,
-        ContextMenuButtonItem(
-          label: e.key,
-          onPressed: () {
-            ContextMenuController.removeAny();
-            messageTextController.text =
-                text.substring(0, value.selection.start) +
-                    e.value +
-                    text.substring(value.selection.start, value.selection.end) +
-                    e.value +
-                    text.substring(value.selection.end, text.length);
-          },
-        ),
-      );
-    }
-
-    return AdaptiveTextSelectionToolbar.buttonItems(
-      anchors: editableTextState.contextMenuAnchors,
-      buttonItems: buttonItems,
-    );
   }
 
   @override
@@ -285,90 +172,206 @@ class _ChatRoomState extends State<ChatRoom> {
                         userId: userData.id,
                       ),
                     ],
-                    SizedBox(height: filePickerResult == null ? 70 : 90),
+                    const SizedBox(height: 70),
                   ],
                 ),
               ),
               Align(
                 alignment: Alignment.bottomCenter,
-                child: Card(
-                  margin: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (filePickerResult != null) ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.file_present),
-                            Flexible(
-                              child: Text(
-                                filePickerResult!.uri.pathSegments.last,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const Divider(height: 1),
-                      ],
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: () async {
-                              if (filePickerResult != null) {
-                                setState(() => filePickerResult = null);
-                                return;
-                              }
-
-                              final picked =
-                                  await FilePicker.platform.pickFiles();
-                              setState(() {
-                                if (picked == null) {
-                                  filePickerResult = null;
-                                } else {
-                                  filePickerResult =
-                                      File(picked.files.single.path!);
-                                }
-                              });
-                            },
-                            icon: filePickerResult == null
-                                ? const Icon(Icons.attach_file)
-                                : const Icon(Icons.highlight_remove_outlined),
-                          ),
-                          Expanded(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxHeight: 100),
-                              child: TextFormField(
-                                controller: messageTextController,
-                                keyboardType: TextInputType.multiline,
-                                maxLines: null,
-                                decoration: const InputDecoration(
-                                  border: InputBorder.none,
-                                  hintText: "Nachricht eingeben",
-                                ),
-                                contextMenuBuilder: contextMenu,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            icon: _isSending
-                                ? const SizedBox(
-                                    width: 25,
-                                    height: 25,
-                                    child: CircularProgressIndicator(),
-                                  )
-                                : const Icon(Icons.send),
-                            onPressed: _isSending ? null : sendPressed,
-                          )
-                        ],
-                      ),
-                    ],
-                  ),
+                child: MessageTextField(
+                  chatId: widget.chat.id,
+                  addMessage: addMessage,
+                  markAsRead: widget.markAsRead,
                 ),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class MessageTextField extends StatefulWidget {
+  final int chatId;
+  final void Function(Message) addMessage;
+  final void Function() markAsRead;
+
+  const MessageTextField({
+    super.key,
+    required this.chatId,
+    required this.addMessage,
+    required this.markAsRead,
+  });
+
+  @override
+  State<MessageTextField> createState() => _MessageTextFieldState();
+}
+
+class _MessageTextFieldState extends State<MessageTextField> {
+  final messageTextController = TextEditingController();
+  bool _isSending = false;
+  File? filePickerResult;
+
+  void sendPressed() async {
+    String? text = messageTextController.text.trim().isEmpty
+        ? null
+        : messageTextController.text;
+
+    if (text == null && filePickerResult == null) {
+      Tools.quickSnackbar(
+        "Nachricht ist leer",
+        icon: const Icon(Icons.error_outline),
+      );
+      return;
+    }
+
+    setState(() => _isSending = true);
+    final sendResp = await ApiClient.sendMessage(
+      widget.chatId,
+      text,
+      filePickerResult,
+    );
+    setState(() => _isSending = false);
+
+    if (sendResp.statusCode != 201) {
+      Tools.quickSnackbar("Senden fehlgeschlagen (${sendResp.statusCode})");
+      return;
+    }
+
+    final msg = sendResp.data!;
+
+    widget.addMessage(msg);
+
+    setState(() => filePickerResult = null);
+
+    DataLoader.cache.chats.data
+        ?.firstWhere((e) => e.id == widget.chatId)
+        .latestMessage = LatestMessage(
+      timestamp: DateTime.fromMillisecondsSinceEpoch(msg.createdAt * 1000),
+      text: msg.text,
+      file: msg.file?.name,
+    );
+
+    widget.markAsRead();
+  }
+
+  Widget contextMenu(
+      BuildContext context, EditableTextState editableTextState) {
+    final List<ContextMenuButtonItem> buttonItems =
+        editableTextState.contextMenuButtonItems;
+    final TextEditingValue value = editableTextState.textEditingValue;
+
+    if (value.selection.start == value.selection.end) {
+      return AdaptiveTextSelectionToolbar.buttonItems(
+        anchors: editableTextState.contextMenuAnchors,
+        buttonItems: buttonItems,
+      );
+    }
+
+    const Map<String, String> map = {
+      "Unterstrichen": "__",
+      "Kursiv": "//",
+      "Fett": "**"
+    };
+
+    String text = messageTextController.text;
+    for (var e in map.entries) {
+      buttonItems.insert(
+        0,
+        ContextMenuButtonItem(
+          label: e.key,
+          onPressed: () {
+            ContextMenuController.removeAny();
+            messageTextController.text =
+                text.substring(0, value.selection.start) +
+                    e.value +
+                    text.substring(value.selection.start, value.selection.end) +
+                    e.value +
+                    text.substring(value.selection.end, text.length);
+          },
+        ),
+      );
+    }
+
+    return AdaptiveTextSelectionToolbar.buttonItems(
+      anchors: editableTextState.contextMenuAnchors,
+      buttonItems: buttonItems,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (filePickerResult != null) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.file_present),
+                Flexible(
+                  child: Text(
+                    filePickerResult!.uri.pathSegments.last,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 1),
+          ],
+          Row(
+            children: [
+              IconButton(
+                onPressed: () async {
+                  if (filePickerResult != null) {
+                    setState(() => filePickerResult = null);
+                    return;
+                  }
+
+                  final picked = await FilePicker.platform.pickFiles();
+                  setState(() {
+                    if (picked == null) {
+                      filePickerResult = null;
+                    } else {
+                      filePickerResult = File(picked.files.single.path!);
+                    }
+                  });
+                },
+                icon: filePickerResult == null
+                    ? const Icon(Icons.attach_file)
+                    : const Icon(Icons.highlight_remove_outlined),
+              ),
+              Expanded(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 100),
+                  child: TextFormField(
+                    controller: messageTextController,
+                    keyboardType: TextInputType.multiline,
+                    maxLines: null,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: "Nachricht eingeben",
+                    ),
+                    contextMenuBuilder: contextMenu,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: _isSending
+                    ? const SizedBox(
+                        width: 25,
+                        height: 25,
+                        child: CircularProgressIndicator(),
+                      )
+                    : const Icon(Icons.send),
+                onPressed: _isSending ? null : sendPressed,
+              )
+            ],
+          ),
+        ],
       ),
     );
   }

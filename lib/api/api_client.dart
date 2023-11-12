@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:http/io_client.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:schueler_portal/api/response_models/api/chat/id.dart';
 import 'package:schueler_portal/api/response_models/api/hausaufgaben.dart';
 import 'package:schueler_portal/pages/user_login.dart';
 
@@ -189,6 +190,31 @@ class ApiClient {
     }
 
     return null;
+  }
+
+  static Future<ApiResponse<Message>> sendMessage(int chatId, String? text, File? file) async {
+    final request = MultipartRequest(
+      "POST",
+      Uri.parse("${ApiClient.baseUrl}/chat/$chatId/message"),
+    );
+
+    if (text != null) {
+      request.fields["text"] = text;
+    }
+
+    if (file != null) {
+      request.files.add(
+        await MultipartFile.fromPath(
+          'file',
+          file.path,
+        ),
+      );
+    }
+
+    return ApiClient.sendAndParse<Message>(
+      request,
+          (p0) => Message.fromJson(jsonDecode(p0)),
+    );
   }
 }
 

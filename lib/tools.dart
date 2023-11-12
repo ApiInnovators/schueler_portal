@@ -89,7 +89,7 @@ class Tools {
               icon,
               const SizedBox(width: 10),
             ],
-            Text(text),
+            Flexible(child: Text(text)),
           ],
         ),
       ),

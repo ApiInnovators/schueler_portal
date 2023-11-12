@@ -15,7 +15,7 @@ class ApiClient {
   static IOClient client = IOClient(
     HttpClient()..connectionTimeout = const Duration(seconds: 5),
   );
-  static const String baseUrl = "http://192.168.178.42:8080/schueler_portal";
+  static const String baseUrl = "https://apiinnovators.de/schueler_portal";
   static bool _alreadyTriesToReauthenticate = false;
 
   static Future<Response> _handledRequest(BaseRequest request) async {

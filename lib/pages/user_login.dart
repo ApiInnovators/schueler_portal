@@ -102,67 +102,71 @@ class UserLoginWidget extends StatelessWidget {
           automaticallyImplyLeading: false,
         ),
         body: Center(
-          child: Column(
-            children: [
-              const Text("Email"),
-              TextField(
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: "Email",
+          child: AutofillGroup(
+            child: Column(
+              children: [
+                const Text("Email"),
+                TextField(
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: "Email",
+                  ),
+                  controller: emailController,
+                  autofillHints: const [AutofillHints.email],
                 ),
-                controller: emailController,
-              ),
-              const Text("Passwort"),
-              TextField(
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: "Passwort",
+                const Text("Passwort"),
+                TextField(
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: "Passwort",
+                  ),
+                  obscureText: true,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  controller: passwordController,
+                  autofillHints: const [AutofillHints.password],
                 ),
-                obscureText: true,
-                enableSuggestions: false,
-                autocorrect: false,
-                controller: passwordController,
-              ),
-              const Text("Schulkürzel"),
-              TextField(
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: "Schulkürzel",
+                const Text("Schulkürzel"),
+                TextField(
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: "Schulkürzel",
+                  ),
+                  controller: institutionController,
                 ),
-                controller: institutionController,
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  LoginData login = LoginData(
-                    email: emailController.text.trim(),
-                    password: passwordController.text.trim(),
-                    schulkuerzel: institutionController.text.trim(),
-                  );
-
-                  final authenticationResp =
-                      await ApiClient.authenticate(login, true);
-
-                  if (authenticationResp.statusCode == 200) {
-                    UserLogin.update(
-                      true,
-                      newLogin: login,
-                      newAccessToken: authenticationResp.data!,
+                ElevatedButton(
+                  onPressed: () async {
+                    LoginData login = LoginData(
+                      email: emailController.text.trim(),
+                      password: passwordController.text.trim(),
+                      schulkuerzel: institutionController.text.trim(),
                     );
-                    if (appState == null) {
-                      navigatorKey.currentState?.pop();
+
+                    final authenticationResp =
+                        await ApiClient.authenticate(login, true);
+
+                    if (authenticationResp.statusCode == 200) {
+                      UserLogin.update(
+                        true,
+                        newLogin: login,
+                        newAccessToken: authenticationResp.data!,
+                      );
+                      if (appState == null) {
+                        navigatorKey.currentState?.pop();
+                      } else {
+                        appState!.setLogin(true);
+                      }
+                    } else if (authenticationResp.statusCode == 422) {
+                      Tools.quickSnackbar("Eingabe fehlerhaft");
                     } else {
-                      appState!.setLogin(true);
+                      Tools.quickSnackbar(
+                          "Failed to login: ${authenticationResp.reasonPhrase}");
                     }
-                  } else if (authenticationResp.statusCode == 422) {
-                    Tools.quickSnackbar("Eingabe fehlerhaft");
-                  } else {
-                    Tools.quickSnackbar(
-                        "Failed to login: ${authenticationResp.reasonPhrase}");
-                  }
-                },
-                child: const Text("Login"),
-              ),
-            ],
+                  },
+                  child: const Text("Login"),
+                ),
+              ],
+            ),
           ),
         ),
       ),

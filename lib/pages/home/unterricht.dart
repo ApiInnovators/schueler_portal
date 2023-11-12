@@ -38,50 +38,49 @@ class _UnterrichtWidgetState extends State<UnterrichtWidget> {
                 await DataLoader.getUnterricht(userRequestedDate);
                 setState(() {});
               },
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height,
-                  child: CachingFutureBuilder<List<Unterricht>>(
-                      future: DataLoader.getUnterricht(userRequestedDate),
-                      cacheGetter: () =>
-                          DataLoader.cache.unterricht[userRequestedDate]?.data,
-                      builder: (context, data) {
-                        List<Unterricht> unterricht = data;
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height,
+                child: CachingFutureBuilder<List<Unterricht>>(
+                    future: DataLoader.getUnterricht(userRequestedDate),
+                    cacheGetter: () =>
+                        DataLoader.cache.unterricht[userRequestedDate]?.data,
+                    builder: (context, data) {
+                      List<Unterricht> unterricht = data;
 
-                        if (unterricht.isEmpty) {
-                          return const Center(
-                            child: Text("Keine Unterrichtsinhalte"),
-                          );
-                        }
-
-                        int lastHour = unterricht
-                            .reduce((currentUnterricht, nextUnterricht) =>
-                                currentUnterricht.hourTo > nextUnterricht.hourTo
-                                    ? currentUnterricht
-                                    : nextUnterricht)
-                            .hourTo;
-
-                        DateTime endTime = Tools.hourEndToDateTime(
-                          lastHour,
-                          userRequestedDate,
+                      if (unterricht.isEmpty) {
+                        return const Center(
+                          child: Text("Keine Unterrichtsinhalte"),
                         );
+                      }
 
-                        return SfCalendar(
-                          controller: _calendarController,
-                          view: CalendarView.day,
-                          viewNavigationMode: ViewNavigationMode.none,
-                          firstDayOfWeek: 1,
-                          dataSource: UnterrichtDataSource(unterricht),
-                          timeSlotViewSettings: TimeSlotViewSettings(
-                            startHour: 7.0 + 55.0 / 60.0,
-                            endHour: endTime.hour + endTime.minute / 60.0,
-                            timeIntervalHeight: 100,
-                          ),
-                          onTap: calenderTapped,
-                        );
-                      }),
-                ),
+                      int lastHour = unterricht
+                          .reduce((currentUnterricht, nextUnterricht) =>
+                              currentUnterricht.hourTo > nextUnterricht.hourTo
+                                  ? currentUnterricht
+                                  : nextUnterricht)
+                          .hourTo;
+
+                      DateTime endTime = Tools.hourEndToDateTime(
+                        lastHour,
+                        userRequestedDate,
+                      );
+
+                      return SfCalendar(
+                        controller: _calendarController,
+                        view: CalendarView.day,
+                        viewNavigationMode: ViewNavigationMode.none,
+                        firstDayOfWeek: 1,
+                        dataSource: UnterrichtDataSource(unterricht),
+                        timeSlotViewSettings: TimeSlotViewSettings(
+                          startHour: 7.0 + 55.0 / 60.0,
+                          endHour: endTime.hour + endTime.minute / 60.0,
+                          timeIntervalHeight: -1,
+                          timeFormat: "HH:mm",
+                        ),
+                        onTap: calenderTapped,
+                        appointmentBuilder: appointmentBuilder,
+                      );
+                    }),
               ),
             ),
           ),
@@ -126,6 +125,98 @@ class _UnterrichtWidgetState extends State<UnterrichtWidget> {
     showDialog(
       context: context,
       builder: (context) => UnterrichtDetailsWidget(unterricht: unterricht),
+    );
+  }
+
+  Widget appointmentBuilder(
+      BuildContext context, CalendarAppointmentDetails details) {
+    final Unterricht u = details.appointments.first;
+
+    final Color backgroundColor = ColorUtils.stringToColor(u.subject.short);
+    Color foregroundColor = (backgroundColor.red * 0.299 +
+                backgroundColor.green * 0.587 +
+                backgroundColor.blue * 0.114) >
+            200
+        ? Colors.black
+        : Colors.white;
+
+    Color filesColor = Theme.of(context).colorScheme.onSecondaryContainer;
+
+    return Container(
+      width: details.bounds.width,
+      height: details.bounds.height,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: const BorderRadius.all(Radius.circular(8)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(5),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  "${u.subject.long} - ${u.teacher}",
+                  style: TextStyle(
+                    color: foregroundColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (u.content.files.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondaryContainer,
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(10)),
+                      ),
+                      height: 15,
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: FittedBox(
+                        child: Row(
+                          children: [
+                            Text(
+                              u.content.files.length.toString(),
+                              style: TextStyle(color: filesColor),
+                            ),
+                            Icon(Icons.attachment, color: filesColor),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            Flexible(
+              child: Text(
+                u.content.text.trim(),
+                style: TextStyle(color: foregroundColor),
+                overflow: TextOverflow.fade,
+              ),
+            ),
+            if (u.homework != null) ...[
+              const Divider(),
+              Text(
+                "Hausaufgabe bis zum ${DateFormat("dd.MM.yyyy").format(u.date)}:",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: foregroundColor,
+                ),
+              ),
+              Flexible(
+                child: Text(
+                  u.homework!.homework.trim(),
+                  style: TextStyle(color: foregroundColor),
+                  overflow: TextOverflow.fade,
+                ),
+              )
+            ]
+          ],
+        ),
+      ),
     );
   }
 }
@@ -205,29 +296,16 @@ class UnterrichtDataSource extends CalendarDataSource {
   @override
   String getSubject(int index) {
     final u = unterricht[index];
+    return "${u.subject.long}\n${u.content.text}".trim();
+  }
 
-    bool hausaufgabe = u.homework != null;
-    int files = u.content.files.length;
-
-    String subject = u.subject.long;
-
-    if (hausaufgabe) subject += " [HA]";
-
-    if (files > 0) {
-      subject += " [$files Datei";
-      if (files > 1) subject += "en";
-      subject += "]";
-    }
-
-    subject += "\n${u.content.text}";
-
-    return subject.trim();
+  @override
+  String? getNotes(int index) {
+    final u = unterricht[index];
+    return '''${u.content.files.length};${u.homework != null}''';
   }
 
   @override
   Color getColor(int index) =>
       ColorUtils.stringToColor(unterricht[index].subject.long);
-
-  @override
-  String getNotes(int index) => unterricht[index].content.text;
 }

@@ -25,6 +25,8 @@ class DataLoader {
   static final _completers = <Completer<ApiResponse>>[];
   static List<Future<ApiResponse>> _futures = [];
 
+  static bool _dataIsCached = false;
+
   static var chatCompleter = Completer<ApiResponse<List<Chat>>>();
   static var newsCompleter = Completer<ApiResponse<List<News>>>();
   static var userCompleter = Completer<ApiResponse<User>>();
@@ -37,7 +39,11 @@ class DataLoader {
   static var chatRequestTargetsCompleter =
       Completer<ApiResponse<List<KontaktanfrageLehrer>>>();
 
-  static Future<List<ApiResponse>> cacheData({bool showProgress = true}) async {
+  static Future<void> cacheData({bool showProgress = true}) async {
+
+    if (_dataIsCached) return;
+    _dataIsCached = true;
+
     log("Caching data...");
     chatCompleter = Completer<ApiResponse<List<Chat>>>();
     newsCompleter = Completer<ApiResponse<List<News>>>();
@@ -63,9 +69,8 @@ class DataLoader {
 
     if (showProgress) _showProgressOfCaching();
 
-    final result = await Future.wait(_futures);
+    await Future.wait(_futures);
     log("Caching completed");
-    return result;
   }
 
   static void _addCompleter(
@@ -158,6 +163,7 @@ class DataLoader {
 
   // Function to cancel and reset the operations
   static cancelAndReset() {
+    _dataIsCached = false;
     for (Completer<ApiResponse> completer in _completers) {
       if (!completer.isCompleted) {
         completer.completeError("Operation canceled");

@@ -25,20 +25,19 @@ Future<void> main() async {
 
   if (UserLogin.login == null) {
     log("No saved user login, opening login page...");
-    runApp(const MyApp());
-    forceLogin();
+    runApp(const MyApp(openLoginPage: true));
     return;
   }
 
   if (UserLogin.accessToken == null) {
     log("No saved api access token, data will be cached later");
-    runApp(const MyApp());
+    runApp(const MyApp(openLoginPage: false));
     return;
   }
 
-  runApp(const MyApp());
+  runApp(const MyApp(openLoginPage: false));
 
-  final validationResp = await ApiClient.hasValidToken();
+  final validationResp = await ApiClient.hasValidToken(true);
 
   if (validationResp.statusCode == 200 && validationResp.data == true) {
     log("Saved access token is still valid (best case scenario)");
@@ -47,8 +46,9 @@ Future<void> main() async {
 }
 
 class MyApp extends StatefulWidget {
+  final bool openLoginPage;
 
-  const MyApp({super.key});
+  const MyApp({super.key, required this.openLoginPage});
 
   @override
   State<StatefulWidget> createState() => MyAppState();
@@ -56,8 +56,11 @@ class MyApp extends StatefulWidget {
 
 class MyAppState extends State<MyApp> {
   Color accentColor = UserData.getAccentColor();
+  late bool loggedIn = !widget.openLoginPage;
 
   setAccentColor(Color color) => setState(() => accentColor = color);
+
+  void setLogin(bool val) => setState(() => loggedIn = val);
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +84,9 @@ class MyAppState extends State<MyApp> {
         useMaterial3: true,
       ),
       themeMode: ThemeMode.system,
-      home: MyHomePage(myAppState: this),
+      home: loggedIn
+          ? MyHomePage(myAppState: this)
+          : UserLoginWidget(appState: this),
     );
   }
 }

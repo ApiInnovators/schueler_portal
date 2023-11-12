@@ -7,6 +7,7 @@ import 'package:schueler_portal/api/api_client.dart';
 import 'package:schueler_portal/data_loader.dart';
 import 'package:schueler_portal/globals.dart';
 
+import '../main.dart';
 import '../tools.dart';
 
 class UserLogin {
@@ -15,25 +16,10 @@ class UserLogin {
   static String? accessToken;
   static LoginData? login;
 
-  static Future<void> update(LoginData newLogin, String newAccessToken) {
-    login = newLogin;
-    accessToken = newAccessToken;
-    DataLoader.cancelAndReset();
-    DataLoader.cacheData();
-    return save();
-  }
-
-  static Future<void> updateLogin(LoginData newLogin) {
-    log("Updating login");
-    login = newLogin;
-    DataLoader.cancelAndReset();
-    DataLoader.cacheData();
-    return save();
-  }
-
-  static Future<void> updateToken(String newAccessToken) {
-    log("Updating token");
-    accessToken = newAccessToken;
+  static Future<void> update(bool recacheData,
+      {LoginData? newLogin, String? newAccessToken}) {
+    if (newLogin != null) login = newLogin;
+    if (newAccessToken != null) accessToken = newAccessToken;
     DataLoader.cancelAndReset();
     DataLoader.cacheData();
     return save();
@@ -101,8 +87,9 @@ class UserLoginWidget extends StatelessWidget {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final institutionController = TextEditingController();
+  final MyAppState? appState;
 
-  UserLoginWidget({super.key});
+  UserLoginWidget({super.key, this.appState});
 
   @override
   Widget build(BuildContext context) {
@@ -152,11 +139,20 @@ class UserLoginWidget extends StatelessWidget {
                     schulkuerzel: institutionController.text.trim(),
                   );
 
-                  final authenticationResp = await ApiClient.authenticate(login);
+                  final authenticationResp =
+                      await ApiClient.authenticate(login, true);
 
                   if (authenticationResp.statusCode == 200) {
-                    navigatorKey.currentState?.pop();
-                    UserLogin.update(login, authenticationResp.data!);
+                    UserLogin.update(
+                      true,
+                      newLogin: login,
+                      newAccessToken: authenticationResp.data!,
+                    );
+                    if (appState == null) {
+                      navigatorKey.currentState?.pop();
+                    } else {
+                      appState!.setLogin(true);
+                    }
                   } else if (authenticationResp.statusCode == 422) {
                     Tools.quickSnackbar("Eingabe fehlerhaft");
                   } else {

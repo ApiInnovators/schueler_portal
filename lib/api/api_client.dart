@@ -59,7 +59,7 @@ class ApiClient {
 
       if (UserLogin.login == null) return response;
 
-      final authResp = await _reauthenticate();
+      final authResp = await _reauthenticate(false);
 
       if (authResp.statusCode == 200 && requestCopy != null) {
         requestCopy.headers["Authorization"] =
@@ -71,10 +71,10 @@ class ApiClient {
     return response;
   }
 
-  static Future<Response> _reauthenticate() async {
+  static Future<Response> _reauthenticate(bool recacheData) async {
     _alreadyTriesToReauthenticate = true;
     log("Trying to reauthenticate user");
-    final authResp = await authenticate(UserLogin.login!);
+    final authResp = await authenticate(UserLogin.login!, recacheData);
 
     if (authResp.statusCode == 422) {
       forceLogin();
@@ -96,7 +96,7 @@ class ApiClient {
     return ApiResponse(resp);
   }
 
-  static Future<ApiResponse<bool>> hasValidToken() async {
+  static Future<ApiResponse<bool>> hasValidToken(bool recacheData) async {
     final result =
         await send(Request("POST", Uri.parse("$baseUrl/token/is-valid")));
 
@@ -104,7 +104,7 @@ class ApiClient {
 
     if (result.body == "true") return ApiResponse(result, data: true);
 
-    final authResp = await _reauthenticate();
+    final authResp = await _reauthenticate(recacheData);
 
     if (authResp.statusCode == 200) {
       return ApiResponse(authResp, data: true);
@@ -136,7 +136,7 @@ class ApiClient {
     return sendAndParse(req, parser);
   }
 
-  static Future<ApiResponse<String>> authenticate(LoginData login) async {
+  static Future<ApiResponse<String>> authenticate(LoginData login, bool recacheData) async {
     final request =
         Request("POST", Uri.parse("$baseUrl/${login.schulkuerzel}/token"));
     request.headers['Content-Type'] = 'application/x-www-form-urlencoded';
@@ -146,7 +146,7 @@ class ApiClient {
 
     if (resp.statusCode == 200) {
       final parsed = jsonDecode(resp.body);
-      UserLogin.updateToken(parsed["access_token"]);
+      UserLogin.update(recacheData, newAccessToken: parsed["access_token"]);
       return ApiResponse(resp, data: parsed["access_token"]);
     }
 

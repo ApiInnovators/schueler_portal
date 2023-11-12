@@ -88,7 +88,7 @@ class ApiClient {
       BaseRequest request, T Function(String) parser) async {
     Response resp = await send(request);
 
-    if (resp.statusCode == 200) {
+    if (resp.statusCode >= 200 && resp.statusCode < 300) {
       return ApiResponse(resp, data: parser(utf8.decode(resp.bodyBytes)));
     }
 

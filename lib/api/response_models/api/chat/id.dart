@@ -16,7 +16,7 @@ String chatDetailsToJson(ChatDetails data) => json.encode(data.toJson());
 class ChatDetails {
   final int id;
   final String name;
-  final bool broadcast;
+  final bool? broadcast;
   final int createdAt;
   final Owner owner;
   final List<Member> members;

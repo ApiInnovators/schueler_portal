@@ -13,7 +13,7 @@ String chatToJson(List<Chat> data) =>
 class Chat {
   final int id;
   final String name;
-  final bool broadcast;
+  final bool? broadcast;
   final int createdAt;
   final Owner owner;
   final List<Member> members;

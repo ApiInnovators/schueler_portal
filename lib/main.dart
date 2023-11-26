@@ -70,6 +70,11 @@ class MyAppState extends State<MyApp> {
       scaffoldMessengerKey: snackbarKey,
       navigatorKey: navigatorKey,
       theme: ThemeData(
+        snackBarTheme: const SnackBarThemeData(
+          backgroundColor: Colors.white,
+          contentTextStyle: TextStyle(color: Colors.black),
+          closeIconColor: Colors.black,
+        ),
         colorScheme: ColorScheme.fromSeed(
           seedColor: accentColor,
           brightness: Brightness.light,
@@ -77,6 +82,10 @@ class MyAppState extends State<MyApp> {
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
+        snackBarTheme: const SnackBarThemeData(
+          backgroundColor: Colors.black87,
+          contentTextStyle: TextStyle(color: Colors.white),
+        ),
         colorScheme: ColorScheme.fromSeed(
           seedColor: accentColor,
           brightness: Brightness.dark,

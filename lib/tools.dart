@@ -95,6 +95,7 @@ class Tools {
     snackbarKey.currentState?.showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
+        showCloseIcon: true,
         content: Row(
           children: [
             if (icon != null) ...[

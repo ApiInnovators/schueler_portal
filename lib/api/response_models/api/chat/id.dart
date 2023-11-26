@@ -58,7 +58,7 @@ class ChatDetails {
 class Message {
   final int id;
   final String? text;
-  final int createdAt;
+  final DateTime createdAt;
   final bool isDeleted;
   final bool isDeletable;
   final bool read;
@@ -79,7 +79,8 @@ class Message {
   factory Message.fromJson(Map<String, dynamic> json) => Message(
         id: json["id"],
         text: json["text"],
-        createdAt: json["createdAt"],
+        createdAt:
+            DateTime.fromMillisecondsSinceEpoch(json["createdAt"] * 1000),
         isDeleted: json["isDeleted"],
         isDeletable: json["isDeletable"],
         read: json["read"],
@@ -90,7 +91,7 @@ class Message {
   Map<String, dynamic> toJson() => {
         "id": id,
         "text": text,
-        "createdAt": createdAt,
+        "createdAt": createdAt.millisecondsSinceEpoch ~/ 1000,
         "isDeleted": isDeleted,
         "isDeletable": isDeletable,
         "read": read,

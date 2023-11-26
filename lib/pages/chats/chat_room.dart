@@ -149,32 +149,31 @@ class _ChatRoomState extends State<ChatRoom> {
 
           Map<DateTime, List<Message>> groupedMessagesByDate = groupBy(
             chatDetails!.messages,
-            (obj) => DateTime.fromMillisecondsSinceEpoch(obj.createdAt * 1000)
-                .dayOnly(),
+            (obj) => obj.createdAt.dayOnly(),
           );
 
           return Stack(
             children: [
-              SingleChildScrollView(
+              ListView.builder(
                 reverse: true,
-                child: Column(
-                  children: [
-                    Center(
+                itemCount: groupedMessagesByDate.length + 2,
+                itemBuilder: (context, index) {
+                  if (index == 0) return const SizedBox(height: 70);
+                  if (index == groupedMessagesByDate.length + 1) {
+                    return Center(
                       child: Text(
                           "Erstellt am ${DateFormat("dd.MM.yyyy").format(DateTime.fromMillisecondsSinceEpoch(widget.chat.createdAt * 1000))}"),
-                    ),
-                    for (MapEntry<DateTime, List<Message>> entry
-                        in groupedMessagesByDate.entries) ...[
-                      ChatDaySection(
-                        dateTime: entry.key,
-                        messages: entry.value,
-                        chatRoom: widget,
-                        userId: userData.id,
-                      ),
-                    ],
-                    const SizedBox(height: 70),
-                  ],
-                ),
+                    );
+                  }
+                  index = groupedMessagesByDate.length - index;
+                  final entry = groupedMessagesByDate.entries.elementAt(index);
+                  return ChatDaySection(
+                    dateTime: entry.key,
+                    messages: entry.value,
+                    chatRoom: widget,
+                    userId: userData.id,
+                  );
+                },
               ),
               Align(
                 alignment: Alignment.bottomCenter,
@@ -248,7 +247,7 @@ class _MessageTextFieldState extends State<MessageTextField> {
     DataLoader.cache.chats.data
         ?.firstWhere((e) => e.id == widget.chatId)
         .latestMessage = LatestMessage(
-      timestamp: DateTime.fromMillisecondsSinceEpoch(msg.createdAt * 1000),
+      timestamp: msg.createdAt,
       text: msg.text,
       file: msg.file?.name,
     );
@@ -522,11 +521,7 @@ class MemberMessage extends ChatRoomMessageWidget {
                     MessageFileAttachment(file: message.file!),
                   ],
                   Text(
-                    DateFormat("HH:mm").format(
-                      DateTime.fromMillisecondsSinceEpoch(
-                        message.createdAt * 1000,
-                      ),
-                    ),
+                    DateFormat("HH:mm").format(message.createdAt),
                     style: TextStyle(
                       color: Theme.of(context)
                           .colorScheme
@@ -602,10 +597,7 @@ class UserMessage extends ChatRoomMessageWidget {
                     MessageFileAttachment(file: message.file!),
                 ],
                 Text(
-                  DateFormat("HH:mm").format(
-                    DateTime.fromMillisecondsSinceEpoch(
-                        message.createdAt * 1000),
-                  ),
+                  DateFormat("HH:mm").format(message.createdAt),
                   style: TextStyle(
                     color: Theme.of(context)
                         .colorScheme
@@ -642,9 +634,7 @@ class MessageFileAttachment extends StatelessWidget {
           return Column(
             children: [
               IconButton(
-                onPressed: () {
-                  OpenFile.open(snapshot.path);
-                },
+                onPressed: () => OpenFile.open(snapshot.path),
                 style: IconButton.styleFrom(
                   shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.zero),

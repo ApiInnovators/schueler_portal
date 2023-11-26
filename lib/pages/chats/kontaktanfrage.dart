@@ -39,9 +39,7 @@ class KontaktanfrageWidget extends StatelessWidget {
       latestMessage: latestMsg == null
           ? null
           : LatestMessage(
-              timestamp: DateTime.fromMillisecondsSinceEpoch(
-                latestMsg.createdAt * 1000,
-              ),
+              timestamp: latestMsg.createdAt,
               text: latestMsg.text,
               file: latestMsg.file?.name,
             ),

@@ -28,94 +28,78 @@ class _UnterrichtWidgetState extends State<UnterrichtWidget> {
         title: const Text("Unterricht"),
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                DataLoader.cache.unterricht.remove(userRequestedDate);
-                await DataLoader.getUnterricht(userRequestedDate);
-                setState(() {});
-              },
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height,
-                child: CachingFutureBuilder<List<Unterricht>>(
-                    future: DataLoader.getUnterricht(userRequestedDate),
-                    cacheGetter: () =>
-                        DataLoader.cache.unterricht[userRequestedDate]?.data,
-                    builder: (context, data) {
-                      List<Unterricht> unterricht = data;
+      body: CachingFutureBuilder<List<Unterricht>>(
+        future: DataLoader.getUnterricht(userRequestedDate),
+        cacheGetter: () => DataLoader.cache.unterricht[userRequestedDate]?.data,
+        builder: (context, data) {
+          List<Unterricht> unterricht = data;
 
-                      if (unterricht.isEmpty) {
-                        return const Center(
-                          child: Text("Keine Unterrichtsinhalte"),
-                        );
-                      }
-
-                      int lastHour = unterricht
-                          .reduce((currentUnterricht, nextUnterricht) =>
-                              currentUnterricht.hourTo > nextUnterricht.hourTo
-                                  ? currentUnterricht
-                                  : nextUnterricht)
-                          .hourTo;
-
-                      DateTime endTime = Tools.hourEndToDateTime(
-                        lastHour,
-                        userRequestedDate,
-                      );
-
-                      return SfCalendar(
-                        controller: _calendarController,
-                        view: CalendarView.day,
-                        viewNavigationMode: ViewNavigationMode.none,
-                        firstDayOfWeek: 1,
-                        dataSource: UnterrichtDataSource(unterricht),
-                        timeSlotViewSettings: TimeSlotViewSettings(
-                          startHour: 7.0 + 55.0 / 60.0,
-                          endHour: endTime.hour + endTime.minute / 60.0,
-                          timeIntervalHeight: -1,
-                          timeFormat: "HH:mm",
-                        ),
-                        onTap: calenderTapped,
-                        appointmentBuilder: appointmentBuilder,
-                      );
-                    }),
+          if (unterricht.isEmpty) {
+            return buildWithDateSelector(
+              const Expanded(
+                child: Center(
+                  child: Text("Keine Unterrichtsinhalte"),
+                ),
               ),
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_left),
-                onPressed: () {
-                  setState(() {
-                    userRequestedDate =
-                        Tools.addDaysToDateTime(userRequestedDate, -1, true);
-                  });
-                },
+              false,
+            );
+          }
+
+          int lastHour = unterricht
+              .reduce((currentUnterricht, nextUnterricht) =>
+                  currentUnterricht.hourTo > nextUnterricht.hourTo
+                      ? currentUnterricht
+                      : nextUnterricht)
+              .hourTo;
+
+          DateTime endTime = Tools.hourEndToDateTime(
+            lastHour,
+            userRequestedDate,
+          );
+
+          return buildWithDateSelector(
+              Expanded(
+                child: SfCalendar(
+                  controller: _calendarController,
+                  view: CalendarView.day,
+                  viewNavigationMode: ViewNavigationMode.none,
+                  firstDayOfWeek: 1,
+                  dataSource: UnterrichtDataSource(unterricht),
+                  timeSlotViewSettings: TimeSlotViewSettings(
+                    startHour: 7.0 + 55.0 / 60.0,
+                    endHour: endTime.hour + endTime.minute / 60.0,
+                    timeIntervalHeight: -1,
+                    timeFormat: "HH:mm",
+                  ),
+                  onTap: calenderTapped,
+                  appointmentBuilder: (context, details) =>
+                      AppointmentContainer(details: details),
+                ),
               ),
-              Center(
-                child: Text(
-                    DateFormat("EEEE - dd.MM.yyyy").format(userRequestedDate)),
-              ),
-              IconButton(
-                icon: const Icon(Icons.arrow_right),
-                onPressed: () {
-                  setState(() {
-                    userRequestedDate =
-                        Tools.addDaysToDateTime(userRequestedDate, 1, true);
-                  });
-                },
-              )
-            ],
-          ),
-        ],
+              false);
+        },
+        loadingIndicator: buildWithDateSelector(
+          const Expanded(child: Center(child: CircularProgressIndicator())),
+          true,
+        ),
       ),
     );
   }
 
-  calenderTapped(CalendarTapDetails details) {
+  Widget buildWithDateSelector(Widget child, bool disabledDateSelector) {
+    return Column(
+      children: [
+        child,
+        DateSelector(
+          initialDate: userRequestedDate,
+          onDateChange: (p0) => setState(() => userRequestedDate = p0),
+          disable: disabledDateSelector,
+        ),
+      ],
+    );
+  }
+
+  void calenderTapped(CalendarTapDetails details) {
     if (details.targetElement != CalendarElement.appointment &&
         details.targetElement != CalendarElement.agenda) return;
 
@@ -126,88 +110,164 @@ class _UnterrichtWidgetState extends State<UnterrichtWidget> {
       builder: (context) => UnterrichtDetailsWidget(unterricht: unterricht),
     );
   }
+}
 
-  Widget appointmentBuilder(
-      BuildContext context, CalendarAppointmentDetails details) {
+class DateSelector extends StatefulWidget {
+  final DateTime initialDate;
+  final void Function(DateTime) onDateChange;
+  final bool disable;
+
+  const DateSelector({
+    super.key,
+    required this.initialDate,
+    required this.onDateChange,
+    this.disable = false,
+  });
+
+  @override
+  State<DateSelector> createState() => _DateSelectorState();
+}
+
+class _DateSelectorState extends State<DateSelector> {
+  late DateTime _userRequestedDate = widget.initialDate;
+
+  DateTime get userRequestedDate => _userRequestedDate;
+
+  set userRequestedDate(DateTime value) {
+    _userRequestedDate = value;
+    widget.onDateChange(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.arrow_left),
+          onPressed: widget.disable
+              ? null
+              : () => setState(() => userRequestedDate =
+                  Tools.addDaysToDateTime(userRequestedDate, -1, true)),
+        ),
+        Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(DateFormat("EEEE - dd.MM.yyyy").format(userRequestedDate)),
+              IconButton(
+                  onPressed: widget.disable
+                      ? null
+                      : () async {
+                          final pickedDate = await showDatePicker(
+                            context: context,
+                            initialDate: userRequestedDate,
+                            firstDate: DateTime(2023),
+                            lastDate: DateTime(2050),
+                          );
+                          if (pickedDate != null) {
+                            setState(() => userRequestedDate = pickedDate);
+                          }
+                        },
+                  icon: const Icon(Icons.calendar_month)),
+            ],
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.arrow_right),
+          onPressed: widget.disable
+              ? null
+              : () => setState(() => userRequestedDate =
+                  Tools.addDaysToDateTime(userRequestedDate, 1, true)),
+        )
+      ],
+    );
+  }
+}
+
+class AppointmentContainer extends StatelessWidget {
+  final CalendarAppointmentDetails details;
+
+  const AppointmentContainer({super.key, required this.details});
+
+  @override
+  Widget build(BuildContext context) {
     final Unterricht u = details.appointments.first;
-
     Color filesColor = Theme.of(context).colorScheme.onSecondaryContainer;
     Color foregroundColor = Theme.of(context).colorScheme.onPrimaryContainer;
 
-    return Container(
+    return SizedBox(
       width: details.bounds.width,
       height: details.bounds.height,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
-        borderRadius: const BorderRadius.all(Radius.circular(8)),
-      ),
-      padding: const EdgeInsets.all(5),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Flexible(
-                child: Text(
-                  "${u.subject.long} - ${u.teacher}",
-                  style: TextStyle(
-                    color: foregroundColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              if (u.content.files.isNotEmpty)
-                Card(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.secondaryContainer,
-                      borderRadius:
-                          const BorderRadius.all(Radius.circular(10)),
-                    ),
-                    height: 17,
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Flexible(
-                      child: Row(
-                        children: [
-                          Text(
-                            u.content.files.length.toString(),
-                            style: TextStyle(color: filesColor),
-                          ),
-                          Icon(Icons.attachment, color: filesColor),
-                        ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Text(
+                      "${u.subject.long} - ${u.teacher}",
+                      style: TextStyle(
+                        color: foregroundColor,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
+                  if (u.content.files.isNotEmpty)
+                    Card(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color:
+                              Theme.of(context).colorScheme.secondaryContainer,
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(10)),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Row(
+                          children: [
+                            Text(
+                              u.content.files.length.toString(),
+                              style: TextStyle(color: filesColor),
+                            ),
+                            Icon(Icons.attachment, color: filesColor, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              Flexible(
+                child: Text(
+                  u.content.text.trim(),
+                  style: TextStyle(color: foregroundColor),
+                  overflow: TextOverflow.fade,
                 ),
+              ),
+              if (u.homework != null) ...[
+                const Divider(),
+                Text(
+                  "Hausaufgabe bis zum ${DateFormat("dd.MM.yyyy").format(u.date)}:",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: foregroundColor,
+                  ),
+                ),
+                Flexible(
+                  child: Text(
+                    u.homework!.homework.trim(),
+                    style: TextStyle(color: foregroundColor),
+                    overflow: TextOverflow.fade,
+                  ),
+                )
+              ]
             ],
           ),
-          Flexible(
-            child: Text(
-              u.content.text.trim(),
-              style: TextStyle(color: foregroundColor),
-              overflow: TextOverflow.fade,
-            ),
-          ),
-          if (u.homework != null) ...[
-            const Divider(),
-            Text(
-              "Hausaufgabe bis zum ${DateFormat("dd.MM.yyyy").format(u.date)}:",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: foregroundColor,
-              ),
-            ),
-            Flexible(
-              child: Text(
-                u.homework!.homework.trim(),
-                style: TextStyle(color: foregroundColor),
-                overflow: TextOverflow.fade,
-              ),
-            )
-          ]
-        ],
+        ),
       ),
     );
   }
